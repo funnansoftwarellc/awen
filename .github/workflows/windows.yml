@@ -38,3 +38,7 @@ jobs:
       - name: cmake-test
         shell: bash
         run: ctest --preset x64-windows-msvc-release --parallel $(( $(nproc --all) + 1 ))
+
+      - name: cmake-install
+        shell: bash
+        run: cmake --build --preset x64-windows-msvc-release --target install
