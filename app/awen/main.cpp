@@ -1,6 +1,14 @@
+#include <cstdlib>
+#include <exception>
 #include <print>
 
-int main() {
-  std::println("Hello, Awen!");
-  return 0;
+auto main() noexcept -> int
+try
+{
+    std::println("Hello, Awen!");
+    return EXIT_SUCCESS;
+}
+catch (const std::exception& e)
+{
+    return EXIT_FAILURE;
 }

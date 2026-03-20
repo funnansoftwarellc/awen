@@ -10,7 +10,8 @@
                 "ms-vscode.cmake-tools",
                 "xaver.clang-format",
                 "GitHub.vscode-pull-request-github",
-                "github.vscode-github-actions"
+                "github.vscode-github-actions",
+                "mhutchie.git-graph"
             ]
         }
     }
