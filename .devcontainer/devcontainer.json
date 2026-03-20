@@ -1,0 +1,17 @@
+{
+    "name": "awen",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "llvm-vs-code-extensions.vscode-clangd",
+                "ms-vscode.cmake-tools",
+                "xaver.clang-format",
+                "GitHub.vscode-pull-request-github",
+                "github.vscode-github-actions"
+            ]
+        }
+    }
+}

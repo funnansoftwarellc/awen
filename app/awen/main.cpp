@@ -1,6 +1,6 @@
 #include <print>
 
 int main() {
-  std::print("Hello, Awen!");
+  std::println("Hello, Awen!");
   return 0;
 }

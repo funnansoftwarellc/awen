@@ -1,0 +1,103 @@
+{
+    "version": 7,
+    "include": [
+        "binarydir.json",
+        "condition-linux.json",
+        "clang.json",
+        "debug.json",
+        "gcc.json",
+        "ninja.json",
+        "release.json",
+        "vcpkg.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "x64-linux-gcc-debug",
+            "inherits": [
+                "binarydir",
+                "condition-linux",
+                "debug",
+                "gcc",
+                "ninja"
+            ]
+        },
+        {
+            "name": "x64-linux-gcc-release",
+            "inherits": [
+                "binarydir",
+                "condition-linux",
+                "release",
+                "gcc",
+                "ninja"
+            ]
+        },
+        {
+            "name": "x64-linux-clang-debug",
+            "inherits": [
+                "binarydir",
+                "condition-linux",
+                "debug",
+                "clang",
+                "ninja"
+            ]
+        },
+        {
+            "name": "x64-linux-clang-release",
+            "inherits": [
+                "binarydir",
+                "condition-linux",
+                "release",
+                "clang",
+                "ninja"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "x64-linux-gcc-debug",
+            "configurePreset": "x64-linux-gcc-debug"
+        },
+        {
+            "name": "x64-linux-gcc-release",
+            "configurePreset": "x64-linux-gcc-release"
+        },
+        {
+            "name": "x64-linux-clang-debug",
+            "configurePreset": "x64-linux-clang-debug"
+        },
+        {
+            "name": "x64-linux-clang-release",
+            "configurePreset": "x64-linux-clang-release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "x64-linux-gcc-debug",
+            "configurePreset": "x64-linux-gcc-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "x64-linux-gcc-release",
+            "configurePreset": "x64-linux-gcc-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "x64-linux-clang-debug",
+            "configurePreset": "x64-linux-clang-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "x64-linux-clang-release",
+            "configurePreset": "x64-linux-clang-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}
