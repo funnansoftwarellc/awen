@@ -1,0 +1,40 @@
+name: Get vcpkg
+description: Configure the vcpkg environment, create the binary cache directory, and restore it.
+
+inputs:
+  vcpkg-root:
+    description: Path to the vcpkg installation directory.
+    required: false
+    default: ${{ github.workspace }}/vcpkg
+  cache-path:
+    description: Path to the vcpkg binary cache directory.
+    required: false
+    default: ${{ github.workspace }}/.vcpkg_cache
+
+outputs:
+  cache-hit:
+    description: Whether the vcpkg binary cache was restored from a previous run.
+    value: ${{ steps.restore-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Configure vcpkg environment
+      shell: bash
+      run: |
+        echo "VCPKG_ROOT=${{ inputs.vcpkg-root }}" >> $GITHUB_ENV
+        echo "VCPKG_DEFAULT_BINARY_CACHE=${{ inputs.cache-path }}" >> $GITHUB_ENV
+        echo "VCPKG_BINARY_SOURCES=default" >> $GITHUB_ENV
+
+    - name: Create vcpkg cache directory
+      shell: bash
+      run: mkdir -p "${{ inputs.cache-path }}"
+
+    - name: Restore vcpkg binary cache
+      id: restore-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.cache-path }}
+        key: vcpkg-${{ runner.os }}-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-

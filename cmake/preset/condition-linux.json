@@ -1,0 +1,14 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "condition-linux",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        }
+    ]
+}

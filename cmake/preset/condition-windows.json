@@ -1,0 +1,14 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "condition-windows",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        }
+    ]
+}

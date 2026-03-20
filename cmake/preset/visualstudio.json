@@ -1,0 +1,14 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "visualstudio",
+            "hidden": true,
+            "generator": "Visual Studio 17 2022",
+            "cacheVariables": {
+                "CMAKE_COMPILE_WARNING_AS_ERROR": true,
+                "CMAKE_CXX_FLAGS": "/MP /permissive- /W4 /WX /EHsc /Zc:preprocessor"
+            }
+        }
+    ]
+}

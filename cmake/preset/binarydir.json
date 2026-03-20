@@ -1,0 +1,13 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "binarydir",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/${presetName}/installed"
+            }
+        }
+    ]
+}

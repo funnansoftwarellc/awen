@@ -1,0 +1,40 @@
+name: windows
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-2022
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/get-vcpkg
+
+      - name: setup-msvc
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: cmake-configure
+        shell: bash
+        run: cmake --preset x64-windows-msvc-release
+
+      - name: cmake-build
+        shell: bash
+        run: cmake --build --preset x64-windows-msvc-release --parallel $(( $(nproc --all) + 1 ))
+
+      - name: cmake-test
+        shell: bash
+        run: ctest --preset x64-windows-msvc-release --parallel $(( $(nproc --all) + 1 ))

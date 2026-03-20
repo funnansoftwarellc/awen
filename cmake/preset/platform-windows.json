@@ -1,0 +1,73 @@
+{
+    "version": 7,
+    "include": [
+        "binarydir.json",
+        "condition-windows.json",
+        "debug.json",
+        "msvc.json",
+        "ninja.json",
+        "release.json",
+        "vcpkg.json",
+        "visualstudio.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "x64-windows-visualstudio",
+            "inherits": [
+                "binarydir",
+                "condition-windows",
+                "visualstudio"
+            ]
+        },
+        {
+            "name": "x64-windows-msvc-debug",
+            "inherits": [
+                "binarydir",
+                "condition-windows",
+                "debug",
+                "msvc",
+                "ninja"
+            ]
+        },
+        {
+            "name": "x64-windows-msvc-release",
+            "inherits": [
+                "binarydir",
+                "condition-windows",
+                "release",
+                "msvc",
+                "ninja"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "x64-windows-visualstudio",
+            "configurePreset": "x64-windows-visualstudio"
+        },
+        {
+            "name": "x64-windows-msvc-debug",
+            "configurePreset": "x64-windows-msvc-debug"
+        },
+        {
+            "name": "x64-windows-msvc-release",
+            "configurePreset": "x64-windows-msvc-release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "x64-windows-msvc-debug",
+            "configurePreset": "x64-windows-msvc-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "x64-windows-msvc-release",
+            "configurePreset": "x64-windows-msvc-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}
