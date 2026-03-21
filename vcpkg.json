@@ -5,6 +5,7 @@
     "description": "A modern C++ game engine for creation and exploration.",
     "homepage": "https://github.com/funnansoftwarellc/awen",
     "dependencies": [
-        "gtest"
+        "gtest",
+        "raylib"
     ]
 }

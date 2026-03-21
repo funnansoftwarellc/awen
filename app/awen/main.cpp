@@ -1,15 +1,28 @@
 #include <cstdlib>
-#include <exception>
-#include <print>
 
-auto main() noexcept -> int
-try
+#include <raylib.h>
+
+auto main() -> int
 {
-    std::println("Hello, Awen!");
+    constexpr int screenWidth = 800;
+    constexpr int screenHeight = 450;
+
+    InitWindow(screenWidth, screenHeight, "Hello Awen - Triangle");
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        DrawTriangle({screenWidth / 2.0f, 50.0f}, {screenWidth / 2.0f - 150.0f, screenHeight - 100.0f},
+                     {screenWidth / 2.0f + 150.0f, screenHeight - 100.0f}, RED);
+
+        DrawText("Hello, Awen!", screenWidth / 2 - MeasureText("Hello, Awen!", 20) / 2, 20, 20, DARKGRAY);
+
+        EndDrawing();
+    }
+
+    CloseWindow();
     return EXIT_SUCCESS;
-}
-catch (const std::exception& /*unused*/)
-{
-    // Can't print since it may throw, but we can log it to a file or something if needed.
-    return EXIT_FAILURE;
 }

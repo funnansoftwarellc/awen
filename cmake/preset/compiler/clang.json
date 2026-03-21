@@ -9,7 +9,8 @@
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -pedantic -Wno-unused-command-line-argument",
-                "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic -Wno-unused-command-line-argument"
+                "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic -Wno-unused-command-line-argument",
+                "BUILD_SHARED_LIBS": false
             }
         }
     ]
