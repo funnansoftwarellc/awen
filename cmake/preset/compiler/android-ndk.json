@@ -2,11 +2,10 @@
     "version": 7,
     "configurePresets": [
         {
-            "name": "clang",
+            "name": "compiler-android-ndk",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_C_COMPILER": "clang",
+                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -pedantic -Wno-unused-command-line-argument",
                 "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic -Wno-unused-command-line-argument"

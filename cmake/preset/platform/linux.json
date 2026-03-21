@@ -1,58 +1,63 @@
 {
     "version": 7,
     "include": [
-        "binarydir.json",
-        "condition-linux.json",
-        "clang.json",
-        "debug.json",
-        "gcc.json",
-        "ninja.json",
-        "release.json",
-        "vcpkg.json"
+        "../binarydir.json",
+        "../compiler/clang.json",
+        "../debug.json",
+        "../compiler/gcc.json",
+        "../ninja.json",
+        "../release.json",
+        "../vcpkg.json",
+        "../host/x64-linux.json",
+        "../target/x64-linux.json"
     ],
     "configurePresets": [
         {
             "name": "x64-linux-gcc-debug",
             "inherits": [
                 "binarydir",
-                "condition-linux",
                 "debug",
-                "gcc",
+                "compiler-gcc",
                 "ninja",
-                "vcpkg"
+                "vcpkg",
+                "host-x64-linux",
+                "target-x64-linux"
             ]
         },
         {
             "name": "x64-linux-gcc-release",
             "inherits": [
                 "binarydir",
-                "condition-linux",
                 "release",
-                "gcc",
+                "compiler-gcc",
                 "ninja",
-                "vcpkg"
+                "vcpkg",
+                "host-x64-linux",
+                "target-x64-linux"
             ]
         },
         {
             "name": "x64-linux-clang-debug",
             "inherits": [
                 "binarydir",
-                "condition-linux",
                 "debug",
-                "clang",
+                "compiler-clang",
                 "ninja",
-                "vcpkg"
+                "vcpkg",
+                "host-x64-linux",
+                "target-x64-linux"
             ]
         },
         {
             "name": "x64-linux-clang-release",
             "inherits": [
                 "binarydir",
-                "condition-linux",
                 "release",
-                "clang",
+                "compiler-clang",
                 "ninja",
-                "vcpkg"
+                "vcpkg",
+                "host-x64-linux",
+                "target-x64-linux"
             ]
         }
     ],

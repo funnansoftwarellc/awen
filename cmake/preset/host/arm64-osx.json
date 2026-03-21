@@ -2,12 +2,15 @@
     "version": 7,
     "configurePresets": [
         {
-            "name": "condition-windows",
+            "name": "host-arm64-osx",
             "hidden": true,
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
-                "rhs": "Windows"
+                "rhs": "Darwin"
+            },
+            "cacheVariables": {
+                "VCPKG_HOST_TRIPLET": "arm64-osx-release"
             }
         }
     ]
