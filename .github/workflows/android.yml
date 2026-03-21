@@ -65,8 +65,6 @@ jobs:
         include:
           - preset: arm64-android-clang-release
             target: install
-          - preset: arm64-android-clang-debug
-            target: install
 
     container:
       image: ghcr.io/${{ github.repository }}:android
