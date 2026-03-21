@@ -35,8 +35,8 @@ jobs:
 
       - name: install-tools
         run: |
-          brew install llvm@23
-          echo "/opt/homebrew/opt/llvm@23/bin" >> $GITHUB_PATH
+          brew install llvm@21
+          echo "/opt/homebrew/opt/llvm@21/bin" >> $GITHUB_PATH
 
       - name: cmake-configure
         shell: bash
