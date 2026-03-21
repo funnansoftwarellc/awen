@@ -17,11 +17,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - preset: x64-osx-clang-release
+          - preset: arm64-osx-clang-release
             target: install
-          - preset: x64-osx-clang-debug
+          - preset: arm64-osx-clang-debug
             target: install
-          - preset: x64-osx-clang-debug
+          - preset: arm64-osx-clang-debug
             target: llvm-cov
 
     steps:
