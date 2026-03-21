@@ -5,7 +5,6 @@ project(awen)
 include(GNUInstallDirs)
 include(cmake/target/clang-format.cmake)
 include(cmake/target/clang-tidy.cmake)
-include(cmake/target/llvm-coverage.cmake)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
