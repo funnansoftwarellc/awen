@@ -1,0 +1,6 @@
+# Exclude build artifacts and vcpkg's heavy cache directories from any
+# Docker build context rooted at the workspace.
+build/
+vcpkg/buildtrees/
+vcpkg/downloads/
+vcpkg/packages/

@@ -1,14 +1,13 @@
 {
-    "name": "awen",
+    "name": "awen - android",
     "build": {
         "dockerfile": "Dockerfile"
     },
+    "postCreateCommand": "${containerWorkspaceFolder}/vcpkg/bootstrap-vcpkg.sh -disableMetrics",
     "customizations": {
         "vscode": {
             "extensions": [
-                "llvm-vs-code-extensions.vscode-clangd",
                 "ms-vscode.cmake-tools",
-                "xaver.clang-format",
                 "GitHub.vscode-pull-request-github",
                 "github.vscode-github-actions",
                 "mhutchie.git-graph"

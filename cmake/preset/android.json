@@ -1,0 +1,13 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "android",
+            "hidden": true,
+            "cacheVariables": {
+                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true
+            }
+        }
+    ]
+}
