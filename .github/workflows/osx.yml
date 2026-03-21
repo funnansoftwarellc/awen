@@ -21,8 +21,6 @@ jobs:
             target: install
           - preset: arm64-osx-clang-debug
             target: install
-          - preset: arm64-osx-clang-debug
-            target: llvm-coverage
 
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +28,7 @@ jobs:
           submodules: recursive
 
       - uses: lukka/get-cmake@latest
-      
+
       - uses: ./.github/actions/get-vcpkg
 
       - name: install-tools
