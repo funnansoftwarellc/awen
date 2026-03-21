@@ -1,5 +1,7 @@
 # awen
 
+![awen banner](banner.png)
+
 2D game engine developed to explore the latest C++ has to offer.
 
 ## Table of Contents
