@@ -7,6 +7,7 @@
         "../ninja.json",
         "../release.json",
         "../vcpkg.json",
+        "../host/x64-linux.json",
         "../target/wasm32-emscripten.json"
     ],
     "configurePresets": [
@@ -18,6 +19,7 @@
                 "debug",
                 "ninja",
                 "vcpkg",
+                "host-x64-linux",
                 "target-wasm32-emscripten"
             ]
         },
@@ -29,6 +31,7 @@
                 "release",
                 "ninja",
                 "vcpkg",
+                "host-x64-linux",
                 "target-wasm32-emscripten"
             ]
         }
