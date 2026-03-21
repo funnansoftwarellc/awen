@@ -1,0 +1,46 @@
+{
+    "version": 7,
+    "include": [
+        "binarydir.json",
+        "debug.json",
+        "emscripten.json",
+        "ninja.json",
+        "release.json",
+        "vcpkg.json",
+        "wasm32-emscripten.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "wasm32-emscripten-debug",
+            "inherits": [
+                "wasm32-emscripten",
+                "emscripten",
+                "binarydir",
+                "debug",
+                "ninja",
+                "vcpkg"
+            ]
+        },
+        {
+            "name": "wasm32-emscripten-release",
+            "inherits": [
+                "wasm32-emscripten",
+                "emscripten",
+                "binarydir",
+                "release",
+                "ninja",
+                "vcpkg"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "wasm32-emscripten-debug",
+            "configurePreset": "wasm32-emscripten-debug"
+        },
+        {
+            "name": "wasm32-emscripten-release",
+            "configurePreset": "wasm32-emscripten-release"
+        }
+    ]
+}

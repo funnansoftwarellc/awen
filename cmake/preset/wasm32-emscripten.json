@@ -1,0 +1,12 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "wasm32-emscripten",
+            "hidden": true,
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "wasm32-emscripten"
+            }
+        }
+    ]
+}

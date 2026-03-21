@@ -1,0 +1,17 @@
+{
+    "name": "awen - wasm",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "postCreateCommand": "${containerWorkspaceFolder}/vcpkg/bootstrap-vcpkg.sh -disableMetrics",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cmake-tools",
+                "GitHub.vscode-pull-request-github",
+                "github.vscode-github-actions",
+                "mhutchie.git-graph"
+            ]
+        }
+    }
+}
