@@ -20,7 +20,8 @@
                 "condition-osx",
                 "debug",
                 "clang",
-                "ninja"
+                "ninja",
+                "vcpkg"
             ]
         },
         {
@@ -31,7 +32,8 @@
                 "condition-osx",
                 "release",
                 "clang",
-                "ninja"
+                "ninja",
+                "vcpkg"
             ]
         }
     ],

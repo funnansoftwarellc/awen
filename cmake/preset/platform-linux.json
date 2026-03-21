@@ -18,7 +18,8 @@
                 "condition-linux",
                 "debug",
                 "gcc",
-                "ninja"
+                "ninja",
+                "vcpkg"
             ]
         },
         {
@@ -28,7 +29,8 @@
                 "condition-linux",
                 "release",
                 "gcc",
-                "ninja"
+                "ninja",
+                "vcpkg"
             ]
         },
         {
@@ -38,7 +40,8 @@
                 "condition-linux",
                 "debug",
                 "clang",
-                "ninja"
+                "ninja",
+                "vcpkg"
             ]
         },
         {
@@ -48,7 +51,8 @@
                 "condition-linux",
                 "release",
                 "clang",
-                "ninja"
+                "ninja",
+                "vcpkg"
             ]
         }
     ],

@@ -16,7 +16,8 @@
             "inherits": [
                 "binarydir",
                 "condition-windows",
-                "visualstudio"
+                "visualstudio",
+                "vcpkg"
             ]
         },
         {
@@ -26,7 +27,8 @@
                 "condition-windows",
                 "debug",
                 "msvc",
-                "ninja"
+                "ninja",
+                "vcpkg"
             ]
         },
         {
@@ -36,7 +38,8 @@
                 "condition-windows",
                 "release",
                 "msvc",
-                "ninja"
+                "ninja",
+                "vcpkg"
             ]
         }
     ],

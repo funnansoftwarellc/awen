@@ -1,0 +1,10 @@
+{
+    "name": "awen",
+    "version-string": "2026.3.20",
+    "port-version": 1,
+    "description": "A modern C++ game engine for creation and exploration.",
+    "homepage": "https://github.com/funnansoftwarellc/awen",
+    "dependencies": [
+        "gtest"
+    ]
+}
