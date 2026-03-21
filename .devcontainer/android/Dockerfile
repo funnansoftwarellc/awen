@@ -7,27 +7,36 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Build essentials and vcpkg dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    git \
-    cmake \
-    ninja-build \
-    pkg-config \
-    python3 \
-    zip \
-    unzip \
-    tar \
-    clang \
+    ca-certificates curl git cmake ninja-build pkg-config python3 zip unzip tar clang openjdk-17-jdk \
     && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+# Android SDK
+RUN mkdir -p /opt/android/sdk && \
+    curl -O https://dl.google.com/android/repository/commandlinetools-linux-14742923_latest.zip && \
+    unzip -qq commandlinetools-linux-14742923_latest.zip -d /opt/android/sdk && \
+    rm -f commandlinetools-linux-14742923_latest.zip
+
+ENV ANDROID_HOME=/opt/android/sdk
+
+# Install Build Tools
+RUN mkdir -p /opt/android/sdk/cmdline-tools/latest && \
+    mv /opt/android/sdk/cmdline-tools/bin /opt/android/sdk/cmdline-tools/latest/ && \
+    mv /opt/android/sdk/cmdline-tools/lib /opt/android/sdk/cmdline-tools/latest/ && \
+    mv /opt/android/sdk/cmdline-tools/NOTICE.txt /opt/android/sdk/cmdline-tools/latest/ && \
+    mv /opt/android/sdk/cmdline-tools/source.properties /opt/android/sdk/cmdline-tools/latest/ && \
+    yes | /opt/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses && \
+    /opt/android/sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
 
 # Android NDK (direct download — no sdkmanager/Java required)
 ARG NDK_VERSION=r29
-ENV ANDROID_NDK_HOME="/opt/android/ndk/android-ndk-${NDK_VERSION}"
-
-RUN mkdir -p /opt/android/ndk \
+RUN mkdir -p /opt/android/ndk/android-ndk-${NDK_VERSION} \
     && curl -fsSL "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip" \
-        -o /tmp/ndk.zip \
+    -o /tmp/ndk.zip \
     && unzip -q /tmp/ndk.zip -d /opt/android/ndk \
     && rm /tmp/ndk.zip
+
+ENV ANDROID_NDK_HOME="/opt/android/ndk/android-ndk-${NDK_VERSION}"
 
 ENV PATH="${ANDROID_NDK_HOME}:${PATH}"
