@@ -1,0 +1,64 @@
+{
+    "version": 7,
+    "include": [
+        "arm64-osx.json",
+        "binarydir.json",
+        "condition-osx.json",
+        "clang.json",
+        "debug.json",
+        "ninja.json",
+        "release.json",
+        "vcpkg.json",
+        "x64-osx.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "arm64-osx-clang-debug",
+            "inherits": [
+                "arm64-osx",
+                "binarydir",
+                "condition-osx",
+                "debug",
+                "clang",
+                "ninja"
+            ]
+        },
+        {
+            "name": "arm64-osx-clang-release",
+            "inherits": [
+                "arm64-osx",
+                "binarydir",
+                "condition-osx",
+                "release",
+                "clang",
+                "ninja"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "arm64-osx-clang-debug",
+            "configurePreset": "arm64-osx-clang-debug"
+        },
+        {
+            "name": "arm64-osx-clang-release",
+            "configurePreset": "arm64-osx-clang-release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "arm64-osx-clang-debug",
+            "configurePreset": "arm64-osx-clang-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "arm64-osx-clang-release",
+            "configurePreset": "arm64-osx-clang-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}

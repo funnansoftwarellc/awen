@@ -1,0 +1,53 @@
+name: osx
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    strategy:
+      matrix:
+        include:
+          - preset: arm64-osx-clang-release
+            target: install
+          - preset: arm64-osx-clang-debug
+            target: install
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: lukka/get-cmake@latest
+
+      - uses: ./.github/actions/get-vcpkg
+
+      - name: install-tools
+        run: |
+          brew install llvm@21
+          echo "/opt/homebrew/opt/llvm@21/bin" >> $GITHUB_PATH
+
+      - name: cmake-configure
+        shell: bash
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: cmake-build
+        shell: bash
+        run: cmake --build --preset ${{ matrix.preset }} --parallel $(( $(nproc --all) + 1 ))
+
+      - name: cmake-test
+        shell: bash
+        run: ctest --preset ${{ matrix.preset }} --parallel $(( $(nproc --all) + 1 ))
+
+      - name: cmake-${{ matrix.target }}
+        shell: bash
+        run: cmake --build --preset ${{ matrix.preset }} --target ${{ matrix.target }}
