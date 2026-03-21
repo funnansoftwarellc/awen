@@ -37,17 +37,13 @@ jobs:
           echo "/opt/homebrew/opt/llvm@21/bin" >> $GITHUB_PATH
 
       - name: cmake-configure
-        shell: bash
         run: cmake --preset ${{ matrix.preset }}
 
       - name: cmake-build
-        shell: bash
         run: cmake --build --preset ${{ matrix.preset }} --parallel $(( $(nproc --all) + 1 ))
 
       - name: cmake-test
-        shell: bash
         run: ctest --preset ${{ matrix.preset }} --parallel $(( $(nproc --all) + 1 ))
 
       - name: cmake-${{ matrix.target }}
-        shell: bash
         run: cmake --build --preset ${{ matrix.preset }} --target ${{ matrix.target }}
