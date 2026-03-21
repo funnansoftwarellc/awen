@@ -28,7 +28,7 @@ runs:
 
     - name: Create vcpkg cache directory
       shell: bash
-      run: mkdir -p "${{ inputs.cache-path }}"
+      run: mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE"
 
     - name: Restore vcpkg binary cache
       id: restore-cache
