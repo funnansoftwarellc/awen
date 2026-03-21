@@ -10,6 +10,8 @@
   - [macOS](#macos)
   - [Linux](#linux)
   - [Windows](#windows)
+  - [Android](#android)
+  - [WebAssembly](#webassembly)
 
 ---
 
@@ -159,4 +161,50 @@ cmake --build --preset x64-windows-msvc-release --target install
 ```
 
 The installed binary is written to `build/<preset>/installed/bin/`.
+
+### Android
+
+Android builds target **arm64-v8a** and cross-compile from Linux using the [Android NDK](https://developer.android.com/ndk). The provided [Dev Container](.devcontainer/android/Dockerfile) sets up the required environment (Ubuntu 25.10 with Clang and NDK r29) and is the recommended approach.
+
+Available presets:
+
+| Preset | Configuration |
+|---|---|
+| `arm64-android-clang-debug` | Debug |
+| `arm64-android-clang-release` | Release |
+
+```sh
+# Configure
+cmake --preset arm64-android-clang-debug
+
+# Build
+cmake --build --preset arm64-android-clang-debug
+
+# Install
+cmake --build --preset arm64-android-clang-debug --target install
+```
+
+### WebAssembly
+
+WebAssembly builds use [Emscripten](https://emscripten.org/) and cross-compile from Linux. The provided [Dev Container](.devcontainer/wasm/Dockerfile) (based on `emscripten/emsdk`) includes all required tooling and is the recommended approach.
+
+Available presets:
+
+| Preset | Configuration |
+|---|---|
+| `wasm32-emscripten-debug` | Debug |
+| `wasm32-emscripten-release` | Release |
+
+```sh
+# Configure
+cmake --preset wasm32-emscripten-debug
+
+# Build
+cmake --build --preset wasm32-emscripten-debug
+
+# Install
+cmake --build --preset wasm32-emscripten-debug --target install
+```
+
+The installed output is written to `build/<preset>/installed/`.
 
