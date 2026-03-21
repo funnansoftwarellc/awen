@@ -60,3 +60,12 @@ RUN curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key \
     --slave   /usr/bin/llvm-cov          llvm-cov        /usr/bin/llvm-cov-${CLANG_VER}                \
     --slave   /usr/bin/llvm-profdata     llvm-profdata   /usr/bin/llvm-profdata-${CLANG_VER}           \
     && rm -rf /var/lib/apt/lists/*
+
+# X11 / display libraries (required by raylib and similar)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xinerama \
+    xcursor \
+    xorg \
+    libglu1-mesa \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
