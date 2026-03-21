@@ -1,0 +1,13 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "x64-osx",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_OSX_SYSROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+                "CMAKE_OSX_ARCHITECTURES": "x86_64"
+            }
+        }
+    ]
+}
