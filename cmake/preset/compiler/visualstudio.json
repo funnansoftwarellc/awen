@@ -2,12 +2,11 @@
     "version": 7,
     "configurePresets": [
         {
-            "name": "msvc",
+            "name": "compiler-visualstudio",
             "hidden": true,
+            "generator": "Visual Studio 17 2022",
             "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "CMAKE_COMPILE_WARNING_AS_ERROR": true,
                 "CMAKE_CXX_FLAGS": "/MP /permissive- /W4 /WX /EHsc /Zc:preprocessor"
             }
         }

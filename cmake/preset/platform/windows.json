@@ -1,45 +1,48 @@
 {
     "version": 7,
     "include": [
-        "binarydir.json",
-        "condition-windows.json",
-        "debug.json",
-        "msvc.json",
-        "ninja.json",
-        "release.json",
-        "vcpkg.json",
-        "visualstudio.json"
+        "../binarydir.json",
+        "../debug.json",
+        "../compiler/msvc.json",
+        "../ninja.json",
+        "../release.json",
+        "../vcpkg.json",
+        "../host/x64-windows.json",
+        "../target/x64-windows.json",
+        "../compiler/visualstudio.json"
     ],
     "configurePresets": [
         {
             "name": "x64-windows-visualstudio",
             "inherits": [
                 "binarydir",
-                "condition-windows",
-                "visualstudio",
-                "vcpkg"
+                "compiler-visualstudio",
+                "vcpkg",
+                "host-x64-windows"
             ]
         },
         {
             "name": "x64-windows-msvc-debug",
             "inherits": [
                 "binarydir",
-                "condition-windows",
                 "debug",
-                "msvc",
+                "compiler-msvc",
                 "ninja",
-                "vcpkg"
+                "vcpkg",
+                "host-x64-windows",
+                "target-x64-windows"
             ]
         },
         {
             "name": "x64-windows-msvc-release",
             "inherits": [
                 "binarydir",
-                "condition-windows",
                 "release",
-                "msvc",
+                "compiler-msvc",
                 "ninja",
-                "vcpkg"
+                "vcpkg",
+                "host-x64-windows",
+                "target-x64-windows"
             ]
         }
     ],

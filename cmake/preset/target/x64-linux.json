@@ -2,10 +2,10 @@
     "version": 7,
     "configurePresets": [
         {
-            "name": "wasm32-emscripten",
+            "name": "target-x64-linux",
             "hidden": true,
             "cacheVariables": {
-                "VCPKG_TARGET_TRIPLET": "wasm32-emscripten"
+                "VCPKG_TARGET_TRIPLET": "x64-linux-release"
             }
         }
     ]

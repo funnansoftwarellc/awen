@@ -2,11 +2,13 @@
     "version": 7,
     "configurePresets": [
         {
-            "name": "emscripten",
+            "name": "compiler-emscripten",
             "hidden": true,
             "cacheVariables": {
                 "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -pedantic",
+                "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic"
             }
         }
     ]
