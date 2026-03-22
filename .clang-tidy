@@ -6,8 +6,10 @@ Checks: "-*,
   cert-*,
   cppcoreguidelines-*,
   misc-*,
+  -misc-include-cleaner,
   modernize-*,
   readability-*,
+  -readability-identifier-length,
   performance-*"
 
 WarningsAsErrors: "*"
