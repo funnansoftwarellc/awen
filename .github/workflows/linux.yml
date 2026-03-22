@@ -20,41 +20,19 @@ jobs:
       attestations: write
       id-token: write
 
+    outputs:
+      image: ${{ steps.docker-image.outputs.image }}
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: detect-changes
-        id: filter
-        uses: dorny/paths-filter@v3
+      - uses: ./.github/actions/docker-image
+        id: docker-image
         with:
-          token: ""
-          filters: |
-            changed:
-              - '.devcontainer/linux/Dockerfile'
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: check-image-exists
-        id: image
-        run: |
-          if docker manifest inspect ghcr.io/${{ github.repository }}:linux > /dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - uses: docker/build-push-action@v6
-        if: steps.filter.outputs.changed == 'true' || steps.image.outputs.exists == 'false'
-        with:
-          context: .devcontainer/linux
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}:linux
+          platform: linux
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
     runs-on: ubuntu-24.04
@@ -66,7 +44,7 @@ jobs:
           - clang-tidy-diff
 
     container:
-      image: ghcr.io/${{ github.repository }}:linux
+      image: ${{ needs.docker.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -83,6 +61,10 @@ jobs:
         shell: bash
         run: cmake --preset x64-linux-clang-debug
 
+      - name: cmake-build
+        shell: bash
+        run: cmake --build --preset x64-linux-clang-debug
+
       - name: ${{ matrix.target }}
         shell: bash
         run: cmake --build --preset x64-linux-clang-debug --target ${{ matrix.target }}
@@ -97,7 +79,7 @@ jobs:
           - x64-linux-clang-debug
 
     container:
-      image: ghcr.io/${{ github.repository }}:linux
+      image: ${{ needs.docker.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}

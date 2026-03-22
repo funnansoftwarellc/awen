@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.28.3)
 project(awen)
 
 include(GNUInstallDirs)
+include(cmake/target/apk.cmake)
 include(cmake/target/clang-format.cmake)
 include(cmake/target/clang-tidy.cmake)
 

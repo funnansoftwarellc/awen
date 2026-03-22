@@ -8,7 +8,8 @@
                 "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -pedantic",
-                "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic"
+                "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic",
+                "BUILD_SHARED_LIBS": false
             }
         }
     ]

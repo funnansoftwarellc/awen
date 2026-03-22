@@ -3,7 +3,13 @@
     "build": {
         "dockerfile": "Dockerfile"
     },
-    "postCreateCommand": "${containerWorkspaceFolder}/vcpkg/bootstrap-vcpkg.sh -disableMetrics",
+    "runArgs": [
+        "--privileged",
+        "--device",
+        "/dev/kvm",
+        "--volume",
+        "/dev/bus/usb:/dev/bus/usb"
+    ],
     "customizations": {
         "vscode": {
             "extensions": [
@@ -13,5 +19,6 @@
                 "mhutchie.git-graph"
             ]
         }
-    }
+    },
+    "postCreateCommand": "${containerWorkspaceFolder}/vcpkg/bootstrap-vcpkg.sh -disableMetrics"
 }

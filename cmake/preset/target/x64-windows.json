@@ -5,7 +5,7 @@
             "name": "target-x64-windows",
             "hidden": true,
             "cacheVariables": {
-                "VCPKG_TARGET_TRIPLET": "x64-windows-release"
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
             }
         }
     ]

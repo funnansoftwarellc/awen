@@ -1,0 +1,6 @@
+# Generated files — not committed to version control
+local.properties
+.gradle/
+app/build/
+app/.cxx/
+build/

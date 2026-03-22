@@ -20,41 +20,19 @@ jobs:
       attestations: write
       id-token: write
 
+    outputs:
+      image: ${{ steps.docker-image.outputs.image }}
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: detect-changes
-        id: filter
-        uses: dorny/paths-filter@v3
+      - uses: ./.github/actions/docker-image
+        id: docker-image
         with:
-          token: ""
-          filters: |
-            changed:
-                - '.devcontainer/android/Dockerfile'
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: check-image-exists
-        id: image
-        run: |
-          if docker manifest inspect ghcr.io/${{ github.repository }}:android > /dev/null 2>&1; then
-              echo "exists=true" >> $GITHUB_OUTPUT
-          else
-              echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - uses: docker/build-push-action@v6
-        if: steps.filter.outputs.changed == 'true' || steps.image.outputs.exists == 'false'
-        with:
-          context: .devcontainer/android
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}:android
+          platform: android
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     runs-on: ubuntu-24.04
@@ -63,11 +41,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - preset: arm64-android-clang-release
+          - preset: x64-linux-clang-arm64-android-release
             target: install
 
     container:
-      image: ghcr.io/${{ github.repository }}:android
+      image: ${{ needs.docker.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}

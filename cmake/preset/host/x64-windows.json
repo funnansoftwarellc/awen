@@ -10,7 +10,7 @@
                 "rhs": "Windows"
             },
             "cacheVariables": {
-                "VCPKG_HOST_TRIPLET": "x64-windows-release"
+                "VCPKG_HOST_TRIPLET": "x64-windows-static-md"
             }
         }
     ]
