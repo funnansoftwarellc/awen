@@ -42,7 +42,11 @@ if(ANDROID)
     )
 endif()
 
-if(NOT ANDROID AND NOT EMSCRIPTEN)
+if(EMSCRIPTEN)
+    # Emscripten provides its own GLFW port via its ports system.
+    # -sUSE_GLFW=3 is a linker-only flag that pulls in the JS GLFW implementation.
+    target_link_options(${PROJECT_NAME} PRIVATE -sUSE_GLFW=3)
+elseif(NOT ANDROID)
     find_package(glfw3 CONFIG REQUIRED)
 
     target_link_libraries(${PROJECT_NAME}
