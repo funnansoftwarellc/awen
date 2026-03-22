@@ -45,7 +45,21 @@ endif()
 if(EMSCRIPTEN)
     # Emscripten provides its own GLFW port via its ports system.
     # -sUSE_GLFW=3 is a linker-only flag that pulls in the JS GLFW implementation.
-    target_link_options(${PROJECT_NAME} PRIVATE -sUSE_GLFW=3)
+    # -sASYNCIFY allows blocking C calls (e.g. emscripten_sleep used by SetTargetFPS)
+    # to be transformed into async JS continuations at compile time.
+    target_link_options(${PROJECT_NAME} PRIVATE -sUSE_GLFW=3 -sASYNCIFY)
+
+    # Emscripten.cmake unconditionally sets CMAKE_EXECUTABLE_SUFFIX to ".js".
+    # Override it at the target level so Emscripten emits awen.html alongside
+    # awen.js and awen.wasm.
+    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
+
+    install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.html
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.js
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.wasm
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/web
+    )
 elseif(NOT ANDROID)
     find_package(glfw3 CONFIG REQUIRED)
 
@@ -66,8 +80,10 @@ if(MSVC)
     )
 endif()
 
-install(TARGETS ${PROJECT_NAME}
-    BUNDLE DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+if(NOT EMSCRIPTEN)
+    install(TARGETS ${PROJECT_NAME}
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
