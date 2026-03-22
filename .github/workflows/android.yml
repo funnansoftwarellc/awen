@@ -63,7 +63,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - preset: arm64-android-clang-release
+          - preset: x64-linux-clang-arm64-android-release
             target: install
 
     container:

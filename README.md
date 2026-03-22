@@ -172,18 +172,20 @@ Available presets:
 
 | Preset | Configuration |
 |---|---|
-| `arm64-android-clang-debug` | Debug |
-| `arm64-android-clang-release` | Release |
+| `x64-linux-clang-arm64-android-debug` | Debug |
+| `x64-linux-clang-arm64-android-release` | Release |
+| `x64-windows-clang-arm64-android-debug` | Debug (Windows host) |
+| `x64-windows-clang-arm64-android-release` | Release (Windows host) |
 
 ```sh
 # Configure
-cmake --preset arm64-android-clang-debug
+cmake --preset x64-linux-clang-arm64-android-debug
 
 # Build
-cmake --build --preset arm64-android-clang-debug
+cmake --build --preset x64-linux-clang-arm64-android-debug
 
 # Install
-cmake --build --preset arm64-android-clang-debug --target install
+cmake --build --preset x64-linux-clang-arm64-android-debug --target install
 ```
 
 ### WebAssembly

@@ -20,5 +20,5 @@
             ]
         }
     },
-    "postCreateCommand": "${containerWorkspaceFolder}/vcpkg/bootstrap-vcpkg.sh -disableMetrics && curl -fsSL -o ${containerWorkspaceFolder}/android/gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.11.1/gradle/wrapper/gradle-wrapper.jar && printf 'sdk.dir=/opt/android/sdk\nndk.dir=/opt/android/ndk/android-ndk-r29\n' > ${containerWorkspaceFolder}/android/local.properties"
+    "postCreateCommand": "${containerWorkspaceFolder}/vcpkg/bootstrap-vcpkg.sh -disableMetrics"
 }
