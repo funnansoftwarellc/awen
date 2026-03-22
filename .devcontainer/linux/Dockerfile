@@ -64,4 +64,5 @@ RUN curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key \
 # X11 / display libraries (required by raylib and similar)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config \
+    libgl1-mesa-dev libx11-dev libxrandr-dev \
     && rm -rf /var/lib/apt/lists/*
