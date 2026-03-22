@@ -16,10 +16,15 @@ if(ANDROID)
             set(_APK_NAME "app-debug.apk")
         endif()
 
-        set(_APK_OUT "${CMAKE_BINARY_DIR}/app/outputs/apk/${_APK_VARIANT}/${_APK_NAME}")
+        # Gradle writes APKs into android/app/build/ — its standard output location.
+        set(_APK_GRADLE_OUT "${CMAKE_SOURCE_DIR}/android/app/build/outputs/apk/${_APK_VARIANT}/${_APK_NAME}")
+        # Copy into the CMake build tree so developers also find it under build/.
+        set(_APK_OUT "${CMAKE_BINARY_DIR}/outputs/apk/${_APK_VARIANT}/${_APK_NAME}")
 
         add_custom_target(apk
             COMMAND "${_GRADLEW}" ${_APK_GRADLE_TASK}
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/outputs/apk/${_APK_VARIANT}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_APK_GRADLE_OUT}" "${_APK_OUT}"
             WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/android"
             COMMENT "Building Android APK (${_APK_GRADLE_TASK}) → ${_APK_OUT}"
             VERBATIM
