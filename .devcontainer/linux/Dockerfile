@@ -65,4 +65,6 @@ RUN curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config \
     libgl1-mesa-dev libx11-dev libxrandr-dev \
+    autoconf autoconf-archive automake libtool python3-venv make \
+    libwayland-dev libxkbcommon-dev libegl1-mesa-dev libibus-1.0-dev libltdl-dev \
     && rm -rf /var/lib/apt/lists/*
