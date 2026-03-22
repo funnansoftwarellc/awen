@@ -1,6 +1,7 @@
 #include <cstdlib>
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
 // NOLINTBEGIN
 
@@ -50,12 +51,14 @@ namespace
 
 } // namespace
 
-int main()
+auto main(int /*unused*/, char ** /*unused*/) -> int
 {
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait");
+
     SDL_Init(SDL_INIT_VIDEO);
 
     AppState app;
-    app.window = SDL_CreateWindow("Hello Awen - Triangle", screenWidth, screenHeight, 0);
+    app.window = SDL_CreateWindow("Hello Awen - Triangle", screenWidth, screenHeight, SDL_WINDOW_FULLSCREEN);
     app.renderer = SDL_CreateRenderer(app.window, nullptr);
 
     while (app.running)
