@@ -20,6 +20,9 @@ jobs:
       attestations: write
       id-token: write
 
+    outputs:
+      image: ${{ steps.resolve.outputs.image }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,12 +52,35 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: resolve-image
+        id: resolve
+        env:
+          REPO: ghcr.io/${{ github.repository }}
+        run: |
+          if [[ "${{ steps.filter.outputs.changed }}" != "true" && "${{ steps.image.outputs.exists }}" != "false" ]]; then
+            echo "image=${REPO}:linux" >> $GITHUB_OUTPUT
+            echo "need-build=false" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "image=${REPO}:linux" >> $GITHUB_OUTPUT
+            echo "need-build=true" >> $GITHUB_OUTPUT
+            {
+              echo "tags<<EOF"
+              echo "${REPO}:linux"
+              echo "${REPO}:linux-${{ github.sha }}"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          else
+            echo "image=${REPO}:linux-${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "need-build=true" >> $GITHUB_OUTPUT
+            echo "tags=${REPO}:linux-${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+
       - uses: docker/build-push-action@v6
-        if: steps.filter.outputs.changed == 'true' || steps.image.outputs.exists == 'false'
+        if: steps.resolve.outputs.need-build == 'true'
         with:
           context: .devcontainer/linux
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}:linux
+          push: true
+          tags: ${{ steps.resolve.outputs.tags }}
 
   lint:
     runs-on: ubuntu-24.04
@@ -66,7 +92,7 @@ jobs:
           - clang-tidy-diff
 
     container:
-      image: ghcr.io/${{ github.repository }}:linux
+      image: ${{ needs.docker.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -97,7 +123,7 @@ jobs:
           - x64-linux-clang-debug
 
     container:
-      image: ghcr.io/${{ github.repository }}:linux
+      image: ${{ needs.docker.outputs.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
