@@ -61,6 +61,10 @@ jobs:
         shell: bash
         run: cmake --preset x64-linux-clang-debug
 
+      - name: cmake-build
+        shell: bash
+        run: cmake --build --preset x64-linux-clang-debug
+
       - name: ${{ matrix.target }}
         shell: bash
         run: cmake --build --preset x64-linux-clang-debug --target ${{ matrix.target }}
