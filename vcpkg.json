@@ -6,6 +6,6 @@
     "homepage": "https://github.com/funnansoftwarellc/awen",
     "dependencies": [
         "gtest",
-        "raylib"
+        "sdl3"
     ]
 }
