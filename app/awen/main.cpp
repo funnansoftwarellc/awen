@@ -2,6 +2,8 @@
 
 #include <raylib.h>
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables, readability-identifier-naming)
+
 auto main() -> int
 {
     constexpr int screenWidth = 800;
@@ -26,3 +28,5 @@ auto main() -> int
     CloseWindow();
     return EXIT_SUCCESS;
 }
+
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables, readability-identifier-naming)

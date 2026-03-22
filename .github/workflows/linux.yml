@@ -21,66 +21,18 @@ jobs:
       id-token: write
 
     outputs:
-      image: ${{ steps.resolve.outputs.image }}
+      image: ${{ steps.docker-image.outputs.image }}
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: detect-changes
-        id: filter
-        uses: dorny/paths-filter@v3
+      - uses: ./.github/actions/docker-image
+        id: docker-image
         with:
-          token: ""
-          filters: |
-            changed:
-              - '.devcontainer/linux/Dockerfile'
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: check-image-exists
-        id: image
-        run: |
-          if docker manifest inspect ghcr.io/${{ github.repository }}:linux > /dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: resolve-image
-        id: resolve
-        env:
-          REPO: ghcr.io/${{ github.repository }}
-        run: |
-          if [[ "${{ steps.filter.outputs.changed }}" != "true" && "${{ steps.image.outputs.exists }}" != "false" ]]; then
-            echo "image=${REPO}:linux" >> $GITHUB_OUTPUT
-            echo "need-build=false" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "image=${REPO}:linux" >> $GITHUB_OUTPUT
-            echo "need-build=true" >> $GITHUB_OUTPUT
-            {
-              echo "tags<<EOF"
-              echo "${REPO}:linux"
-              echo "${REPO}:linux-${{ github.sha }}"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
-          else
-            echo "image=${REPO}:linux-${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "need-build=true" >> $GITHUB_OUTPUT
-            echo "tags=${REPO}:linux-${{ github.sha }}" >> $GITHUB_OUTPUT
-          fi
-
-      - uses: docker/build-push-action@v6
-        if: steps.resolve.outputs.need-build == 'true'
-        with:
-          context: .devcontainer/linux
-          push: true
-          tags: ${{ steps.resolve.outputs.tags }}
+          platform: linux
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
     runs-on: ubuntu-24.04
