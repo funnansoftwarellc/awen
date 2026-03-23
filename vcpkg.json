@@ -10,9 +10,15 @@
         {
             "name": "skia",
             "features": [
-                "graphite",
-                "metal"
+                "graphite"
             ]
+        },
+        {
+            "name": "skia",
+            "features": [
+                "metal"
+            ],
+            "platform": "osx | ios"
         }
     ]
 }
