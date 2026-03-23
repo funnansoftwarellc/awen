@@ -12,12 +12,33 @@ target_sources(${PROJECT_NAME}
         main.cpp
 )
 
+# Platform-specific GPU surface backend
+if(APPLE)
+    target_sources(${PROJECT_NAME} PRIVATE gpu_surface_metal.mm)
+    set_source_files_properties(gpu_surface_metal.mm PROPERTIES LANGUAGE OBJCXX)
+elseif(EMSCRIPTEN)
+    target_sources(${PROJECT_NAME} PRIVATE gpu_surface_dawn.cpp)
+else()
+    # Windows, Linux, Android → Vulkan
+    target_sources(${PROJECT_NAME} PRIVATE gpu_surface_vulkan.cpp)
+endif()
+
 find_package(SDL3 CONFIG REQUIRED)
+find_package(unofficial-skia CONFIG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         SDL3::SDL3
+        unofficial::skia::skia
 )
+
+if(APPLE)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            "-framework Metal"
+            "-framework QuartzCore"
+    )
+endif()
 
 # SDL3 on Android still needs the core Android and logging system libraries.
 # OpenGL ES and EGL are managed internally by SDL3 and do not need to be

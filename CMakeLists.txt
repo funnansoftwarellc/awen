@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.28.3)
 
 project(awen)
 
+if(APPLE)
+    enable_language(OBJCXX)
+endif()
+
 include(GNUInstallDirs)
 include(cmake/target/apk.cmake)
 include(cmake/target/clang-format.cmake)

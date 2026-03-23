@@ -6,6 +6,13 @@
     "homepage": "https://github.com/funnansoftwarellc/awen",
     "dependencies": [
         "gtest",
-        "sdl3"
+        "sdl3",
+        {
+            "name": "skia",
+            "features": [
+                "graphite",
+                "metal"
+            ]
+        }
     ]
 }
