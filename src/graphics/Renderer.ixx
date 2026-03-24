@@ -86,6 +86,21 @@ export namespace awn::graphics
                         [](const DrawText& c) { ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color)); },
                         [](const DrawBeginScissor& c) { BeginScissorMode(c.x, c.y, c.width, c.height); },
                         [](const DrawEndScissor&) { EndScissorMode(); },
+                        [](const DrawSprite& c)
+                        {
+                            const auto tex = Texture2D{
+                                .id = c.texture.id,
+                                .width = c.texture.width,
+                                .height = c.texture.height,
+                                .mipmaps = c.texture.mipmaps,
+                                .format = c.texture.format,
+                            };
+                            DrawTexturePro(
+                                tex,
+                                Rectangle{.x = 0.0F, .y = 0.0F, .width = static_cast<float>(tex.width), .height = static_cast<float>(tex.height)},
+                                Rectangle{.x = c.x, .y = c.y, .width = c.width, .height = c.height}, Vector2{.x = 0.0F, .y = 0.0F}, 0.0F,
+                                to_raylib(c.tint));
+                        },
                     },
                     cmd);
             }

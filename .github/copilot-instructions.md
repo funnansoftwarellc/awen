@@ -36,6 +36,10 @@
 - Do **not** add `{}` to members of non-trivial class types (e.g., `std::string text;`, `std::vector<T> items;`) — they have their own default constructors and an empty initializer is redundant (`readability-redundant-member-init`)
 - Multi-line initializer lists must have a trailing comma after the last element; single-line lists must not
 
+### Operators
+- Prefer `auto operator<=>(const T&) const noexcept = default` over `operator==` when equality or ordering is needed — the spaceship operator synthesises all six comparison operators including `==`
+- Always `#include <compare>` in the global module fragment when using `operator<=>` in a C++ module (`.ixx`) file
+
 ### Literals
 - Float literals use the `F` suffix (e.g., `0.0F`, `1.05F`)
 - Prefer `static_cast<float>(…)` over C-style casts
@@ -55,3 +59,6 @@
 - Build system: CMake with Ninja, presets defined in `CMakePresets.json`
 - Package manager: vcpkg (manifest mode, `vcpkg.json`)
 - Primary graphics library: raylib
+
+## CMake Style
+- Place `find_package()` calls immediately before the `target_link_libraries()` / `target_include_directories()` / `target_compile_definitions()` calls that consume them — not at the top of the file

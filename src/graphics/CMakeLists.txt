@@ -1,8 +1,5 @@
 project(awen-graphics)
 
-find_package(magic_enum CONFIG REQUIRED)
-find_package(raylib CONFIG REQUIRED)
-
 add_library(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PUBLIC
@@ -15,12 +12,21 @@ target_sources(${PROJECT_NAME} PUBLIC
         Graphics.ixx
 )
 
+find_package(Threads REQUIRED)
+find_package(magic_enum CONFIG REQUIRED)
+find_package(raylib CONFIG REQUIRED)
+
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         awen-core
         magic_enum::magic_enum
+        Threads::Threads
         raylib
 )
+
+if(NOT ANDROID)
+    add_subdirectory(test)
+endif()
 
 if(EMSCRIPTEN)
     target_link_options(${PROJECT_NAME}
@@ -47,4 +53,18 @@ else()
         PUBLIC
             glfw
     )
+
+    if(MSVC)
+        target_link_options(${PROJECT_NAME}
+            PUBLIC
+                $<$<CONFIG:Debug>:/NODEFAULTLIB:MSVCRT>
+        )
+
+        target_link_libraries(${PROJECT_NAME}
+            PUBLIC
+                winmm
+        )
+    endif()
 endif()
+
+

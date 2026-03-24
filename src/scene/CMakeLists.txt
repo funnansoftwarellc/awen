@@ -7,7 +7,17 @@ target_sources(${PROJECT_NAME} PUBLIC
         NodeId.ixx
         NodePool.ixx
         HierarchyPool.ixx
+        Transform.ixx
+        TextureId.ixx
+        TextureCache.ixx
+        SceneNodes.ixx
+        TraversalPass.ixx
         Scene.ixx
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        awen-graphics
 )
 
 if(NOT ANDROID)
