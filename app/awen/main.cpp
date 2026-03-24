@@ -227,7 +227,6 @@ auto main() -> int
     GameState state{
         .left_pad = {.x = paddle_offset, .y = (sh0 * half) - (paddle_height * half), .score = 0},
         .right_pad = {.x = sw0 - paddle_offset - paddle_width, .y = (sh0 * half) - (paddle_height * half), .score = 0},
-        .ball = {},
         .p2_ai = true,
     };
 
