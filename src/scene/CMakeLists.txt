@@ -9,4 +9,6 @@ target_sources(${PROJECT_NAME} PUBLIC
         Scene.ixx
 )
 
-add_subdirectory(test)
+if(NOT ANDROID)
+    add_subdirectory(test)
+endif()

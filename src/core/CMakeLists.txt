@@ -11,4 +11,6 @@ target_sources(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 
-add_subdirectory(test)
+if(NOT ANDROID)
+    add_subdirectory(test)
+endif()
