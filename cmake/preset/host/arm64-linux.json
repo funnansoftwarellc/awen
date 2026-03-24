@@ -1,0 +1,17 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "host-arm64-linux",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "VCPKG_HOST_TRIPLET": "arm64-linux-release"
+            }
+        }
+    ]
+}

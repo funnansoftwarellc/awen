@@ -41,7 +41,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - preset: wasm32-emscripten-release
+          - preset: x64-linux-wasm-release
             target: install
 
     container:
