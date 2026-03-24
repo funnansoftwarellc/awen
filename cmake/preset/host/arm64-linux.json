@@ -1,0 +1,18 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "host-arm64-linux",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "VCPKG_HOST_TRIPLET": "arm64-linux-release",
+                "VCPKG_INSTALL_OPTIONS": "--x-buildtrees-root=/tmp/vcpkg-buildtrees;--x-packages-root=/tmp/vcpkg-packages"
+            }
+        }
+    ]
+}

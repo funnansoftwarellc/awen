@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Build essentials and vcpkg dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl git cmake ninja-build pkg-config python3 zip unzip tar clang openjdk-17-jdk \
+    ca-certificates curl git cmake make ninja-build pkg-config python3 zip unzip tar clang openjdk-17-jdk \
     # emulator runtime dependencies
     libpulse0 libgl1 libnss3 libxcomposite1 libxcursor1 libxi6 libxtst6 \
     # adb over USB

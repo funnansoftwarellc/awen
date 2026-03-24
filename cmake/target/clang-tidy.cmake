@@ -22,11 +22,16 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
 
         if(CLANG_TIDY_DIFF)
             set(CLANG_TIDY_DIFF_SCRIPT "${CMAKE_BINARY_DIR}/run-clang-tidy-diff.sh")
+            if(APPLE)
+                set(CLANG_TIDY_DIFF_IREGEX ".*\\.(cpp|cc|cxx|c|h|hpp|m|mm|ixx)")
+            else()
+                set(CLANG_TIDY_DIFF_IREGEX ".*\\.(cpp|cc|cxx|c|h|hpp|ixx)")
+            endif()
             file(WRITE "${CLANG_TIDY_DIFF_SCRIPT}"
                 "#!/bin/bash\n"
                 "set -e\n"
                 "git config --global --add safe.directory \"${CMAKE_SOURCE_DIR}\" 2>/dev/null || true\n"
-                "git diff origin/main | \"${CLANG_TIDY_DIFF}\" -p1 -path \"${CMAKE_BINARY_DIR}\" -j ${NPROC}\n"
+                "git diff origin/main | \"${CLANG_TIDY_DIFF}\" -p1 -path \"${CMAKE_BINARY_DIR}\" -j ${NPROC} -iregex \"${CLANG_TIDY_DIFF_IREGEX}\"\n"
             )
 
             add_custom_target(clang-tidy-diff
