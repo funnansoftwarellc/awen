@@ -49,7 +49,7 @@ export namespace awn::graphics
     /// @brief Draw command that renders a string of text using the default font.
     struct DrawText
     {
-        std::string text{};
+        std::string text;
         int x{};
         int y{};
         int font_size{};

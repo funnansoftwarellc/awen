@@ -41,8 +41,8 @@ export namespace awn::scene
             data_.emplace_back();
 
             // Generation 1 is the first live allocation for a new slot.
-            generations_.push_back(1u);
-            return NodeId{.index = index, .generation = 1u};
+            generations_.push_back(1U);
+            return NodeId{.index = index, .generation = 1U};
         }
 
         /// @brief Frees the slot identified by id.
@@ -93,13 +93,13 @@ export namespace awn::scene
         /// @brief Calls fn(NodeId, T&) for every live slot in allocation order.
         /// @param fn Callable invoked with the NodeId and a mutable reference to each live value.
         template <typename F>
-        auto for_each(F&& fn) -> void
+        auto for_each(const F& fn) -> void
         {
             const auto count = static_cast<uint32_t>(data_.size());
             for (auto i = uint32_t{0}; i < count; ++i)
             {
                 // An odd generation indicates a live slot.
-                if (generations_[i] & 1u)
+                if (generations_[i] & 1U)
                 {
                     fn(NodeId{.index = i, .generation = generations_[i]}, data_[i]);
                 }
@@ -109,13 +109,13 @@ export namespace awn::scene
         /// @brief Calls fn(NodeId, const T&) for every live slot in allocation order.
         /// @param fn Callable invoked with the NodeId and a const reference to each live value.
         template <typename F>
-        auto for_each(F&& fn) const -> void
+        auto for_each(const F& fn) const -> void
         {
             const auto count = static_cast<uint32_t>(data_.size());
             for (auto i = uint32_t{0}; i < count; ++i)
             {
                 // An odd generation indicates a live slot.
-                if (generations_[i] & 1u)
+                if (generations_[i] & 1U)
                 {
                     fn(NodeId{.index = i, .generation = generations_[i]}, data_[i]);
                 }

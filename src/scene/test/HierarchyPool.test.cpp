@@ -64,7 +64,7 @@ TEST(HierarchyPool, DepthFirstVisitsNodesInOrder)
     auto visited = std::vector<NodeId>{};
     pool.depth_first([&](NodeId id) { visited.push_back(id); });
 
-    ASSERT_EQ(visited.size(), 4u);
+    ASSERT_EQ(visited.size(), 4U);
     EXPECT_EQ(visited[0], a);
     EXPECT_EQ(visited[1], a1);
     EXPECT_EQ(visited[2], a2);
@@ -82,7 +82,7 @@ TEST(HierarchyPool, SiblingsOrderedByLocalZ)
     auto visited = std::vector<NodeId>{};
     pool.depth_first([&](NodeId id) { visited.push_back(id); });
 
-    ASSERT_EQ(visited.size(), 3u);
+    ASSERT_EQ(visited.size(), 3U);
     EXPECT_EQ(visited[0], low);
     EXPECT_EQ(visited[1], mid);
     EXPECT_EQ(visited[2], high);
@@ -98,7 +98,7 @@ TEST(HierarchyPool, FreedNodeNotVisited)
     auto visited = std::vector<NodeId>{};
     pool.depth_first([&](NodeId id) { visited.push_back(id); });
 
-    ASSERT_EQ(visited.size(), 1u);
+    ASSERT_EQ(visited.size(), 1U);
     EXPECT_EQ(visited[0], b);
 }
 
@@ -114,7 +114,7 @@ TEST(HierarchyPool, FreedNodeDetachedFromSiblingList)
     auto visited = std::vector<NodeId>{};
     pool.depth_first([&](NodeId id) { visited.push_back(id); });
 
-    ASSERT_EQ(visited.size(), 2u);
+    ASSERT_EQ(visited.size(), 2U);
     EXPECT_EQ(visited[0], a);
     EXPECT_EQ(visited[1], c);
 }
@@ -132,6 +132,6 @@ TEST(HierarchyPool, DepthFirstFromSubtree)
     auto visited = std::vector<NodeId>{};
     pool.depth_first_from(a, [&](NodeId id) { visited.push_back(id); });
 
-    ASSERT_EQ(visited.size(), 1u);
+    ASSERT_EQ(visited.size(), 1U);
     EXPECT_EQ(visited[0], a1);
 }

@@ -27,10 +27,13 @@
 - Pointer aligned left: `int* ptr`, not `int *ptr`
 - Always use braces `{}` on `if`/`else`/`for`/`while` bodies, even single-line — no short statements on a single line
 - Sort `#include` directives; separate definition blocks with a blank line
+- Always add a blank line after a closing `}` before the next line of code, unless that next line is itself a closing `}` or `}`-else chain
+- Always add a blank line before `if`, `for`, and `while` statements when they are preceded by a non-blank line of code
 
 ### Structs & Initialization
 - Use designated initializers for aggregate initialization, including inline struct literals passed as arguments (e.g., `Vector2{.x = 1.0F, .y = 2.0F}`)
-- Zero-initialize members with `{}` in struct definitions (e.g., `float x{};`)
+- Zero-initialize POD members (numeric types, enums, pointers, bools) with `{}` in struct definitions (e.g., `float x{};`)
+- Do **not** add `{}` to members of non-trivial class types (e.g., `std::string text;`, `std::vector<T> items;`) — they have their own default constructors and an empty initializer is redundant (`readability-redundant-member-init`)
 - Multi-line initializer lists must have a trailing comma after the last element; single-line lists must not
 
 ### Literals
@@ -45,6 +48,8 @@
 - Keep functions small and focused on a single responsibility
 - Pass large objects by reference or const-reference; avoid unnecessary copies
 - Prefer early returns and guard clauses over deeply nested branches
+- For template callable parameters (`F`): use `const F&` when the callable is invoked more than once (including across recursive calls); only use `F&&` when the callable will be forwarded exactly once with `std::forward<F>(f)` (`cppcoreguidelines-missing-std-forward`)
+- Prefer iterative tree traversal over recursive helpers to avoid `misc-no-recursion` warnings and unbounded call-stack growth
 
 ## Build & Project
 - Build system: CMake with Ninja, presets defined in `CMakePresets.json`
