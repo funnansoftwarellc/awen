@@ -13,6 +13,12 @@
 - Use trailing return types on function definitions (e.g., `auto foo() -> int`)
 - Use `const` wherever a variable is not mutated
 
+### Comments
+- Never place a comment on the same line as code — always put comments on their own line above the code they describe
+- Always add a blank line before a comment block when it is preceded by a non-blank line of code
+- Comments must be complete sentences (start with a capital letter, end with a period)
+- Use a paragraph comment above a block of related statements rather than commenting each line individually
+
 ### Formatting (from `.clang-format`)
 - Brace style: Allman — opening braces on their own line
 - Indent width: 4 spaces, no tabs

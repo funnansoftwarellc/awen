@@ -1,15 +1,13 @@
-project(awen-core)
-
-find_package(Threads REQUIRED)
+project(awen-scene)
 
 add_library(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES FILES
-        Awen.ixx
+        NodeId.ixx
+        NodePool.ixx
+        Scene.ixx
 )
-
-target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 
 if(NOT ANDROID)
     add_subdirectory(test)
