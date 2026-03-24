@@ -23,12 +23,13 @@ TEST(NodePool, AllocateReturnsValidId)
 
 TEST(NodePool, GetReturnsDataAfterAllocate)
 {
+    constexpr auto expected_value = 42;
     auto pool = NodePool<SimpleData>{};
     const auto id = pool.allocate();
     auto* data = pool.get(id);
     ASSERT_NE(data, nullptr);
-    data->value = 42;
-    EXPECT_EQ(pool.get(id)->value, 42);
+    data->value = expected_value;
+    EXPECT_EQ(pool.get(id)->value, expected_value);
 }
 
 TEST(NodePool, GetReturnsNullAfterFree)

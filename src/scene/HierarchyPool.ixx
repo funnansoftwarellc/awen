@@ -96,7 +96,7 @@ export namespace awn::scene
         /// @param visitor Callable invoked with the NodeId of each visited node.
         /// @note Siblings are visited in ascending local_z order. The root sentinel is not visited.
         template <typename F>
-        auto depth_first(F&& visitor) const -> void
+        auto depth_first(const F& visitor) const -> void
         {
             visit_children(root_, visitor);
         }
@@ -105,14 +105,14 @@ export namespace awn::scene
         /// @param start NodeId of the subtree root. Its own id is not passed to visitor.
         /// @param visitor Callable invoked with the NodeId of each visited node.
         template <typename F>
-        auto depth_first_from(NodeId start, F&& visitor) const -> void
+        auto depth_first_from(NodeId start, const F& visitor) const -> void
         {
             visit_children(start, visitor);
         }
 
     private:
         /// @brief Inserts child into parent's child list, maintaining ascending local_z order.
-        auto insert_child(NodeId parent_id, NodeId child_id) -> void
+        auto insert_child(NodeId parent_id, NodeId child_id) -> void // NOLINT(bugprone-easily-swappable-parameters)
         {
             auto* parent_node = pool_.get(parent_id);
             auto* child_node = pool_.get(child_id);
@@ -185,29 +185,50 @@ export namespace awn::scene
         }
 
         template <typename F>
-        auto visit_children(NodeId parent_id, F&& visitor) const -> void
+        auto visit_children(NodeId parent_id, const F& visitor) const -> void
         {
-            const auto* parent_node = pool_.get(parent_id);
-            if (parent_node == nullptr)
-            {
-                return;
-            }
+            // Iterative depth-first traversal. The stack holds nodes yet to be visited.
+            // Children are appended in sibling order then the newly added slice is reversed
+            // in-place so the first child (lowest local_z) is always on top of the stack.
 
-            // Siblings are already sorted by local_z at insert time, so a forward
-            // walk produces the correct depth-first draw order.
-            auto curr = parent_node->first_child;
-            while (curr.is_valid())
+            // Pushes all siblings reachable from node->first_child onto the stack,
+            // then reverses the newly added slice so the lowest-z sibling is on top.
+            const auto push_children = [this](std::vector<NodeId>& stack, NodeId id)
             {
-                const auto* curr_node = pool_.get(curr);
-                if (curr_node == nullptr)
+                const auto* node = pool_.get(id);
+
+                if (node == nullptr)
                 {
-                    break;
+                    return;
                 }
 
-                visitor(curr);
-                visit_children(curr, visitor);
+                const auto base = static_cast<std::ptrdiff_t>(std::size(stack));
 
-                curr = curr_node->next_sibling;
+                for (auto curr = node->first_child; curr.is_valid();)
+                {
+                    const auto* child = pool_.get(curr);
+                    if (child == nullptr)
+                    {
+                        break;
+                    }
+                    stack.push_back(curr);
+                    curr = child->next_sibling;
+                }
+
+                std::ranges::reverse(std::next(std::begin(stack), base), std::end(stack));
+            };
+
+            auto stack = std::vector<NodeId>{};
+            push_children(stack, parent_id);
+
+            while (!std::empty(stack))
+            {
+                const auto id = stack.back();
+                stack.pop_back();
+
+                visitor(id);
+
+                push_children(stack, id);
             }
         }
 
