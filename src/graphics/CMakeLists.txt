@@ -12,6 +12,7 @@ target_sources(${PROJECT_NAME} PUBLIC
         Graphics.ixx
 )
 
+find_package(Threads REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(raylib CONFIG REQUIRED)
 
@@ -19,6 +20,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         awen-core
         magic_enum::magic_enum
+        Threads::Threads
         raylib
 )
 

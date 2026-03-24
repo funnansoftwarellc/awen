@@ -15,14 +15,9 @@ target_sources(${PROJECT_NAME} PUBLIC
         Scene.ixx
 )
 
-find_package(Threads REQUIRED)
-find_package(raylib CONFIG REQUIRED)
-
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         awen-graphics
-        Threads::Threads
-        raylib
 )
 
 if(NOT ANDROID)
