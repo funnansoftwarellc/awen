@@ -25,6 +25,8 @@ namespace
     constexpr auto ai_speed_ratio = 0.85F;
     constexpr auto ball_launch_angle = 30;
     constexpr auto target_fps = 60;
+    constexpr auto dash_width = 4.0F;
+    constexpr auto dash_center_offset = 2.0F;
     constexpr auto dash_gap = 20;
     constexpr auto dash_height = 10;
     constexpr auto score_x_left = 70;
@@ -50,6 +52,12 @@ namespace
         float vy{};
     };
 
+    struct ScreenSize
+    {
+        float w{};
+        float h{};
+    };
+
     struct GameState
     {
         Paddle left_pad;
@@ -70,10 +78,10 @@ namespace
         p.y = std::min(screen_h - paddle_height, p.y);
     }
 
-    auto reset_ball(Ball& ball, int direction, float screen_w, float screen_h) -> void
+    auto reset_ball(Ball& ball, int direction, ScreenSize screen) -> void
     {
-        ball.x = screen_w * half;
-        ball.y = screen_h * half;
+        ball.x = screen.w * half;
+        ball.y = screen.h * half;
         const auto angle = static_cast<float>(random_value(-ball_launch_angle, ball_launch_angle)) * deg2rad;
         ball.vx = static_cast<float>(direction) * ball_init_speed * std::cos(angle);
         ball.vy = ball_init_speed * std::sin(angle);
@@ -85,11 +93,11 @@ namespace
         return std::min(s, ball_max_speed);
     }
 
-    auto update_ai(Paddle& paddle, const Ball& ball, float screen_h, float dt) -> void
+    auto update_ai(Paddle& paddle, const Ball& ball, ScreenSize screen, float delta_time) -> void
     {
         const auto center = paddle.y + (paddle_height * half);
         const auto diff = ball.y - center;
-        const auto move = paddle_speed * ai_speed_ratio * dt;
+        const auto move = paddle_speed * ai_speed_ratio * delta_time;
         if (std::abs(diff) < move)
         {
             paddle.y += diff;
@@ -98,10 +106,10 @@ namespace
         {
             paddle.y += (diff > 0.0F) ? move : -move;
         }
-        clamp_paddle(paddle, screen_h);
+        clamp_paddle(paddle, screen.h);
     }
 
-    auto update_physics(GameState& state, float screen_w, float screen_h, float dt) -> void
+    auto update_physics(GameState& state, ScreenSize screen, float dt) -> void
     {
         state.ball.x += state.ball.vx * dt;
         state.ball.y += state.ball.vy * dt;
@@ -113,9 +121,9 @@ namespace
             state.ball.vy = std::abs(state.ball.vy);
         }
         // Wall collision bottom
-        if (state.ball.y + ball_radius > screen_h)
+        if (state.ball.y + ball_radius > screen.h)
         {
-            state.ball.y = screen_h - ball_radius;
+            state.ball.y = screen.h - ball_radius;
             state.ball.vy = -std::abs(state.ball.vy);
         }
 
@@ -144,126 +152,134 @@ namespace
         }
 
         // Scoring
-        if (state.ball.x - ball_radius > screen_w)
+        if (state.ball.x - ball_radius > screen.w)
         {
             ++state.left_pad.score;
-            reset_ball(state.ball, -1, screen_w, screen_h);
+            reset_ball(state.ball, -1, screen);
         }
         if (state.ball.x + ball_radius < 0.0F)
         {
             ++state.right_pad.score;
-            reset_ball(state.ball, 1, screen_w, screen_h);
+            reset_ball(state.ball, 1, screen);
         }
     }
 }
 
 auto main() -> int
 {
-    using namespace awn::graphics;
-
-    auto window = Window{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable}};
-    window.set_target_fps(target_fps);
-
-    const auto sw0 = static_cast<float>(init_width);
-    const auto sh0 = static_cast<float>(init_height);
-
-    auto state = GameState{
-        .left_pad = {.x = paddle_offset, .y = (sh0 * half) - (paddle_height * half), .score = 0},
-        .right_pad = {.x = sw0 - paddle_offset - paddle_width, .y = (sh0 * half) - (paddle_height * half), .score = 0},
-        .ball = {},
-        .p2_ai = true,
-    };
-
-    reset_ball(state.ball, 1, sw0, sh0);
-
-    window.on_event(
-        [&state](const EventKeyboard& ev)
-        {
-            if (ev.key == EventKeyboard::Key::space && ev.type == EventKeyboard::Type::pressed)
-            {
-                state.p2_ai = !state.p2_ai;
-            }
-        });
-
-    auto renderer = Renderer{};
-
-    while (window.is_open())
+    try
     {
-        window.poll_events();
+        using namespace awn::graphics;
 
-        const auto sw = static_cast<float>(window.get_screen_width());
-        const auto sh = static_cast<float>(window.get_screen_height());
-        const auto dt = window.get_frame_time();
+        auto window = Window{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable}};
+        Window::set_target_fps(target_fps);
 
-        state.right_pad.x = sw - paddle_offset - paddle_width;
+        const auto sw0 = static_cast<float>(init_width);
+        const auto sh0 = static_cast<float>(init_height);
 
-        // Player 1 input
-        if (window.is_key_down(EventKeyboard::Key::w))
-        {
-            state.left_pad.y -= paddle_speed * dt;
-        }
-        if (window.is_key_down(EventKeyboard::Key::s))
-        {
-            state.left_pad.y += paddle_speed * dt;
-        }
-        clamp_paddle(state.left_pad, sh);
+        auto state = GameState{
+            .left_pad = {.x = paddle_offset, .y = (sh0 * half) - (paddle_height * half), .score = 0},
+            .right_pad = {.x = sw0 - paddle_offset - paddle_width, .y = (sh0 * half) - (paddle_height * half), .score = 0},
+            .ball = {},
+            .p2_ai = true,
+        };
 
-        // Player 2 input
-        if (state.p2_ai)
-        {
-            update_ai(state.right_pad, state.ball, sh, dt);
-        }
-        else
-        {
-            if (window.is_key_down(EventKeyboard::Key::up))
+        reset_ball(state.ball, 1, ScreenSize{.w = sw0, .h = sh0});
+
+        window.on_event(
+            [&state](const EventKeyboard& ev)
             {
-                state.right_pad.y -= paddle_speed * dt;
-            }
-            if (window.is_key_down(EventKeyboard::Key::down))
-            {
-                state.right_pad.y += paddle_speed * dt;
-            }
-            clamp_paddle(state.right_pad, sh);
-        }
+                if (ev.key == EventKeyboard::Key::space && ev.type == EventKeyboard::Type::pressed)
+                {
+                    state.p2_ai = !state.p2_ai;
+                }
+            });
 
-        update_physics(state, sw, sh, dt);
-
-        // Draw
-        renderer.begin();
-        renderer.clear(colors::black);
-
-        const auto screen_w = window.get_screen_width();
-        const auto screen_h = window.get_screen_height();
-
-        // Dashed center line
-        for (auto y = 0; y < screen_h; y += dash_gap)
+        while (Window::is_open())
         {
-            renderer.draw_rect(static_cast<float>((screen_w / 2) - 2), static_cast<float>(y), 4.0F, static_cast<float>(dash_height),
-                               colors::dark_gray);
+            window.poll_events();
+
+            const auto sw = static_cast<float>(Window::get_screen_width());
+            const auto sh = static_cast<float>(Window::get_screen_height());
+            const auto dt = Window::get_frame_time();
+            const auto screen = ScreenSize{.w = sw, .h = sh};
+
+            state.right_pad.x = sw - paddle_offset - paddle_width;
+
+            // Player 1 input
+            if (Window::is_key_down(EventKeyboard::Key::w))
+            {
+                state.left_pad.y -= paddle_speed * dt;
+            }
+            if (Window::is_key_down(EventKeyboard::Key::s))
+            {
+                state.left_pad.y += paddle_speed * dt;
+            }
+            clamp_paddle(state.left_pad, sh);
+
+            // Player 2 input
+            if (state.p2_ai)
+            {
+                update_ai(state.right_pad, state.ball, screen, dt);
+            }
+            else
+            {
+                if (Window::is_key_down(EventKeyboard::Key::up))
+                {
+                    state.right_pad.y -= paddle_speed * dt;
+                }
+                if (Window::is_key_down(EventKeyboard::Key::down))
+                {
+                    state.right_pad.y += paddle_speed * dt;
+                }
+                clamp_paddle(state.right_pad, sh);
+            }
+
+            update_physics(state, screen, dt);
+
+            // Draw
+            Renderer::begin();
+            Renderer::clear(colors::black);
+
+            const auto screen_w = static_cast<int>(screen.w);
+            const auto half_w = screen.w * half;
+            const auto screen_h_i = static_cast<int>(screen.h);
+
+            // Dashed center line
+            for (auto y = 0; y < screen_h_i; y += dash_gap)
+            {
+                Renderer::draw_rect(half_w - dash_center_offset, static_cast<float>(y), dash_width, static_cast<float>(dash_height),
+                                    colors::dark_gray);
+            }
+
+            // Paddles
+            Renderer::draw_rect(state.left_pad.x, state.left_pad.y, paddle_width, paddle_height, colors::white);
+            Renderer::draw_rect(state.right_pad.x, state.right_pad.y, paddle_width, paddle_height, colors::white);
+
+            // Ball
+            Renderer::draw_circle(state.ball.x, state.ball.y, ball_radius, colors::white);
+
+            // Scores
+            const auto left_score_str = std::to_string(state.left_pad.score);
+            const auto right_score_str = std::to_string(state.right_pad.score);
+            Renderer::draw_text(left_score_str.c_str(), static_cast<int>(half_w) - score_x_left, score_y, score_font_size, colors::white);
+            Renderer::draw_text(right_score_str.c_str(),
+                                static_cast<int>(half_w) + score_x_left - Renderer::measure_text(right_score_str.c_str(), score_font_size), score_y,
+                                score_font_size, colors::white);
+
+            // Hints
+            Renderer::draw_text("W / S", hint_x, screen_h_i - hint_y_from_bottom, hint_font_size, colors::dark_gray);
+            const auto* p2_text = state.p2_ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
+            Renderer::draw_text(p2_text, screen_w - Renderer::measure_text(p2_text, hint_font_size) - hint_x, screen_h_i - hint_y_from_bottom,
+                                hint_font_size, colors::dark_gray);
+
+            Renderer::end();
         }
 
-        // Paddles
-        renderer.draw_rect(state.left_pad.x, state.left_pad.y, paddle_width, paddle_height, colors::white);
-        renderer.draw_rect(state.right_pad.x, state.right_pad.y, paddle_width, paddle_height, colors::white);
-
-        // Ball
-        renderer.draw_circle(state.ball.x, state.ball.y, ball_radius, colors::white);
-
-        // Scores
-        const auto left_score_str = std::to_string(state.left_pad.score);
-        const auto right_score_str = std::to_string(state.right_pad.score);
-        renderer.draw_text(left_score_str.c_str(), (screen_w / 2) - score_x_left, score_y, score_font_size, colors::white);
-        renderer.draw_text(right_score_str.c_str(), (screen_w / 2) + score_x_left - renderer.measure_text(right_score_str.c_str(), score_font_size),
-                           score_y, score_font_size, colors::white);
-
-        // Hints
-        renderer.draw_text("W / S", hint_x, screen_h - hint_y_from_bottom, hint_font_size, colors::dark_gray);
-        const auto* p2_text = state.p2_ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
-        renderer.draw_text(p2_text, screen_w - renderer.measure_text(p2_text, hint_font_size) - hint_x, screen_h - hint_y_from_bottom, hint_font_size,
-                           colors::dark_gray);
-
-        renderer.end();
+        return EXIT_SUCCESS;
     }
-
-    return EXIT_SUCCESS;
+    catch (...)
+    {
+        return EXIT_FAILURE;
+    }
 }

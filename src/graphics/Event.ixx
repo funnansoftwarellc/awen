@@ -1,5 +1,6 @@
 module;
 
+#include <cstdint>
 #include <variant>
 
 #include <raylib.h>
@@ -10,7 +11,7 @@ export namespace awn::graphics
 {
     struct EventKeyboard
     {
-        enum class Key : int
+        enum class Key : std::uint16_t
         {
             null_key = KEY_NULL,
             back = KEY_BACK,
@@ -124,7 +125,7 @@ export namespace awn::graphics
             kb_menu = KEY_KB_MENU,
         };
 
-        enum class Type : int
+        enum class Type : std::uint8_t
         {
             pressed,
             released,
@@ -136,7 +137,7 @@ export namespace awn::graphics
 
     struct EventMouse
     {
-        enum class MouseButton : int
+        enum class MouseButton : std::uint8_t
         {
             left = MOUSE_BUTTON_LEFT,
             right = MOUSE_BUTTON_RIGHT,
@@ -147,7 +148,7 @@ export namespace awn::graphics
             back = MOUSE_BUTTON_BACK,
         };
 
-        enum class Type : int
+        enum class Type : std::uint8_t
         {
             pressed,
             released,
@@ -165,7 +166,7 @@ export namespace awn::graphics
 
     struct EventTouch
     {
-        enum class Type : int
+        enum class Type : std::uint8_t
         {
             pressed,
             released,
@@ -180,7 +181,7 @@ export namespace awn::graphics
 
     struct EventJoystick
     {
-        enum class Button : int
+        enum class Button : std::uint8_t
         {
             unknown = GAMEPAD_BUTTON_UNKNOWN,
             left_face_up = GAMEPAD_BUTTON_LEFT_FACE_UP,
@@ -202,7 +203,7 @@ export namespace awn::graphics
             right_thumb = GAMEPAD_BUTTON_RIGHT_THUMB,
         };
 
-        enum class Type : int
+        enum class Type : std::uint8_t
         {
             pressed,
             released,

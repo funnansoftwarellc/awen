@@ -1,6 +1,7 @@
 module;
 
 #include <cstdint>
+#include <limits>
 
 export module awen.graphics.color;
 
@@ -11,7 +12,7 @@ export namespace awn::graphics
         std::uint8_t r{};
         std::uint8_t g{};
         std::uint8_t b{};
-        std::uint8_t a{255};
+        std::uint8_t a{std::numeric_limits<std::uint8_t>::max()};
     };
 
     namespace colors

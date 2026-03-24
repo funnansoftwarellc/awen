@@ -59,42 +59,42 @@ export namespace awn::graphics
         Window(Window&&) = delete;
         auto operator=(Window&&) -> Window& = delete;
 
-        [[nodiscard]] auto is_open() const -> bool
+        [[nodiscard]] static auto is_open() -> bool
         {
             return !WindowShouldClose();
         }
 
-        auto set_target_fps(int fps) -> void
+        static auto set_target_fps(int fps) -> void
         {
             SetTargetFPS(fps);
         }
 
-        [[nodiscard]] auto get_frame_time() const -> float
+        [[nodiscard]] static auto get_frame_time() -> float
         {
             return GetFrameTime();
         }
 
-        [[nodiscard]] auto get_screen_width() const -> int
+        [[nodiscard]] static auto get_screen_width() -> int
         {
             return GetScreenWidth();
         }
 
-        [[nodiscard]] auto get_screen_height() const -> int
+        [[nodiscard]] static auto get_screen_height() -> int
         {
             return GetScreenHeight();
         }
 
-        [[nodiscard]] auto is_key_down(EventKeyboard::Key key) const -> bool
+        [[nodiscard]] static auto is_key_down(EventKeyboard::Key key) -> bool
         {
             return IsKeyDown(static_cast<int>(key));
         }
 
-        [[nodiscard]] auto is_key_pressed(EventKeyboard::Key key) const -> bool
+        [[nodiscard]] static auto is_key_pressed(EventKeyboard::Key key) -> bool
         {
             return IsKeyPressed(static_cast<int>(key));
         }
 
-        [[nodiscard]] auto is_key_released(EventKeyboard::Key key) const -> bool
+        [[nodiscard]] static auto is_key_released(EventKeyboard::Key key) -> bool
         {
             return IsKeyReleased(static_cast<int>(key));
         }
@@ -288,7 +288,7 @@ export namespace awn::graphics
                 const auto pos = GetTouchPosition(idx);
                 current.insert(id);
 
-                if (prev_touches_.find(id) == prev_touches_.end())
+                if (!prev_touches_.contains(id))
                 {
                     dispatch(EventTouch{.id = id, .type = EventTouch::Type::pressed, .x = pos.x, .y = pos.y});
                 }
@@ -300,7 +300,7 @@ export namespace awn::graphics
 
             for (const auto id : prev_touches_)
             {
-                if (current.find(id) == current.end())
+                if (!current.contains(id))
                 {
                     dispatch(EventTouch{.id = id, .type = EventTouch::Type::released});
                 }
