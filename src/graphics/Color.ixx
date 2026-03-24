@@ -1,5 +1,6 @@
 module;
 
+#include <compare>
 #include <cstdint>
 #include <limits>
 
@@ -13,6 +14,8 @@ export namespace awn::graphics
         std::uint8_t g{};
         std::uint8_t b{};
         std::uint8_t a{std::numeric_limits<std::uint8_t>::max()};
+
+        auto operator<=>(const Color&) const noexcept = default;
     };
 
     namespace colors

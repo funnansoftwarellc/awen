@@ -73,8 +73,33 @@ export namespace awn::graphics
     {
     };
 
+    /// @brief GPU texture descriptor embedded in a DrawSprite command.
+    ///
+    /// Contains only the fields the renderer needs to issue a draw call.
+    /// Populated by the scene traversal pass from a TextureCache lookup so that
+    /// the DrawList itself has no dependency on the TextureCache.
+    struct TextureHandle
+    {
+        unsigned int id{};
+        int width{};
+        int height{};
+        int mipmaps{};
+        int format{};
+    };
+
+    /// @brief Draw command that renders a textured rectangle.
+    struct DrawSprite
+    {
+        TextureHandle texture{};
+        float x{};
+        float y{};
+        float width{};
+        float height{};
+        Color tint{};
+    };
+
     /// @brief A single entry in a DrawList, holding one draw command of any supported type.
-    using DrawCommand = std::variant<DrawClear, DrawRect, DrawCircle, DrawLine, DrawText, DrawBeginScissor, DrawEndScissor>;
+    using DrawCommand = std::variant<DrawClear, DrawRect, DrawCircle, DrawLine, DrawText, DrawBeginScissor, DrawEndScissor, DrawSprite>;
 
     /// @brief An ordered list of draw commands consumed by Renderer::submit().
     ///

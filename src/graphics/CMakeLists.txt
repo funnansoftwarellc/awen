@@ -10,6 +10,10 @@ target_sources(${PROJECT_NAME} PUBLIC
         Event.ixx
         Color.ixx
         DrawList.ixx
+        TextureId.ixx
+        TextureCache.ixx
+        SceneNodes.ixx
+        TraversalPass.ixx
         Window.ixx
         Renderer.ixx
         Graphics.ixx
@@ -18,9 +22,14 @@ target_sources(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         awen-core
+        awen-scene
         magic_enum::magic_enum
         raylib
 )
+
+if(NOT ANDROID)
+    add_subdirectory(test)
+endif()
 
 if(EMSCRIPTEN)
     target_link_options(${PROJECT_NAME}

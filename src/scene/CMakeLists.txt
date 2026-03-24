@@ -7,6 +7,7 @@ target_sources(${PROJECT_NAME} PUBLIC
         NodeId.ixx
         NodePool.ixx
         HierarchyPool.ixx
+        Transform.ixx
         Scene.ixx
 )
 
