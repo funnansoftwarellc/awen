@@ -24,7 +24,7 @@ namespace awen
     auto GpuSurface::create(SDL_Window *window) -> std::unique_ptr<GpuSurface>
     {
         (void)window;
-        SDL_Log("Dawn/WebGPU GpuSurface backend is not yet implemented");
+        SDL_Log("Dawn/WebGPU GpuSurface backend is not yet implemented"); // NOLINT(cppcoreguidelines-pro-type-vararg)
         return nullptr;
     }
 
