@@ -6,6 +6,7 @@
     "homepage": "https://github.com/funnansoftwarellc/awen",
     "dependencies": [
         "gtest",
+        "magic-enum",
         "raylib"
     ]
 }
