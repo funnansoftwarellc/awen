@@ -5,7 +5,7 @@
 #include <random>
 #include <string>
 
-import awen.graphics;
+import awen.engine;
 
 namespace
 {
@@ -171,8 +171,8 @@ auto main() -> int
     {
         using namespace awn::graphics;
 
-        auto window = Window{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable}};
-        Window::set_target_fps(target_fps);
+        auto engine = awn::Engine{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable}};
+        awn::Engine::set_target_fps(target_fps);
 
         const auto sw0 = static_cast<float>(init_width);
         const auto sh0 = static_cast<float>(init_height);
@@ -186,7 +186,9 @@ auto main() -> int
 
         reset_ball(state.ball, 1, ScreenSize{.w = sw0, .h = sh0});
 
-        window.on_event(
+        auto scene = awn::scene::Scene{};
+
+        engine.on_event(
             [&state](const EventKeyboard& ev)
             {
                 if (ev.key == EventKeyboard::Key::space && ev.type == EventKeyboard::Type::pressed)
@@ -195,86 +197,87 @@ auto main() -> int
                 }
             });
 
-        while (Window::is_open())
-        {
-            window.poll_events();
+        engine.run(scene,
+                   [&state](float dt)
+                   {
+                       using namespace awn::graphics;
 
-            const auto sw = static_cast<float>(Window::get_screen_width());
-            const auto sh = static_cast<float>(Window::get_screen_height());
-            const auto dt = Window::get_frame_time();
-            const auto screen = ScreenSize{.w = sw, .h = sh};
+                       const auto sw = static_cast<float>(Window::get_screen_width());
+                       const auto sh = static_cast<float>(Window::get_screen_height());
+                       const auto screen = ScreenSize{.w = sw, .h = sh};
 
-            state.right_pad.x = sw - paddle_offset - paddle_width;
+                       state.right_pad.x = sw - paddle_offset - paddle_width;
 
-            // Player 1 input
-            if (Window::is_key_down(EventKeyboard::Key::w))
-            {
-                state.left_pad.y -= paddle_speed * dt;
-            }
-            if (Window::is_key_down(EventKeyboard::Key::s))
-            {
-                state.left_pad.y += paddle_speed * dt;
-            }
-            clamp_paddle(state.left_pad, sh);
+                       // Player 1 input
+                       if (Window::is_key_down(EventKeyboard::Key::w))
+                       {
+                           state.left_pad.y -= paddle_speed * dt;
+                       }
 
-            // Player 2 input
-            if (state.p2_ai)
-            {
-                update_ai(state.right_pad, state.ball, screen, dt);
-            }
-            else
-            {
-                if (Window::is_key_down(EventKeyboard::Key::up))
-                {
-                    state.right_pad.y -= paddle_speed * dt;
-                }
-                if (Window::is_key_down(EventKeyboard::Key::down))
-                {
-                    state.right_pad.y += paddle_speed * dt;
-                }
-                clamp_paddle(state.right_pad, sh);
-            }
+                       if (Window::is_key_down(EventKeyboard::Key::s))
+                       {
+                           state.left_pad.y += paddle_speed * dt;
+                       }
 
-            update_physics(state, screen, dt);
+                       clamp_paddle(state.left_pad, sh);
 
-            // Draw
-            Renderer::begin();
-            Renderer::clear(colors::black);
+                       // Player 2 input
+                       if (state.p2_ai)
+                       {
+                           update_ai(state.right_pad, state.ball, screen, dt);
+                       }
+                       else
+                       {
+                           if (Window::is_key_down(EventKeyboard::Key::up))
+                           {
+                               state.right_pad.y -= paddle_speed * dt;
+                           }
 
-            const auto screen_w = static_cast<int>(screen.w);
-            const auto half_w = screen.w * half;
-            const auto screen_h_i = static_cast<int>(screen.h);
+                           if (Window::is_key_down(EventKeyboard::Key::down))
+                           {
+                               state.right_pad.y += paddle_speed * dt;
+                           }
 
-            // Dashed center line
-            for (auto y = 0; y < screen_h_i; y += dash_gap)
-            {
-                Renderer::draw_rect(half_w - dash_center_offset, static_cast<float>(y), dash_width, static_cast<float>(dash_height),
-                                    colors::dark_gray);
-            }
+                           clamp_paddle(state.right_pad, sh);
+                       }
 
-            // Paddles
-            Renderer::draw_rect(state.left_pad.x, state.left_pad.y, paddle_width, paddle_height, colors::white);
-            Renderer::draw_rect(state.right_pad.x, state.right_pad.y, paddle_width, paddle_height, colors::white);
+                       update_physics(state, screen, dt);
 
-            // Ball
-            Renderer::draw_circle(state.ball.x, state.ball.y, ball_radius, colors::white);
+                       // Draw.
+                       Renderer::clear(colors::black);
 
-            // Scores
-            const auto left_score_str = std::to_string(state.left_pad.score);
-            const auto right_score_str = std::to_string(state.right_pad.score);
-            Renderer::draw_text(left_score_str.c_str(), static_cast<int>(half_w) - score_x_left, score_y, score_font_size, colors::white);
-            Renderer::draw_text(right_score_str.c_str(),
-                                static_cast<int>(half_w) + score_x_left - Renderer::measure_text(right_score_str.c_str(), score_font_size), score_y,
-                                score_font_size, colors::white);
+                       const auto screen_w = static_cast<int>(screen.w);
+                       const auto half_w = screen.w * half;
+                       const auto screen_h_i = static_cast<int>(screen.h);
 
-            // Hints
-            Renderer::draw_text("W / S", hint_x, screen_h_i - hint_y_from_bottom, hint_font_size, colors::dark_gray);
-            const auto* p2_text = state.p2_ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
-            Renderer::draw_text(p2_text, screen_w - Renderer::measure_text(p2_text, hint_font_size) - hint_x, screen_h_i - hint_y_from_bottom,
-                                hint_font_size, colors::dark_gray);
+                       // Dashed center line.
+                       for (auto y = 0; y < screen_h_i; y += dash_gap)
+                       {
+                           Renderer::draw_rect(half_w - dash_center_offset, static_cast<float>(y), dash_width, static_cast<float>(dash_height),
+                                               colors::dark_gray);
+                       }
 
-            Renderer::end();
-        }
+                       // Paddles.
+                       Renderer::draw_rect(state.left_pad.x, state.left_pad.y, paddle_width, paddle_height, colors::white);
+                       Renderer::draw_rect(state.right_pad.x, state.right_pad.y, paddle_width, paddle_height, colors::white);
+
+                       // Ball.
+                       Renderer::draw_circle(state.ball.x, state.ball.y, ball_radius, colors::white);
+
+                       // Scores.
+                       const auto left_score_str = std::to_string(state.left_pad.score);
+                       const auto right_score_str = std::to_string(state.right_pad.score);
+                       Renderer::draw_text(left_score_str.c_str(), static_cast<int>(half_w) - score_x_left, score_y, score_font_size, colors::white);
+                       Renderer::draw_text(right_score_str.c_str(),
+                                           static_cast<int>(half_w) + score_x_left - Renderer::measure_text(right_score_str.c_str(), score_font_size),
+                                           score_y, score_font_size, colors::white);
+
+                       // Hints.
+                       Renderer::draw_text("W / S", hint_x, screen_h_i - hint_y_from_bottom, hint_font_size, colors::dark_gray);
+                       const auto* p2_text = state.p2_ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
+                       Renderer::draw_text(p2_text, screen_w - Renderer::measure_text(p2_text, hint_font_size) - hint_x,
+                                           screen_h_i - hint_y_from_bottom, hint_font_size, colors::dark_gray);
+                   });
 
         return EXIT_SUCCESS;
     }
