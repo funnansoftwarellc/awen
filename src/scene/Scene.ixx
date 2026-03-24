@@ -58,11 +58,13 @@ export namespace awn::scene
         /// @brief Sets the width and height of a RectNode or SpriteNode.
         /// @param width  New width in pixels.
         /// @param height New height in pixels.
-        auto set_size(float width, float height) const -> const NodeHandle<T>& requires(std::same_as<T, RectNode> || std::same_as<T, SpriteNode>);
+        auto set_size(float width, float height) const -> const NodeHandle<T>&
+            requires(std::same_as<T, RectNode> || std::same_as<T, SpriteNode>);
 
         /// @brief Sets the fill colour of a RectNode, or the text colour of a TextNode.
         /// @param color New colour value.
-        auto set_color(graphics::Color color) const -> const NodeHandle<T>& requires(std::same_as<T, RectNode> || std::same_as<T, TextNode>);
+        auto set_color(graphics::Color color) const -> const NodeHandle<T>&
+            requires(std::same_as<T, RectNode> || std::same_as<T, TextNode>);
 
         /// @brief Sets the TextureId on a SpriteNode.
         /// @param id TextureId returned by Scene::load_texture().
@@ -184,48 +186,50 @@ export namespace awn::scene
     }
 
     template <typename T>
-    auto NodeHandle<T>::set_size(float width, float height) const
-        -> const NodeHandle<T>& requires(std::same_as<T, RectNode> || std::same_as<T, SpriteNode>) {
-            if constexpr (std::same_as<T, RectNode>)
+    auto NodeHandle<T>::set_size(float width, float height) const -> const NodeHandle<T>&
+        requires(std::same_as<T, RectNode> || std::same_as<T, SpriteNode>)
+    {
+        if constexpr (std::same_as<T, RectNode>)
+        {
+            if (auto* r = scene_->rects_.get(id_); r != nullptr)
             {
-                if (auto* r = scene_->rects_.get(id_); r != nullptr)
-                {
-                    r->width = width;
-                    r->height = height;
-                }
+                r->width = width;
+                r->height = height;
             }
-            else
-            {
-                if (auto* s = scene_->sprites_.get(id_); s != nullptr)
-                {
-                    s->width = width;
-                    s->height = height;
-                }
-            }
-
-            return *this;
         }
+        else
+        {
+            if (auto* s = scene_->sprites_.get(id_); s != nullptr)
+            {
+                s->width = width;
+                s->height = height;
+            }
+        }
+
+        return *this;
+    }
 
     template <typename T>
-    auto NodeHandle<T>::set_color(graphics::Color color) const
-        -> const NodeHandle<T>& requires(std::same_as<T, RectNode> || std::same_as<T, TextNode>) {
-            if constexpr (std::same_as<T, RectNode>)
+    auto NodeHandle<T>::set_color(graphics::Color color) const -> const NodeHandle<T>&
+        requires(std::same_as<T, RectNode> || std::same_as<T, TextNode>)
+    {
+        if constexpr (std::same_as<T, RectNode>)
+        {
+            if (auto* r = scene_->rects_.get(id_); r != nullptr)
             {
-                if (auto* r = scene_->rects_.get(id_); r != nullptr)
-                {
-                    r->color = color;
-                }
+                r->color = color;
             }
-            else
-            {
-                if (auto* tn = scene_->texts_.get(id_); tn != nullptr)
-                {
-                    tn->color = color;
-                }
-            }
-
-            return *this;
         }
+        else
+        {
+            if (auto* tn = scene_->texts_.get(id_); tn != nullptr)
+            {
+                tn->color = color;
+            }
+        }
+
+        return *this;
+    }
 
     template <typename T>
     auto NodeHandle<T>::set_texture(TextureId id) const -> const NodeHandle<T>&
