@@ -28,6 +28,7 @@ export namespace awn::scene
     /// @param hierarchy    Scene hierarchy providing the depth-first traversal order.
     /// @param transforms   Per-node local (parent-relative) 2D positions.
     /// @param rect_nodes   Per-node filled-rectangle visual data.
+    /// @param circle_nodes Per-node filled-circle visual data.
     /// @param sprite_nodes Per-node sprite visual data.
     /// @param text_nodes   Per-node text label visual data.
     /// @param textures     Cache used to resolve SpriteNode TextureIds to GPU handles.
@@ -35,8 +36,8 @@ export namespace awn::scene
     /// @note The draw list is not cleared before appending; callers are responsible for
     ///       calling DrawList::clear() when starting a new frame.
     auto build_draw_list(const HierarchyPool& hierarchy, const NodePool<Transform>& transforms, const NodePool<RectNode>& rect_nodes,
-                         const NodePool<SpriteNode>& sprite_nodes, const NodePool<TextNode>& text_nodes, const TextureCache& textures,
-                         awn::graphics::DrawList& out) -> void
+                         const NodePool<CircleNode>& circle_nodes, const NodePool<SpriteNode>& sprite_nodes, const NodePool<TextNode>& text_nodes,
+                         const TextureCache& textures, awn::graphics::DrawList& out) -> void
     {
         // Maps NodeId.index -> WorldTransform for in-flight parent-to-child propagation.
         auto world_cache = std::unordered_map<uint32_t, WorldTransform>{};
@@ -89,6 +90,17 @@ export namespace awn::scene
                         .width = rect->width,
                         .height = rect->height,
                         .color = rect->color,
+                    });
+                }
+
+                // Emit a DrawCircle command if this node carries a CircleNode.
+                if (const auto* circle = circle_nodes.get(id); circle != nullptr)
+                {
+                    out.push(awn::graphics::DrawCircle{
+                        .center_x = wt.x,
+                        .center_y = wt.y,
+                        .radius = circle->radius,
+                        .color = circle->color,
                     });
                 }
 

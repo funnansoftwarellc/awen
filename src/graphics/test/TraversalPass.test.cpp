@@ -53,6 +53,7 @@ namespace
     {
         NodePool<Transform> transforms;
         NodePool<RectNode> rects;
+        NodePool<CircleNode> circles;
         NodePool<SpriteNode> sprites;
         NodePool<TextNode> texts;
         TextureCache textures;
@@ -65,7 +66,7 @@ TEST(TraversalPass, EmptyHierarchy_EmitsNoCommands)
     auto pools = Pools{};
     auto out = DrawList{};
 
-    build_draw_list(hier, pools.transforms, pools.rects, pools.sprites, pools.texts, pools.textures, out);
+    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     EXPECT_TRUE(out.empty());
 }
@@ -79,7 +80,7 @@ TEST(TraversalPass, NodeWithNoComponents_EmitsNoCommands)
     auto pools = Pools{};
     auto out = DrawList{};
 
-    build_draw_list(hier, pools.transforms, pools.rects, pools.sprites, pools.texts, pools.textures, out);
+    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     EXPECT_TRUE(out.empty());
 }
@@ -101,7 +102,7 @@ TEST(TraversalPass, RectNode_EmitsDrawRectAtNodePosition)
     rect->color = colors::red;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.sprites, pools.texts, pools.textures, out);
+    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     ASSERT_EQ(out.size(), 1U);
     const auto* cmd = std::get_if<DrawRect>(&out.commands()[0]);
@@ -134,7 +135,7 @@ TEST(TraversalPass, WorldTransform_PropagatesFromParentToChild)
     rect->height = 1.0F;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.sprites, pools.texts, pools.textures, out);
+    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     // Parent emits no command (no RectNode). Child emits one DrawRect at world position.
     ASSERT_EQ(out.size(), 1U);
@@ -164,7 +165,7 @@ TEST(TraversalPass, NodeWithNoTransform_InheritsParentWorldTransform)
     rect->height = 1.0F;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.sprites, pools.texts, pools.textures, out);
+    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     ASSERT_EQ(out.size(), 1U);
     const auto* cmd = std::get_if<DrawRect>(&out.commands()[0]);
@@ -190,7 +191,7 @@ TEST(TraversalPass, TextNode_EmitsDrawTextAtNodePosition)
     text->color = colors::white;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.sprites, pools.texts, pools.textures, out);
+    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     ASSERT_EQ(out.size(), 1U);
     const auto* cmd = std::get_if<DrawText>(&out.commands()[0]);
@@ -215,7 +216,7 @@ TEST(TraversalPass, SpriteNode_NullTextureId_EmitsNoCommand)
     sprite->height = 32.0F;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.sprites, pools.texts, pools.textures, out);
+    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     EXPECT_TRUE(out.empty());
 }
@@ -242,7 +243,7 @@ TEST(TraversalPass, CommandOrder_MatchesDepthFirstByZ)
     advance_to(pools.rects, a1)->color = colors::blue;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.sprites, pools.texts, pools.textures, out);
+    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     ASSERT_EQ(out.size(), 3U);
 

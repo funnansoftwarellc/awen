@@ -29,6 +29,13 @@ export namespace awn::scene
         Color tint{};
     };
 
+    /// @brief Visual data for a filled circle node.
+    struct CircleNode
+    {
+        float radius{};
+        Color color{};
+    };
+
     /// @brief Visual data for a text label node.
     struct TextNode
     {
