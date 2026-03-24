@@ -43,6 +43,13 @@ export namespace awn
             graphics::Window::set_target_fps(fps);
         }
 
+        /// @brief Sets the background colour used to clear each frame.
+        /// @param color Colour written as a DrawClear command before scene commands.
+        auto set_clear_color(graphics::Color color) -> void
+        {
+            clear_color_ = color;
+        }
+
         /// @brief Registers an event handler forwarded to the underlying Window.
         /// @param handler Callable accepting a single event struct parameter.
         template <typename F>
@@ -65,13 +72,14 @@ export namespace awn
                 window_.poll_events();
                 const auto dt = graphics::Window::get_frame_time();
 
-                graphics::Renderer::begin();
                 on_update(dt);
 
                 draw_list_.clear();
+                draw_list_.push(graphics::DrawClear{.color = clear_color_});
                 scene.build_draw_list(draw_list_);
-                graphics::Renderer::submit(draw_list_);
 
+                graphics::Renderer::begin();
+                graphics::Renderer::submit(draw_list_);
                 graphics::Renderer::end();
             }
         }
@@ -79,5 +87,6 @@ export namespace awn
     private:
         graphics::Window window_;
         graphics::DrawList draw_list_;
+        graphics::Color clear_color_{};
     };
 }
