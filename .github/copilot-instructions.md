@@ -24,7 +24,7 @@
 ### Structs & Initialization
 - Use designated initializers for aggregate initialization, including inline struct literals passed as arguments (e.g., `Vector2{.x = 1.0F, .y = 2.0F}`)
 - Zero-initialize members with `{}` in struct definitions (e.g., `float x{};`)
-- No trailing comma on the last member of a designated initializer list
+- Multi-line initializer lists must have a trailing comma after the last element; single-line lists must not
 
 ### Literals
 - Float literals use the `F` suffix (e.g., `0.0F`, `1.05F`)

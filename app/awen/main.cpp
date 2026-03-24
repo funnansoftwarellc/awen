@@ -230,10 +230,12 @@ auto main() -> int
     const auto sw0 = static_cast<float>(init_width);
     const auto sh0 = static_cast<float>(init_height);
 
-    GameState state{.left_pad = {.x = paddle_offset, .y = (sh0 * half) - (paddle_height * half), .score = 0},
-                    .right_pad = {.x = sw0 - paddle_offset - paddle_width, .y = (sh0 * half) - (paddle_height * half), .score = 0},
-                    .ball = {},
-                    .p2_ai = true};
+    GameState state{
+        .left_pad = {.x = paddle_offset, .y = (sh0 * half) - (paddle_height * half), .score = 0},
+        .right_pad = {.x = sw0 - paddle_offset - paddle_width, .y = (sh0 * half) - (paddle_height * half), .score = 0},
+        .ball = {},
+        .p2_ai = true,
+    };
 
     reset_ball(state.ball, 1, {.x = sw0, .y = sh0});
 
