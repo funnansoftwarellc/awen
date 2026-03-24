@@ -45,6 +45,33 @@ export namespace awn::scene
             return NodeId{.index = index, .generation = 1U};
         }
 
+        /// @brief Activates a slot at exactly @p index, padding any gap with null sentinel slots.
+        ///
+        /// All skipped indices are inserted with generation 0 and are never returned as alive.
+        /// This allows multiple pools to share a common index space driven by a single authoritative
+        /// allocator (e.g. HierarchyPool): call allocate_at(N) on each secondary pool with the
+        /// NodeId.index obtained from the primary pool to ensure all pools stay in step.
+        ///
+        /// @param index The slot index to activate.
+        /// @return A NodeId for the newly activated slot.
+        /// @note Only call with indices that have never been allocated. Activating a slot whose
+        ///       index is already alive produces undefined behaviour.
+        auto allocate_at(uint32_t index) -> NodeId
+        {
+            // Grow backing storage; padding slots use generation 0 (null sentinel, never alive).
+            while (static_cast<uint32_t>(data_.size()) <= index)
+            {
+                data_.emplace_back();
+                generations_.push_back(0U);
+            }
+
+            // Activate: generation 1 for a fresh slot, or odd(+1) for a recycled-then-reused slot.
+            auto& gen = generations_[index];
+            gen = (gen == 0U) ? 1U : gen + 1U;
+            data_[index] = T{};
+            return NodeId{.index = index, .generation = gen};
+        }
+
         /// @brief Frees the slot identified by id.
         /// @param id The NodeId of the slot to free. Stale or null ids are silently ignored.
         auto free(NodeId id) -> void
