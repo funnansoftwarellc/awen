@@ -1,5 +1,6 @@
 module;
 
+#include <algorithm>
 #include <variant>
 
 #include <raylib.h>
@@ -71,22 +72,31 @@ export namespace awn::graphics
         /// @param list The draw list to consume.
         static auto submit(const DrawList& list) -> void
         {
-            for (const auto& cmd : list.commands())
-            {
-                std::visit(
-                    awn::Overloaded{
-                        [](const DrawClear& c) { ClearBackground(to_raylib(c.color)); },
-                        [](const DrawRect& c)
-                        { DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, to_raylib(c.color)); },
-                        [](const DrawCircle& c) { DrawCircleV(::Vector2{.x = c.center_x, .y = c.center_y}, c.radius, to_raylib(c.color)); },
-                        [](const DrawLine& c)
-                        { DrawLineV(::Vector2{.x = c.start_x, .y = c.start_y}, ::Vector2{.x = c.end_x, .y = c.end_y}, to_raylib(c.color)); },
-                        [](const DrawText& c) { ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color)); },
-                        [](const DrawBeginScissor& c) { BeginScissorMode(c.x, c.y, c.width, c.height); },
-                        [](const DrawEndScissor&) { EndScissorMode(); },
-                    },
-                    cmd);
-            }
+            // Clang ADL bug (C++ modules, -std=c++23): a range-based for loop over
+            // std::vector<std::variant<...>> incorrectly leaks std::variant's operator==
+            // into ADL for the iterator comparison, causing a hard error at the implicit
+            // operator!= call for the loop sentinels. Using std::for_each with explicit
+            // std::begin/std::end iterators sidesteps the broken ADL lookup entirely.
+
+            const auto& command_list = list.commands();
+            std::for_each(
+                std::begin(command_list), std::end(command_list),
+                [](const DrawCommand& cmd)
+                {
+                    std::visit(
+                        awn::Overloaded{
+                            [](const DrawClear& c) { ClearBackground(to_raylib(c.color)); },
+                            [](const DrawRect& c)
+                            { DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, to_raylib(c.color)); },
+                            [](const DrawCircle& c) { DrawCircleV(::Vector2{.x = c.center_x, .y = c.center_y}, c.radius, to_raylib(c.color)); },
+                            [](const DrawLine& c)
+                            { DrawLineV(::Vector2{.x = c.start_x, .y = c.start_y}, ::Vector2{.x = c.end_x, .y = c.end_y}, to_raylib(c.color)); },
+                            [](const DrawText& c) { ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color)); },
+                            [](const DrawBeginScissor& c) { BeginScissorMode(c.x, c.y, c.width, c.height); },
+                            [](const DrawEndScissor&) { EndScissorMode(); },
+                        },
+                        cmd);
+                });
         }
     };
 }
