@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <tuple>
 #include <vector>
 
 import awen.scene;
@@ -123,8 +124,10 @@ TEST(HierarchyPool, DepthFirstFromSubtree)
     // depth_first_from must visit only the subtree rooted at the given node.
     auto pool = HierarchyPool{};
     const auto a = pool.allocate(pool.root());
-    const auto b = pool.allocate(pool.root());
     const auto a1 = pool.allocate(a);
+
+    // Allocate a sibling of a to confirm it is not visited by depth_first_from(a, …).
+    std::ignore = pool.allocate(pool.root());
 
     auto visited = std::vector<NodeId>{};
     pool.depth_first_from(a, [&](NodeId id) { visited.push_back(id); });
