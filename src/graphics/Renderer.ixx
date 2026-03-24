@@ -1,10 +1,14 @@
 module;
 
+#include <type_traits>
+#include <variant>
+
 #include <raylib.h>
 
 export module awen.graphics.renderer;
 
 export import awen.graphics.color;
+export import awen.graphics.draw_list;
 
 namespace
 {
@@ -46,7 +50,7 @@ export namespace awn::graphics
 
         static auto draw_text(const char* text, int x, int y, int font_size, const Color& color) -> void
         {
-            DrawText(text, x, y, font_size, to_raylib(color));
+            ::DrawText(text, x, y, font_size, to_raylib(color));
         }
 
         [[nodiscard]] static auto measure_text(const char* text, int font_size) -> int
@@ -57,6 +61,53 @@ export namespace awn::graphics
         static auto draw_line(float start_x, float start_y, float end_x, float end_y, const Color& color) -> void
         {
             DrawLineV(::Vector2{.x = start_x, .y = start_y}, ::Vector2{.x = end_x, .y = end_y}, to_raylib(color));
+        }
+
+        /// @brief Submits an ordered list of draw commands to the underlying renderer.
+        ///
+        /// Each command in @p list is dispatched to the corresponding raylib call.
+        /// This method must be called between Renderer::begin() and Renderer::end().
+        /// @param list The draw list to consume.
+        static auto submit(const DrawList& list) -> void
+        {
+            for (const auto& cmd : list.commands())
+            {
+                std::visit(
+                    [](const auto& c)
+                    {
+                        using T = std::decay_t<decltype(c)>;
+
+                        if constexpr (std::is_same_v<T, DrawClear>)
+                        {
+                            ClearBackground(to_raylib(c.color));
+                        }
+                        else if constexpr (std::is_same_v<T, DrawRect>)
+                        {
+                            DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, to_raylib(c.color));
+                        }
+                        else if constexpr (std::is_same_v<T, DrawCircle>)
+                        {
+                            DrawCircleV(::Vector2{.x = c.center_x, .y = c.center_y}, c.radius, to_raylib(c.color));
+                        }
+                        else if constexpr (std::is_same_v<T, DrawLine>)
+                        {
+                            DrawLineV(::Vector2{.x = c.start_x, .y = c.start_y}, ::Vector2{.x = c.end_x, .y = c.end_y}, to_raylib(c.color));
+                        }
+                        else if constexpr (std::is_same_v<T, DrawText>)
+                        {
+                            ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color));
+                        }
+                        else if constexpr (std::is_same_v<T, DrawBeginScissor>)
+                        {
+                            BeginScissorMode(c.x, c.y, c.width, c.height);
+                        }
+                        else if constexpr (std::is_same_v<T, DrawEndScissor>)
+                        {
+                            EndScissorMode();
+                        }
+                    },
+                    cmd);
+            }
         }
     };
 }

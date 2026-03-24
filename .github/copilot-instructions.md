@@ -37,6 +37,9 @@
 - Float literals use the `F` suffix (e.g., `0.0F`, `1.05F`)
 - Prefer `static_cast<float>(…)` over C-style casts
 
+### Standard Library Usage
+- Prefer non-member free functions over container member functions where equivalents exist: `std::size()`, `std::empty()`, `std::begin()`, `std::end()`, `std::data()`, etc.
+
 ### Functions
 - Keep functions small and focused on a single responsibility
 - Pass large objects by reference or const-reference; avoid unnecessary copies
