@@ -39,6 +39,7 @@
 
 ### Standard Library Usage
 - Prefer non-member free functions over container member functions where equivalents exist: `std::size()`, `std::empty()`, `std::begin()`, `std::end()`, `std::data()`, etc.
+- Always use `std::visit` with `awn::Overloaded` (from `awen.overloaded`) when dispatching `std::variant` alternatives — never use a single generic lambda with `if constexpr` chains.
 
 ### Functions
 - Keep functions small and focused on a single responsibility

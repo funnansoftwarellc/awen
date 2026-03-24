@@ -1,11 +1,12 @@
 module;
 
-#include <type_traits>
 #include <variant>
 
 #include <raylib.h>
 
 export module awen.graphics.renderer;
+
+import awen.overloaded;
 
 export import awen.graphics.color;
 export import awen.graphics.draw_list;
@@ -73,38 +74,16 @@ export namespace awn::graphics
             for (const auto& cmd : list.commands())
             {
                 std::visit(
-                    [](const auto& c)
-                    {
-                        using T = std::decay_t<decltype(c)>;
-
-                        if constexpr (std::is_same_v<T, DrawClear>)
-                        {
-                            ClearBackground(to_raylib(c.color));
-                        }
-                        else if constexpr (std::is_same_v<T, DrawRect>)
-                        {
-                            DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, to_raylib(c.color));
-                        }
-                        else if constexpr (std::is_same_v<T, DrawCircle>)
-                        {
-                            DrawCircleV(::Vector2{.x = c.center_x, .y = c.center_y}, c.radius, to_raylib(c.color));
-                        }
-                        else if constexpr (std::is_same_v<T, DrawLine>)
-                        {
-                            DrawLineV(::Vector2{.x = c.start_x, .y = c.start_y}, ::Vector2{.x = c.end_x, .y = c.end_y}, to_raylib(c.color));
-                        }
-                        else if constexpr (std::is_same_v<T, DrawText>)
-                        {
-                            ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color));
-                        }
-                        else if constexpr (std::is_same_v<T, DrawBeginScissor>)
-                        {
-                            BeginScissorMode(c.x, c.y, c.width, c.height);
-                        }
-                        else if constexpr (std::is_same_v<T, DrawEndScissor>)
-                        {
-                            EndScissorMode();
-                        }
+                    awn::Overloaded{
+                        [](const DrawClear& c) { ClearBackground(to_raylib(c.color)); },
+                        [](const DrawRect& c)
+                        { DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, to_raylib(c.color)); },
+                        [](const DrawCircle& c) { DrawCircleV(::Vector2{.x = c.center_x, .y = c.center_y}, c.radius, to_raylib(c.color)); },
+                        [](const DrawLine& c)
+                        { DrawLineV(::Vector2{.x = c.start_x, .y = c.start_y}, ::Vector2{.x = c.end_x, .y = c.end_y}, to_raylib(c.color)); },
+                        [](const DrawText& c) { ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color)); },
+                        [](const DrawBeginScissor& c) { BeginScissorMode(c.x, c.y, c.width, c.height); },
+                        [](const DrawEndScissor&) { EndScissorMode(); },
                     },
                     cmd);
             }

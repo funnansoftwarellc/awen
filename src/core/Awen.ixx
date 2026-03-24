@@ -2,6 +2,8 @@ module;
 
 export module awen;
 
+export import awen.overloaded;
+
 export namespace awn
 {
     class Awen
