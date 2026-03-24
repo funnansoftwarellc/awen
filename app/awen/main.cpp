@@ -199,10 +199,10 @@ namespace
             DrawRectangle((screen_w / 2) - 2, y, 4, dash_height, DARKGRAY);
         }
 
-        DrawRectangleV({state.left_pad.x, state.left_pad.y}, {paddle_width, paddle_height}, WHITE);
-        DrawRectangleV({state.right_pad.x, state.right_pad.y}, {paddle_width, paddle_height}, WHITE);
+        DrawRectangleV({.x = state.left_pad.x, .y = state.left_pad.y}, {.x = paddle_width, .y = paddle_height}, WHITE);
+        DrawRectangleV({.x = state.right_pad.x, .y = state.right_pad.y}, {.x = paddle_width, .y = paddle_height}, WHITE);
 
-        DrawCircleV({state.ball.x, state.ball.y}, ball_radius, WHITE);
+        DrawCircleV({.x = state.ball.x, .y = state.ball.y}, ball_radius, WHITE);
 
         DrawText(std::to_string(state.left_pad.score).c_str(), (screen_w / 2) - score_x_left, score_y, score_font_size, WHITE);
         DrawText(std::to_string(state.right_pad.score).c_str(), (screen_w / 2) + score_x_right, score_y, score_font_size, WHITE);
@@ -230,14 +230,12 @@ auto main() -> int
     const auto sw0 = static_cast<float>(init_width);
     const auto sh0 = static_cast<float>(init_height);
 
-    GameState state{
-        .left_pad = {.x = paddle_offset, .y = (sh0 * half) - (paddle_height * half), .score = 0},
-        .right_pad = {.x = sw0 - paddle_offset - paddle_width, .y = (sh0 * half) - (paddle_height * half), .score = 0},
-        .ball = {},
-        .p2_ai = true,
-    };
+    GameState state{.left_pad = {.x = paddle_offset, .y = (sh0 * half) - (paddle_height * half), .score = 0},
+                    .right_pad = {.x = sw0 - paddle_offset - paddle_width, .y = (sh0 * half) - (paddle_height * half), .score = 0},
+                    .ball = {},
+                    .p2_ai = true};
 
-    reset_ball(state.ball, 1, {sw0, sh0});
+    reset_ball(state.ball, 1, {.x = sw0, .y = sh0});
 
     while (!WindowShouldClose())
     {
@@ -247,8 +245,8 @@ auto main() -> int
 
         state.right_pad.x = sw - paddle_offset - paddle_width;
 
-        handle_input(state, {sw, sh}, dt);
-        update_physics(state, {sw, sh}, dt);
+        handle_input(state, {.x = sw, .y = sh}, dt);
+        update_physics(state, {.x = sw, .y = sh}, dt);
         draw_game(state);
     }
 

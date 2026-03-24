@@ -22,8 +22,9 @@
 - Sort `#include` directives; separate definition blocks with a blank line
 
 ### Structs & Initialization
-- Use designated initializers for aggregate initialization (e.g., `.x = 0.0F`)
+- Use designated initializers for aggregate initialization, including inline struct literals passed as arguments (e.g., `Vector2{.x = 1.0F, .y = 2.0F}`)
 - Zero-initialize members with `{}` in struct definitions (e.g., `float x{};`)
+- No trailing comma on the last member of a designated initializer list
 
 ### Literals
 - Float literals use the `F` suffix (e.g., `0.0F`, `1.05F`)
