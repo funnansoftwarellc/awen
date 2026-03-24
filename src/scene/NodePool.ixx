@@ -9,19 +9,21 @@ export import awen.scene.node_id;
 
 export namespace awn::scene
 {
-    // NodePool<T> stores T values in a contiguous array indexed by NodeId.
-    //
-    // Generation encoding (no extra storage needed):
-    //   0          — slot never allocated (null sentinel)
-    //   odd  >= 1  — slot is alive
-    //   even >= 2  — slot has been freed
-    //
-    // When a handle's generation differs from the stored generation, the slot
-    // has been freed or recycled — get() returns nullptr for stale handles.
+    /// @brief Contiguous generational arena storing values of type T, indexed by NodeId.
+    ///
+    /// Generation encoding (no extra storage needed):
+    ///   - 0         — slot never allocated (null sentinel)
+    ///   - odd >= 1  — slot is alive
+    ///   - even >= 2 — slot has been freed
+    ///
+    /// When a handle's generation differs from the stored generation, the slot
+    /// has been freed or recycled — get() returns nullptr for stale handles.
     template <typename T>
     class NodePool
     {
     public:
+        /// @brief Allocates a new slot, reusing a freed slot when available.
+        /// @return A NodeId identifying the newly allocated slot.
         [[nodiscard]] auto allocate() -> NodeId
         {
             if (!free_list_.empty())
@@ -43,6 +45,8 @@ export namespace awn::scene
             return NodeId{.index = index, .generation = 1u};
         }
 
+        /// @brief Frees the slot identified by id.
+        /// @param id The NodeId of the slot to free. Stale or null ids are silently ignored.
         auto free(NodeId id) -> void
         {
             if (!is_alive(id))
@@ -55,6 +59,9 @@ export namespace awn::scene
             free_list_.push_back(id.index);
         }
 
+        /// @brief Returns a pointer to the value stored in the given slot.
+        /// @param id The NodeId of the slot to retrieve.
+        /// @return Pointer to the stored value, or nullptr if id is stale or null.
         [[nodiscard]] auto get(NodeId id) -> T*
         {
             if (!is_alive(id))
@@ -64,6 +71,9 @@ export namespace awn::scene
             return &data_[id.index];
         }
 
+        /// @brief Returns a const pointer to the value stored in the given slot.
+        /// @param id The NodeId of the slot to retrieve.
+        /// @return Const pointer to the stored value, or nullptr if id is stale or null.
         [[nodiscard]] auto get(NodeId id) const -> const T*
         {
             if (!is_alive(id))
@@ -73,13 +83,15 @@ export namespace awn::scene
             return &data_[id.index];
         }
 
-        // Returns the number of backing slots, including both live and freed slots.
-        // Use for_each to visit only live nodes.
+        /// @brief Returns the total number of backing slots, including freed slots.
+        /// @note Use for_each to visit only live nodes.
         [[nodiscard]] auto capacity() const noexcept -> std::size_t
         {
             return data_.size();
         }
 
+        /// @brief Calls fn(NodeId, T&) for every live slot in allocation order.
+        /// @param fn Callable invoked with the NodeId and a mutable reference to each live value.
         template <typename F>
         auto for_each(F&& fn) -> void
         {
@@ -94,6 +106,8 @@ export namespace awn::scene
             }
         }
 
+        /// @brief Calls fn(NodeId, const T&) for every live slot in allocation order.
+        /// @param fn Callable invoked with the NodeId and a const reference to each live value.
         template <typename F>
         auto for_each(F&& fn) const -> void
         {
