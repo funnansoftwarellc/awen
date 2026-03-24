@@ -26,14 +26,11 @@ namespace
     constexpr auto dash_gap = 20;
     constexpr auto dash_height = 10;
     constexpr auto score_x_left = 70;
-    constexpr auto score_x_right = 22;
     constexpr auto score_y = 18;
     constexpr auto score_font_size = 52;
     constexpr auto hint_x = 10;
     constexpr auto hint_y_from_bottom = 22;
     constexpr auto hint_font_size = 16;
-    constexpr auto hint_ai_x_offset = 138;
-    constexpr auto hint_human_x_offset = 150;
 
     struct Paddle
     {
@@ -204,18 +201,15 @@ namespace
 
         DrawCircleV({.x = state.ball.x, .y = state.ball.y}, ball_radius, WHITE);
 
-        DrawText(std::to_string(state.left_pad.score).c_str(), (screen_w / 2) - score_x_left, score_y, score_font_size, WHITE);
-        DrawText(std::to_string(state.right_pad.score).c_str(), (screen_w / 2) + score_x_right, score_y, score_font_size, WHITE);
+        const auto left_score_str = std::to_string(state.left_pad.score);
+        const auto right_score_str = std::to_string(state.right_pad.score);
+        DrawText(left_score_str.c_str(), (screen_w / 2) - score_x_left, score_y, score_font_size, WHITE);
+        DrawText(right_score_str.c_str(), (screen_w / 2) + score_x_left - MeasureText(right_score_str.c_str(), score_font_size), score_y,
+                 score_font_size, WHITE);
 
         DrawText("W / S", hint_x, screen_h - hint_y_from_bottom, hint_font_size, DARKGRAY);
-        if (state.p2_ai)
-        {
-            DrawText("P2: AI  [SPACE]", screen_w - hint_ai_x_offset, screen_h - hint_y_from_bottom, hint_font_size, DARKGRAY);
-        }
-        else
-        {
-            DrawText("UP/DOWN  [SPACE]", screen_w - hint_human_x_offset, screen_h - hint_y_from_bottom, hint_font_size, DARKGRAY);
-        }
+        const auto* p2_text = state.p2_ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
+        DrawText(p2_text, screen_w - MeasureText(p2_text, hint_font_size) - hint_x, screen_h - hint_y_from_bottom, hint_font_size, DARKGRAY);
 
         EndDrawing();
     }
