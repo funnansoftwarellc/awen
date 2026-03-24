@@ -277,7 +277,7 @@ export namespace awn::scene
 
     // ── Scene method definitions ───────────────────────────────────────────────
 
-    inline Scene::Scene()
+    Scene::Scene()
     {
         // Synchronise the transforms pool with the root sentinel already allocated
         // inside the HierarchyPool constructor (index 0, generation 1). Every data
@@ -286,17 +286,17 @@ export namespace awn::scene
         transforms_.allocate_at(hierarchy_.root().index);
     }
 
-    inline auto Scene::root() noexcept -> NodeHandle<void>
+    auto Scene::root() noexcept -> NodeHandle<void>
     {
         return NodeHandle<void>{hierarchy_.root(), this};
     }
 
-    inline auto Scene::build_draw_list(awn::graphics::DrawList& out) const -> void
+    auto Scene::build_draw_list(awn::graphics::DrawList& out) const -> void
     {
         awn::scene::build_draw_list(hierarchy_, transforms_, rects_, sprites_, texts_, textures_, out);
     }
 
-    inline auto Scene::load_texture(const std::string& path) -> TextureId
+    auto Scene::load_texture(const std::string& path) -> TextureId
     {
         return textures_.load(path);
     }
