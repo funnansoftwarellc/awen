@@ -59,3 +59,6 @@
 - Build system: CMake with Ninja, presets defined in `CMakePresets.json`
 - Package manager: vcpkg (manifest mode, `vcpkg.json`)
 - Primary graphics library: raylib
+
+## CMake Style
+- Place `find_package()` calls immediately before the `target_link_libraries()` / `target_include_directories()` / `target_compile_definitions()` calls that consume them — not at the top of the file

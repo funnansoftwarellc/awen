@@ -11,6 +11,13 @@ target_sources(${PROJECT_NAME} PUBLIC
         Scene.ixx
 )
 
+find_package(Threads REQUIRED)
+
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        Threads::Threads
+)
+
 if(NOT ANDROID)
     add_subdirectory(test)
 endif()

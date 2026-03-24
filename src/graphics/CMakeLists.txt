@@ -1,8 +1,5 @@
 project(awen-graphics)
 
-find_package(magic_enum CONFIG REQUIRED)
-find_package(raylib CONFIG REQUIRED)
-
 add_library(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PUBLIC
@@ -18,6 +15,9 @@ target_sources(${PROJECT_NAME} PUBLIC
         Renderer.ixx
         Graphics.ixx
 )
+
+find_package(magic_enum CONFIG REQUIRED)
+find_package(raylib CONFIG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
@@ -56,16 +56,18 @@ else()
         PUBLIC
             glfw
     )
+
+    if(MSVC)
+        target_link_options(${PROJECT_NAME}
+            PUBLIC
+                $<$<CONFIG:Debug>:/NODEFAULTLIB:MSVCRT>
+        )
+
+        target_link_libraries(${PROJECT_NAME}
+            PUBLIC
+                winmm
+        )
+    endif()
 endif()
 
-if(MSVC)
-    target_link_options(${PROJECT_NAME}
-        PUBLIC
-            $<$<CONFIG:Debug>:/NODEFAULTLIB:MSVCRT>
-    )
 
-    target_link_libraries(${PROJECT_NAME}
-        PUBLIC
-            winmm
-    )
-endif()
