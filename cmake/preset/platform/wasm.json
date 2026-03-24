@@ -8,11 +8,12 @@
         "../release.json",
         "../vcpkg.json",
         "../host/x64-linux.json",
+        "../host/arm64-linux.json",
         "../target/wasm32-emscripten.json"
     ],
     "configurePresets": [
         {
-            "name": "wasm32-emscripten-debug",
+            "name": "x64-linux-wasm-debug",
             "inherits": [
                 "compiler-emscripten",
                 "binarydir",
@@ -24,7 +25,7 @@
             ]
         },
         {
-            "name": "wasm32-emscripten-release",
+            "name": "x64-linux-wasm-release",
             "inherits": [
                 "compiler-emscripten",
                 "binarydir",
@@ -34,16 +35,48 @@
                 "host-x64-linux",
                 "target-wasm32-emscripten"
             ]
+        },
+        {
+            "name": "arm64-linux-wasm-debug",
+            "inherits": [
+                "compiler-emscripten",
+                "binarydir",
+                "debug",
+                "ninja",
+                "vcpkg",
+                "host-arm64-linux",
+                "target-wasm32-emscripten"
+            ]
+        },
+        {
+            "name": "arm64-linux-wasm-release",
+            "inherits": [
+                "compiler-emscripten",
+                "binarydir",
+                "release",
+                "ninja",
+                "vcpkg",
+                "host-arm64-linux",
+                "target-wasm32-emscripten"
+            ]
         }
     ],
     "buildPresets": [
         {
-            "name": "wasm32-emscripten-debug",
-            "configurePreset": "wasm32-emscripten-debug"
+            "name": "x64-linux-wasm-debug",
+            "configurePreset": "x64-linux-wasm-debug"
         },
         {
-            "name": "wasm32-emscripten-release",
-            "configurePreset": "wasm32-emscripten-release"
+            "name": "x64-linux-wasm-release",
+            "configurePreset": "x64-linux-wasm-release"
+        },
+        {
+            "name": "arm64-linux-wasm-debug",
+            "configurePreset": "arm64-linux-wasm-debug"
+        },
+        {
+            "name": "arm64-linux-wasm-release",
+            "configurePreset": "arm64-linux-wasm-release"
         }
     ]
 }
