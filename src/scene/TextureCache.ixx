@@ -7,11 +7,11 @@ module;
 
 #include <raylib.h>
 
-export module awen.graphics.texture_cache;
+export module awen.scene.texture_cache;
 
-export import awen.graphics.texture_id;
+export import awen.scene.texture_id;
 
-export namespace awn::graphics
+export namespace awn::scene
 {
     /// @brief Owns Texture2D lifetimes, keyed by file path.
     ///

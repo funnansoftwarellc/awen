@@ -1,10 +1,11 @@
 module;
 
+#include <compare>
 #include <cstdint>
 
-export module awen.graphics.texture_id;
+export module awen.scene.texture_id;
 
-export namespace awn::graphics
+export namespace awn::scene
 {
     /// @brief Opaque handle to a texture managed by TextureCache.
     ///
@@ -19,7 +20,7 @@ export namespace awn::graphics
             return index != 0;
         }
 
-        auto operator==(const TextureId&) const noexcept -> bool = default;
+        auto operator<=>(const TextureId&) const noexcept = default;
     };
 
     /// @brief Sentinel value representing an absent or unset texture reference.

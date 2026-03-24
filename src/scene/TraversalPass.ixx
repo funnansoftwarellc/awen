@@ -3,16 +3,18 @@ module;
 #include <cstdint>
 #include <unordered_map>
 
-export module awen.graphics.traversal_pass;
+#include <raylib.h>
+
+export module awen.scene.traversal_pass;
 
 import awen.graphics.draw_list;
-import awen.graphics.scene_nodes;
-import awen.graphics.texture_cache;
+import awen.scene.scene_nodes;
+import awen.scene.texture_cache;
 import awen.scene.hierarchy_pool;
 import awen.scene.node_pool;
 import awen.scene.transform;
 
-export namespace awn::graphics
+export namespace awn::scene
 {
     /// @brief Performs a depth-first scene traversal, propagating world transforms and emitting draw commands.
     ///
@@ -32,18 +34,18 @@ export namespace awn::graphics
     /// @param out          DrawList that receives the emitted draw commands.
     /// @note The draw list is not cleared before appending; callers are responsible for
     ///       calling DrawList::clear() when starting a new frame.
-    auto build_draw_list(const awn::scene::HierarchyPool& hierarchy, const awn::scene::NodePool<awn::scene::Transform>& transforms,
-                         const awn::scene::NodePool<RectNode>& rect_nodes, const awn::scene::NodePool<SpriteNode>& sprite_nodes,
-                         const awn::scene::NodePool<TextNode>& text_nodes, const TextureCache& textures, DrawList& out) -> void
+    auto build_draw_list(const HierarchyPool& hierarchy, const NodePool<Transform>& transforms, const NodePool<RectNode>& rect_nodes,
+                         const NodePool<SpriteNode>& sprite_nodes, const NodePool<TextNode>& text_nodes, const TextureCache& textures,
+                         awn::graphics::DrawList& out) -> void
     {
         // Maps NodeId.index -> WorldTransform for in-flight parent-to-child propagation.
-        auto world_cache = std::unordered_map<uint32_t, awn::scene::WorldTransform>{};
+        auto world_cache = std::unordered_map<uint32_t, WorldTransform>{};
 
         // Root sentinel carries zero world transform.
-        world_cache[hierarchy.root().index] = awn::scene::WorldTransform{};
+        world_cache[hierarchy.root().index] = WorldTransform{};
 
         hierarchy.depth_first(
-            [&](awn::scene::NodeId id)
+            [&](NodeId id)
             {
                 const auto* hier = hierarchy.get(id);
 
@@ -53,7 +55,7 @@ export namespace awn::graphics
                 }
 
                 // Retrieve parent's accumulated world transform, defaulting to identity.
-                const auto parent_wt = [&]() -> awn::scene::WorldTransform
+                const auto parent_wt = [&]() -> WorldTransform
                 {
                     if (!hier->parent.is_valid())
                     {
@@ -71,7 +73,7 @@ export namespace awn::graphics
                 }();
 
                 const auto* local = transforms.get(id);
-                const auto wt = awn::scene::WorldTransform{
+                const auto wt = WorldTransform{
                     .x = parent_wt.x + (local != nullptr ? local->x : 0.0F),
                     .y = parent_wt.y + (local != nullptr ? local->y : 0.0F),
                 };
@@ -81,7 +83,7 @@ export namespace awn::graphics
                 // Emit a DrawRect command if this node carries a RectNode.
                 if (const auto* rect = rect_nodes.get(id); rect != nullptr)
                 {
-                    out.push(DrawRect{
+                    out.push(awn::graphics::DrawRect{
                         .x = wt.x,
                         .y = wt.y,
                         .width = rect->width,
@@ -95,7 +97,7 @@ export namespace awn::graphics
                 {
                     if (const auto* tex = textures.get(sprite->texture_id); tex != nullptr)
                     {
-                        out.push(DrawSprite{
+                        out.push(awn::graphics::DrawSprite{
                             .texture =
                                 {
                                     .id = tex->id,
@@ -116,7 +118,7 @@ export namespace awn::graphics
                 // Emit a DrawText command if this node carries a TextNode.
                 if (const auto* text = text_nodes.get(id); text != nullptr)
                 {
-                    out.push(DrawText{
+                    out.push(awn::graphics::DrawText{
                         .text = text->text,
                         .x = static_cast<int>(wt.x),
                         .y = static_cast<int>(wt.y),

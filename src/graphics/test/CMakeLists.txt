@@ -12,6 +12,7 @@ find_package(GTest CONFIG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     awen-graphics
+    awen-scene
     GTest::gtest
     GTest::gtest_main
 )
