@@ -27,18 +27,6 @@ if(ANDROID)
     )
 endif()
 
-if(MSVC)
-    target_link_options(${PROJECT_NAME}
-        PRIVATE
-            $<$<CONFIG:Debug>:/NODEFAULTLIB:MSVCRT>
-    )
-
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-            winmm
-    )
-endif()
-
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

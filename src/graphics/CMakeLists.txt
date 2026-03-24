@@ -57,3 +57,15 @@ else()
             glfw
     )
 endif()
+
+if(MSVC)
+    target_link_options(${PROJECT_NAME}
+        PUBLIC
+            $<$<CONFIG:Debug>:/NODEFAULTLIB:MSVCRT>
+    )
+
+    target_link_libraries(${PROJECT_NAME}
+        PUBLIC
+            winmm
+    )
+endif()

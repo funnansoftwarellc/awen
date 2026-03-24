@@ -16,16 +16,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     GTest::gtest_main
 )
 
-if(MSVC)
-    target_link_options(${PROJECT_NAME}
-        PRIVATE
-            $<$<CONFIG:Debug>:/NODEFAULTLIB:MSVCRT>
-    )
-
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-            winmm
-    )
-endif()
-
 gtest_discover_tests(${PROJECT_NAME})
