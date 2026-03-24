@@ -13,6 +13,7 @@
 #include "include/ports/SkFontMgr_mac_ct.h"
 #elifdef __ANDROID__
 #include "include/ports/SkFontMgr_android.h"
+#include "include/ports/SkFontScanner_FreeType.h"
 #elifdef __EMSCRIPTEN__
 #include "include/ports/SkFontMgr_data.h"
 #elifdef _WIN32
@@ -50,7 +51,7 @@ namespace
 #ifdef __APPLE__
         return SkFontMgr_New_CoreText(nullptr);
 #elifdef __ANDROID__
-        return SkFontMgr_New_Android(nullptr);
+        return SkFontMgr_New_Android(nullptr, SkFontScanner_Make_FreeType());
 #elifdef __EMSCRIPTEN__
         return SkFontMgr_New_Custom_Empty();
 #elifdef _WIN32
