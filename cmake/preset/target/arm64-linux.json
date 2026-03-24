@@ -2,10 +2,10 @@
     "version": 7,
     "configurePresets": [
         {
-            "name": "debug",
+            "name": "target-arm64-linux",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "VCPKG_TARGET_TRIPLET": "arm64-linux-release"
             }
         }
     ]

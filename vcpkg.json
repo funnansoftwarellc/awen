@@ -9,12 +9,30 @@
         "sdl3",
         {
             "name": "skia",
+            "default-features": false,
             "features": [
-                "graphite"
+                "dng",
+                "graphite",
+                "harfbuzz",
+                "icu",
+                "jpeg",
+                "png",
+                "vulkan",
+                "webp"
             ]
         },
         {
             "name": "skia",
+            "default-features": false,
+            "features": [
+                "fontconfig",
+                "freetype"
+            ],
+            "platform": "linux"
+        },
+        {
+            "name": "skia",
+            "default-features": false,
             "features": [
                 "metal"
             ],

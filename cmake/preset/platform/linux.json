@@ -8,7 +8,9 @@
         "../ninja.json",
         "../release.json",
         "../vcpkg.json",
+        "../host/arm64-linux.json",
         "../host/x64-linux.json",
+        "../target/arm64-linux.json",
         "../target/x64-linux.json"
     ],
     "configurePresets": [
@@ -59,6 +61,54 @@
                 "host-x64-linux",
                 "target-x64-linux"
             ]
+        },
+        {
+            "name": "arm64-linux-gcc-debug",
+            "inherits": [
+                "binarydir",
+                "debug",
+                "compiler-gcc",
+                "ninja",
+                "vcpkg",
+                "host-arm64-linux",
+                "target-arm64-linux"
+            ]
+        },
+        {
+            "name": "arm64-linux-gcc-release",
+            "inherits": [
+                "binarydir",
+                "release",
+                "compiler-gcc",
+                "ninja",
+                "vcpkg",
+                "host-arm64-linux",
+                "target-arm64-linux"
+            ]
+        },
+        {
+            "name": "arm64-linux-clang-debug",
+            "inherits": [
+                "binarydir",
+                "debug",
+                "compiler-clang",
+                "ninja",
+                "vcpkg",
+                "host-arm64-linux",
+                "target-arm64-linux"
+            ]
+        },
+        {
+            "name": "arm64-linux-clang-release",
+            "inherits": [
+                "binarydir",
+                "release",
+                "compiler-clang",
+                "ninja",
+                "vcpkg",
+                "host-arm64-linux",
+                "target-arm64-linux"
+            ]
         }
     ],
     "buildPresets": [
@@ -77,6 +127,22 @@
         {
             "name": "x64-linux-clang-release",
             "configurePreset": "x64-linux-clang-release"
+        },
+        {
+            "name": "arm64-linux-gcc-debug",
+            "configurePreset": "arm64-linux-gcc-debug"
+        },
+        {
+            "name": "arm64-linux-gcc-release",
+            "configurePreset": "arm64-linux-gcc-release"
+        },
+        {
+            "name": "arm64-linux-clang-debug",
+            "configurePreset": "arm64-linux-clang-debug"
+        },
+        {
+            "name": "arm64-linux-clang-release",
+            "configurePreset": "arm64-linux-clang-release"
         }
     ],
     "testPresets": [
@@ -104,6 +170,34 @@
         {
             "name": "x64-linux-clang-release",
             "configurePreset": "x64-linux-clang-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "arm64-linux-gcc-debug",
+            "configurePreset": "arm64-linux-gcc-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "arm64-linux-gcc-release",
+            "configurePreset": "arm64-linux-gcc-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "arm64-linux-clang-debug",
+            "configurePreset": "arm64-linux-clang-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "arm64-linux-clang-release",
+            "configurePreset": "arm64-linux-clang-release",
             "output": {
                 "outputOnFailure": true
             }

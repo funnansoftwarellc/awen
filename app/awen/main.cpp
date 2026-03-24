@@ -19,6 +19,7 @@
 #include "include/ports/SkFontMgr_directory.h"
 #else
 #include "include/ports/SkFontMgr_fontconfig.h"
+#include "include/ports/SkFontScanner_FreeType.h"
 #endif
 
 #include "gpu_surface.h"
@@ -55,7 +56,7 @@ namespace
 #elifdef _WIN32
         return SkFontMgr_New_Custom_Directory("C:\\Windows\\Fonts");
 #else
-        return SkFontMgr_New_FontConfig(nullptr);
+        return SkFontMgr_New_FontConfig(nullptr, SkFontScanner_Make_FreeType());
 #endif
     }
 
