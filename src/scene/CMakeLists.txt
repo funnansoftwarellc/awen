@@ -6,6 +6,7 @@ target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES FILES
         NodeId.ixx
         NodePool.ixx
+        HierarchyPool.ixx
         Scene.ixx
 )
 

@@ -18,6 +18,7 @@
 - Always add a blank line before a comment block when it is preceded by a non-blank line of code
 - Comments must be complete sentences (start with a capital letter, end with a period)
 - Use a paragraph comment above a block of related statements rather than commenting each line individually
+- Document all classes, structs, and public functions with Doxygen `///` comments using `@brief`, `@param`, `@return`, `@note`, etc.
 
 ### Formatting (from `.clang-format`)
 - Brace style: Allman — opening braces on their own line
