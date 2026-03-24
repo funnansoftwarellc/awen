@@ -26,7 +26,7 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
                 "#!/bin/bash\n"
                 "set -e\n"
                 "git config --global --add safe.directory \"${CMAKE_SOURCE_DIR}\" 2>/dev/null || true\n"
-                "git diff origin/main | \"${CLANG_TIDY_DIFF}\" -p1 -path \"${CMAKE_BINARY_DIR}\" -j ${NPROC}\n"
+                "git diff origin/main | \"${CLANG_TIDY_DIFF}\" -p1 -path \"${CMAKE_BINARY_DIR}\" -j ${NPROC} -header-filter='.*(src|app)/.*'\n"
             )
 
             add_custom_target(clang-tidy-diff
