@@ -13,7 +13,7 @@ Checks: "-*,
   performance-*"
 
 WarningsAsErrors: "*"
-HeaderFilterRegex: ".*"
+HeaderFilterRegex: ".*(src|app)/.*"
 FormatStyle: file
 UseColor: "true"
 CheckOptions:
