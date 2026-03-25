@@ -25,7 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     clang-tidy-22 \
     clangd-22 \
     lld-22 \
-    lldb-22 \
     && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-22 100 \
     && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 100 \
@@ -33,7 +32,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-22 100 \
     && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-22 100 \
     && update-alternatives --install /usr/bin/lld lld /usr/bin/lld-22 100 \
-    && update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-22 100 \
     && update-alternatives --install /usr/bin/run-clang-tidy run-clang-tidy /usr/bin/run-clang-tidy-22 100 \
     && update-alternatives --install /usr/bin/clang-tidy-diff clang-tidy-diff /usr/bin/clang-tidy-diff-22.py 100
 
