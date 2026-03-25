@@ -18,7 +18,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100 \
     && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
 
-# Clang 22 (available in Ubuntu 25.10 main archive)
+# Add the official LLVM apt repository so that clang-22 packages are available.
+RUN curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key \
+        -o /usr/share/keyrings/llvm-apt-key.asc \
+    && . /etc/os-release \
+    && echo "deb [signed-by=/usr/share/keyrings/llvm-apt-key.asc] http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-22 main" \
+       > /etc/apt/sources.list.d/llvm-22.list
+
+# Clang 22
 RUN apt-get update && apt-get install -y --no-install-recommends \
     clang-22 \
     clang-format-22 \
