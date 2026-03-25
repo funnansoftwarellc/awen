@@ -18,11 +18,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100 \
     && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
 
-# Clang 22 via LLVM APT repository
-RUN curl -fsSL https://apt.llvm.org/llvm.sh -o /tmp/llvm.sh \
-    && chmod +x /tmp/llvm.sh \
-    && /tmp/llvm.sh 22 all \
-    && rm /tmp/llvm.sh \
+# Clang 22 (available in Ubuntu 25.10 main archive)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    clang-22 \
+    clang-format-22 \
+    clang-tidy-22 \
+    clangd-22 \
+    lld-22 \
+    lldb-22 \
+    && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-22 100 \
     && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 100 \
     && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-22 100 \
