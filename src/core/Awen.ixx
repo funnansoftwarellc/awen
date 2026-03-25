@@ -3,6 +3,7 @@ module;
 export module awen;
 
 export import awen.overloaded;
+export import awen.signal;
 
 export namespace awn
 {
