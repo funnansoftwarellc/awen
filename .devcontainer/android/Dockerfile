@@ -8,13 +8,30 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Build essentials and vcpkg dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl git cmake ninja-build pkg-config python3 zip unzip tar openjdk-17-jdk \
-    # GCC and Clang from Ubuntu repos
-    gcc g++ clang clang-format clang-tidy clangd lld lldb \
+    # GCC 15
+    gcc-15 g++-15 \
     # emulator runtime dependencies
     libpulse0 libgl1 libnss3 libxcomposite1 libxcursor1 libxi6 libxtst6 \
     # adb over USB
     usbutils \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
+
+# Clang 22 via LLVM APT repository
+RUN curl -fsSL https://apt.llvm.org/llvm.sh -o /tmp/llvm.sh \
+    && chmod +x /tmp/llvm.sh \
+    && /tmp/llvm.sh 22 all \
+    && rm /tmp/llvm.sh \
+    && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-22 100 \
+    && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 100 \
+    && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-22 100 \
+    && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-22 100 \
+    && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-22 100 \
+    && update-alternatives --install /usr/bin/lld lld /usr/bin/lld-22 100 \
+    && update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-22 100 \
+    && update-alternatives --install /usr/bin/run-clang-tidy run-clang-tidy /usr/bin/run-clang-tidy-22 100 \
+    && update-alternatives --install /usr/bin/clang-tidy-diff clang-tidy-diff /usr/bin/clang-tidy-diff-22.py 100
 
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
