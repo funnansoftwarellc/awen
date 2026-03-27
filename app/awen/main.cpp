@@ -178,7 +178,7 @@ auto main() -> int
         using namespace awn::graphics;
         using namespace awn::scene;
 
-        auto engine = awn::Engine{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable}};
+        auto engine = awn::Engine{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable, ConfigFlag::high_dpi}};
         awn::Engine::set_target_fps(target_fps);
         engine.set_clear_color(colors::black);
 

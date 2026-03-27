@@ -7,6 +7,12 @@
     "dependencies": [
         "gtest",
         "magic-enum",
-        "raylib"
+        "raylib",
+        {
+            "name": "glfw3",
+            "features": [
+                "wayland"
+            ]
+        }
     ]
 }
