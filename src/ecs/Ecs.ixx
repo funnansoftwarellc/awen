@@ -1,17 +1,8 @@
 module;
-
 #include <compare>
-#include <cstdint>
+#include <flecs.h>
 
 export module awen.ecs;
-
-// Forward-declare the opaque flecs C world type with external C linkage.
-// Not exported — internal bridge type allowing Entity/World to store pointers
-// without including <flecs.h> in the module interface.
-extern "C"
-{
-    struct ecs_world_t; // NOLINT(readability-identifier-naming)
-}
 
 export namespace awn
 {
@@ -26,38 +17,48 @@ export namespace awn
         Entity() = default;
 
         /// @brief Returns true if the entity is currently alive in its world.
-        [[nodiscard]] auto is_alive() const noexcept -> bool;
+        [[nodiscard]] auto is_alive() const noexcept -> bool
+        {
+            return entity_.is_alive();
+        }
 
         /// @brief Destroys the entity and all its children.
-        auto destroy() -> void;
+        auto destroy() -> void
+        {
+            entity_.destruct();
+        }
 
         /// @brief Reparents this entity under the given parent.
         /// @param parent The new parent entity.
-        auto set_parent(Entity parent) -> void;
-
-        /// @brief Returns the underlying flecs entity id.
-        [[nodiscard]] auto id() const noexcept -> std::uint64_t
+        auto set_parent(Entity parent) -> void
         {
-            return id_;
+            entity_.child_of(parent.entity_);
         }
 
-        /// @brief Returns a pointer to the world this entity belongs to.
-        [[nodiscard]] auto world_ptr() const noexcept -> ecs_world_t*
+        /// @brief Returns the underlying flecs entity for direct flecs API access.
+        [[nodiscard]] auto raw() const noexcept -> flecs::entity
         {
-            return world_;
+            return entity_;
         }
 
-        auto operator<=>(const Entity&) const noexcept = default;
+        [[nodiscard]] auto operator==(const Entity& rhs) const noexcept -> bool
+        {
+            return entity_.id() == rhs.entity_.id();
+        }
+
+        [[nodiscard]] auto operator<=>(const Entity& rhs) const noexcept -> std::strong_ordering
+        {
+            return entity_.id() <=> rhs.entity_.id();
+        }
 
     private:
         friend class World;
 
-        Entity(std::uint64_t id, ecs_world_t* world) noexcept : id_(id), world_(world)
+        explicit Entity(flecs::entity e) noexcept : entity_(e)
         {
         }
 
-        std::uint64_t id_{};
-        ecs_world_t* world_{};
+        flecs::entity entity_{};
     };
 
     /// @brief Owns and manages the flecs ECS world.
@@ -67,44 +68,56 @@ export namespace awn
     class World
     {
     public:
-        World();
-        ~World();
+        World() = default;
+        ~World() = default;
 
         World(const World&) = delete;
         auto operator=(const World&) -> World& = delete;
 
         /// @brief Creates an unnamed entity in this world.
         /// @return A handle to the new live entity.
-        [[nodiscard]] auto create_entity() -> Entity;
+        [[nodiscard]] auto create_entity() -> Entity
+        {
+            return Entity{world_.entity()};
+        }
 
         /// @brief Creates a named entity in this world.
         /// @param name Unique name identifying the entity.
         /// @return A handle to the new live entity.
-        [[nodiscard]] auto create_entity(const char* name) -> Entity;
+        [[nodiscard]] auto create_entity(const char* name) -> Entity
+        {
+            return Entity{world_.entity(name)};
+        }
 
         /// @brief Returns whether the given entity handle is currently alive.
         /// @param e The entity to check.
-        [[nodiscard]] auto is_alive(Entity e) const noexcept -> bool;
+        [[nodiscard]] auto is_alive(Entity e) const noexcept -> bool
+        {
+            return e.is_alive();
+        }
 
         /// @brief Advances all registered systems by one tick.
         /// @param dt Delta time in seconds. Pass 0 to use wall-clock time.
         /// @return False if the world has been requested to terminate.
-        auto progress(float dt = 0.0F) -> bool;
+        auto progress(float dt = 0.0F) -> bool
+        {
+            return world_.progress(dt);
+        }
 
-        /// @brief Returns the underlying flecs world pointer for direct flecs API access.
-        [[nodiscard]] auto raw() noexcept -> ecs_world_t*
+        /// @brief Returns the underlying flecs world for direct flecs API access.
+        [[nodiscard]] auto raw() noexcept -> flecs::world&
         {
             return world_;
         }
 
-        /// @brief Returns the underlying flecs world pointer for direct read-only access.
-        [[nodiscard]] auto raw() const noexcept -> const ecs_world_t*
+        /// @brief Returns the underlying flecs world for direct read-only access.
+        [[nodiscard]] auto raw() const noexcept -> const flecs::world&
         {
             return world_;
         }
 
     private:
-        ecs_world_t* world_{};
+        flecs::world world_{};
     };
 
 } // namespace awn

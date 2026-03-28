@@ -9,10 +9,6 @@ target_sources(${PROJECT_NAME} PUBLIC
         Ecs.ixx
 )
 
-target_sources(${PROJECT_NAME} PRIVATE
-    Ecs.cpp
-)
-
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         $<IF:$<TARGET_EXISTS:flecs::flecs>,flecs::flecs,flecs::flecs_static>
