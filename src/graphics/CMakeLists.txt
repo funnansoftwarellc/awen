@@ -32,6 +32,7 @@ if(EMSCRIPTEN)
     target_link_options(${PROJECT_NAME}
         PUBLIC
             -sUSE_GLFW=3
+            -sASYNCIFY
     )
 elseif(ANDROID)
     find_library(log-lib log)

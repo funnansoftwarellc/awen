@@ -180,7 +180,7 @@ auto main() -> int
 
         auto engine = awn::Engine{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable, ConfigFlag::high_dpi}};
         awn::Engine::set_target_fps(target_fps);
-        engine.set_clear_color(colors::black);
+        engine.set_clear_color(Color{.r = 0, .g = 0, .b = 0, .a = 120});
 
         const auto sw0 = static_cast<float>(init_width);
         const auto sh0 = static_cast<float>(init_height);
