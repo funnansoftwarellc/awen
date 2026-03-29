@@ -9,9 +9,14 @@ target_sources(${PROJECT_NAME} PUBLIC
         Overloaded.ixx
         Signal.ixx
         Awen.ixx
+        Core.ixx
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        Threads::Threads
+        awen-flecs
+)
 
 if(NOT ANDROID)
     add_subdirectory(test)

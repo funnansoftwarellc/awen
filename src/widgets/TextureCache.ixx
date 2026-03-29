@@ -7,17 +7,13 @@ module;
 
 #include <raylib.h>
 
-export module awen.scene.texture_cache;
+export module awen.widgets.texture_cache;
 
 export import awen.graphics.texture_id;
 
-export namespace awn::scene
+export namespace awn::widgets
 {
     /// @brief Owns Texture2D lifetimes, keyed by file path.
-    ///
-    /// Textures are loaded on first request and unloaded when the cache is
-    /// destroyed. Duplicate load() calls for the same path return the existing
-    /// TextureId without reloading.
     class TextureCache
     {
     public:
@@ -26,23 +22,19 @@ export namespace awn::scene
         /// @brief Unloads all managed textures via UnloadTexture.
         ~TextureCache()
         {
-            // Skip slot 0 (null sentinel).
             for (auto i = std::size_t{1}; i < std::size(textures_); ++i)
             {
                 UnloadTexture(textures_[i]);
             }
         }
 
-        // Non-copyable; textures are unique GPU resources.
         TextureCache(const TextureCache&) = delete;
         auto operator=(const TextureCache&) -> TextureCache& = delete;
 
         TextureCache(TextureCache&&) = default;
         auto operator=(TextureCache&&) -> TextureCache& = default;
 
-        /// @brief Loads a texture from @p path, or returns the cached TextureId if already loaded.
-        /// @param path File path of the image to load.
-        /// @return A TextureId that can be passed to get().
+        /// @brief Loads a texture from @p path or returns the cached TextureId.
         [[nodiscard]] auto load(const std::string& path) -> awn::graphics::TextureId
         {
             const auto it = path_to_id_.find(path);
@@ -54,7 +46,6 @@ export namespace awn::scene
 
             if (std::empty(textures_))
             {
-                // Slot 0 is reserved as the null sentinel.
                 textures_.push_back(Texture2D{});
             }
 
@@ -67,9 +58,7 @@ export namespace awn::scene
             return id;
         }
 
-        /// @brief Returns a const pointer to the Texture2D for @p id, or nullptr if invalid.
-        /// @param id TextureId returned by a previous call to load().
-        /// @return Const pointer to the Texture2D, or nullptr if id is null or out of range.
+        /// @brief Returns a pointer to the Texture2D for @p id, or nullptr if invalid.
         [[nodiscard]] auto get(awn::graphics::TextureId id) const -> const Texture2D*
         {
             if (!id.is_valid() || id.index >= static_cast<uint32_t>(std::size(textures_)))
@@ -81,7 +70,6 @@ export namespace awn::scene
         }
 
     private:
-        // textures_[0] is a dummy null sentinel; valid textures start at index 1.
         std::vector<Texture2D> textures_;
         std::unordered_map<std::string, awn::graphics::TextureId> path_to_id_;
     };

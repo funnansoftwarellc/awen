@@ -14,7 +14,12 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        awen-engine
+    awen-core
+    awen-core-engine
+    awen-graphics
+    awen-scene
+    awen-widgets
+    awen-flecs
 )
 
 if(EMSCRIPTEN)

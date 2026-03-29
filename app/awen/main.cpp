@@ -8,7 +8,11 @@
 
 #include <awen/flecs.h>
 
-import awen.engine;
+import awen.core;
+import awen.core.engine;
+import awen.graphics;
+import awen.scene;
+import awen.widgets;
 
 namespace
 {
@@ -177,11 +181,18 @@ auto main() -> int
 {
     try
     {
+        auto world = flecs::world{};
+        world.import<awn::core::Module>();
+        world.import<awn::graphics::Module>();
+        world.import<awn::scene::Module>();
+        world.import<awn::widgets::Module>();
+
         using namespace awn::graphics;
         using namespace awn::scene;
+        using awn::widgets::DrawOrder;
 
-        auto engine = awn::Engine{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable, ConfigFlag::high_dpi}};
-        awn::Engine::set_target_fps(target_fps);
+        auto engine = awn::core::Engine{world, "Awen - Pong", init_width, init_height, {ConfigFlag::resizable, ConfigFlag::high_dpi}};
+        awn::core::Engine::set_target_fps(target_fps);
         engine.set_clear_color(Color{.r = 0, .g = 0, .b = 0, .a = 120});
 
         const auto sw0 = static_cast<float>(init_width);
@@ -195,8 +206,6 @@ auto main() -> int
         };
 
         reset_ball(state.ball, 1, ScreenSize{.w = sw0, .h = sh0});
-
-        auto& world = engine.raw_world();
 
         // Dashed center line (z = 0).
         auto dashes = std::vector<flecs::entity>{};
