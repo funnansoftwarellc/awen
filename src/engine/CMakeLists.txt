@@ -7,7 +7,10 @@ target_sources(${PROJECT_NAME} PUBLIC
         Engine.ixx
 )
 
+find_package(flecs CONFIG REQUIRED)
+
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         awen-scene
+        $<IF:$<TARGET_EXISTS:flecs::flecs>,flecs::flecs,flecs::flecs_static>
 )

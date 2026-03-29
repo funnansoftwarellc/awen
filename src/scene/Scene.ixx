@@ -1,117 +1,51 @@
 module;
 
-#include <concepts>
+#include <algorithm>
 #include <string>
-#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include <flecs.h>
 
 export module awen.scene;
 
-export import awen.scene.node_id;
-export import awen.scene.node_pool;
-export import awen.scene.hierarchy_pool;
 export import awen.scene.transform;
 export import awen.scene.texture_id;
 export import awen.scene.texture_cache;
 export import awen.scene.scene_nodes;
-export import awen.scene.traversal_pass;
 
 import awen.graphics.draw_list;
 
 export namespace awn::scene
 {
-    /// @brief Forward declaration — full definition follows below.
-    class Scene;
-
-    /// @brief Copyable handle to a typed node in a Scene.
-    ///
-    /// Holds a NodeId and a non-owning pointer back to the owning Scene. All
-    /// mutating operations (set_transform, set_size, …) write directly into the
-    /// Scene's pools, so changes are immediately visible to the next
-    /// Scene::build_draw_list() call.
-    ///
-    /// @tparam T The data-component type associated with this node: RectNode,
-    ///           SpriteNode, TextNode, or void for a pure hierarchy anchor.
-    template <typename T>
-    class NodeHandle
+    /// @brief Draw order for a scene node — lower z values are rendered first among siblings.
+    struct DrawOrder
     {
-    public:
-        /// @brief Constructs a handle wrapping @p id and pointing at @p scene.
-        NodeHandle(NodeId id, Scene* scene) noexcept : id_{id}, scene_{scene}
-        {
-        }
-
-        /// @brief Returns the NodeId of the underlying hierarchy slot.
-        [[nodiscard]] auto node_id() const noexcept -> NodeId
-        {
-            return id_;
-        }
-
-        /// @brief Allocates a new child node of type U and returns a handle to it.
-        /// @param local_z Draw order relative to siblings; lower values are visited first.
-        template <typename U>
-        [[nodiscard]] auto add_child(int local_z = 0) const -> NodeHandle<U>;
-
-        /// @brief Sets the local (parent-relative) position of this node.
-        /// @param t New Transform to write into the transforms pool.
-        auto set_transform(Transform t) const -> const NodeHandle<T>&;
-
-        /// @brief Sets the width and height of a RectNode or SpriteNode.
-        /// @param width  New width in pixels.
-        /// @param height New height in pixels.
-        auto set_size(float width, float height) const -> const NodeHandle<T>&
-            requires(std::same_as<T, RectNode> || std::same_as<T, SpriteNode>);
-
-        /// @brief Sets the fill colour of a RectNode or CircleNode, or the text colour of a TextNode.
-        /// @param color New colour value.
-        auto set_color(graphics::Color color) const -> const NodeHandle<T>&
-            requires(std::same_as<T, RectNode> || std::same_as<T, CircleNode> || std::same_as<T, TextNode>);
-
-        /// @brief Sets the radius of a CircleNode.
-        /// @param radius New radius in pixels.
-        auto set_radius(float radius) const -> const NodeHandle<T>&
-            requires std::same_as<T, CircleNode>;
-
-        /// @brief Sets the TextureId on a SpriteNode.
-        /// @param id TextureId returned by Scene::load_texture().
-        auto set_texture(TextureId id) const -> const NodeHandle<T>&
-            requires std::same_as<T, SpriteNode>;
-
-        /// @brief Sets the tint colour multiplied with the sprite's texture.
-        /// @param tint New tint colour value.
-        auto set_tint(graphics::Color tint) const -> const NodeHandle<T>&
-            requires std::same_as<T, SpriteNode>;
-
-        /// @brief Sets the display text of a TextNode.
-        /// @param text String to display.
-        auto set_text(std::string_view text) const -> const NodeHandle<T>&
-            requires std::same_as<T, TextNode>;
-
-        /// @brief Sets the font size of a TextNode.
-        /// @param size Font size in pixels.
-        auto set_font_size(int size) const -> const NodeHandle<T>&
-            requires std::same_as<T, TextNode>;
-
-    private:
-        NodeId id_{};
-        Scene* scene_{};
+        int z{};
     };
 
-    /// @brief Owns the full scene graph: hierarchy, component pools, and texture cache.
+    /// @brief Scene graph backed by a flecs ECS world.
     ///
-    /// Every node in the scene has an entry in the hierarchy pool and the
-    /// transforms pool. Nodes of a specific visual type (RectNode, SpriteNode,
-    /// TextNode) additionally have an entry in the corresponding data pool.
-    /// All pool allocations use the same index space so that the depth-first
-    /// traversal pass can look up each component by the same NodeId.
+    /// Entities are the first-class handles; use scene.root() as the common
+    /// ancestor and scene.add_child<T>() to grow the hierarchy. Component data
+    /// (Transform, DrawOrder, RectNode, etc.) is set directly on the returned
+    /// flecs::entity via entity.set<T>({...}).
+    ///
+    /// build_draw_list() is the render system: it performs a depth-first
+    /// traversal of the entity hierarchy, propagates world transforms
+    /// parent-to-child, and emits a DrawCommand for every entity that carries a
+    /// visual component (RectNode, CircleNode, SpriteNode, TextNode). Siblings
+    /// are always visited in ascending DrawOrder::z order.
     ///
     /// Usage:
     /// @code
     ///   auto scene = awn::scene::Scene{};
     ///   auto root  = scene.root();
-    ///   auto rect  = root.add_child<awn::scene::RectNode>()
-    ///                    .set_transform({.x = 10.0F, .y = 20.0F})
-    ///                    .set_size(100.0F, 50.0F)
-    ///                    .set_color(awn::graphics::Color{255, 0, 0, 255});
+    ///   auto rect  = scene.add_child<RectNode>(root)
+    ///                    .set<Transform>({.x = 10.0F, .y = 20.0F})
+    ///                    .set<RectNode>({.width = 100.0F, .height = 50.0F,
+    ///                                   .color  = awn::graphics::Color{255, 0, 0, 255}});
     ///   auto dl = awn::graphics::DrawList{};
     ///   scene.build_draw_list(dl);
     /// @endcode
@@ -120,209 +54,91 @@ export namespace awn::scene
     public:
         Scene();
 
-        /// @brief Default.
         ~Scene() = default;
 
-        // Non-copyable (TextureCache owns GPU resources).
+        // Non-copyable — flecs::world and TextureCache own exclusive resources.
         Scene(const Scene&) = delete;
         auto operator=(const Scene&) -> Scene& = delete;
 
         Scene(Scene&&) = default;
         auto operator=(Scene&&) -> Scene& = default;
 
-        /// @brief Returns a handle to the invisible root sentinel node.
+        /// @brief Returns the invisible root sentinel entity.
         ///
-        /// The root itself is never visited by the traversal pass; it exists
-        /// purely as the common ancestor for all top-level scene nodes.
-        [[nodiscard]] auto root() noexcept -> NodeHandle<void>;
+        /// The root is never emitted as a draw command; it exists solely as the
+        /// common ancestor for all top-level scene entities.
+        [[nodiscard]] auto root() const noexcept -> flecs::entity;
 
-        /// @brief Runs the depth-first traversal pass, appending draw commands to @p out.
+        /// @brief Creates a child entity under @p parent and attaches it to the hierarchy.
         ///
-        /// The list is not cleared before appending; call DrawList::clear() at
-        /// the start of each frame before calling this method.
+        /// Every entity receives a default-constructed Transform and a DrawOrder
+        /// component. When T is a concrete visual type (RectNode, CircleNode,
+        /// SpriteNode, or TextNode) a default-constructed T component is also
+        /// added. When T is void the entity acts as a pure group/container node.
+        ///
+        /// @tparam T  Visual component type, or void for a group node.
+        /// @param parent   Parent entity; pass scene.root() for top-level nodes.
+        /// @param local_z  Draw order relative to siblings — lower values first.
+        /// @return The newly created flecs::entity ready for component mutation.
+        template <typename T>
+        [[nodiscard]] auto add_child(flecs::entity parent, int local_z = 0) -> flecs::entity;
+
+        /// @brief Render system — performs a depth-first traversal and appends draw commands to @p out.
+        ///
+        /// World transforms are propagated from parent to child during the walk.
+        /// Siblings are visited in ascending DrawOrder::z order. The list is not
+        /// cleared before appending; callers must call DrawList::clear() at the
+        /// start of each frame.
+        ///
         /// @param out DrawList that receives the emitted commands.
-        auto build_draw_list(awn::graphics::DrawList& out) const -> void;
+        auto build_draw_list(awn::graphics::DrawList& out) -> void;
 
         /// @brief Loads a texture from @p path or returns the cached TextureId if already loaded.
         /// @param path File path of the image to load.
-        /// @return TextureId that can be assigned to a SpriteNode via NodeHandle::set_texture().
+        /// @return TextureId that can be passed to a SpriteNode component.
         [[nodiscard]] auto load_texture(const std::string& path) -> TextureId;
 
+        /// @brief Returns the underlying flecs world for direct ECS access.
+        [[nodiscard]] auto raw_world() noexcept -> flecs::world&;
+
     private:
-        template <typename T>
-        friend class NodeHandle;
+        flecs::world world_;
 
-        HierarchyPool hierarchy_;
-        NodePool<Transform> transforms_;
-        NodePool<RectNode> rects_;
-        NodePool<CircleNode> circles_;
-        NodePool<SpriteNode> sprites_;
-        NodePool<TextNode> texts_;
+        // Store the root entity id separately so it remains valid across moves.
+        flecs::entity_t root_id_{};
+
         TextureCache textures_;
-
-        /// @brief Core allocation helper called by NodeHandle::add_child<T>().
-        ///
-        /// Allocates a hierarchy slot and a transforms slot, then allocates the
-        /// type-specific data slot when T is a concrete visual node type.
-        /// @param parent  NodeId of the parent hierarchy node.
-        /// @param local_z Draw order relative to siblings.
-        /// @return NodeHandle<T> wrapping the freshly allocated NodeId.
-        template <typename T>
-        [[nodiscard]] auto add_child_node(NodeId parent, int local_z) -> NodeHandle<T>;
     };
 
-    // ── NodeHandle<T> method definitions ──────────────────────────────────────
+    // ── add_child<T> ─────────────────────────────────────────────────────────
 
     template <typename T>
-    template <typename U>
-    auto NodeHandle<T>::add_child(int local_z) const -> NodeHandle<U>
+    auto Scene::add_child(flecs::entity parent, int local_z) -> flecs::entity
     {
-        return scene_->add_child_node<U>(id_, local_z);
-    }
+        auto e = world_.entity().child_of(parent).set<Transform>({}).set<DrawOrder>({.z = local_z});
 
-    template <typename T>
-    auto NodeHandle<T>::set_transform(Transform t) const -> const NodeHandle<T>&
-    {
-        if (auto* xf = scene_->transforms_.get(id_); xf != nullptr)
+        if constexpr (!std::is_void_v<T>)
         {
-            *xf = t;
+            e.set<T>({});
         }
 
-        return *this;
+        return e;
     }
 
-    template <typename T>
-    auto NodeHandle<T>::set_size(float width, float height) const -> const NodeHandle<T>&
-        requires(std::same_as<T, RectNode> || std::same_as<T, SpriteNode>)
-    {
-        if constexpr (std::same_as<T, RectNode>)
-        {
-            if (auto* r = scene_->rects_.get(id_); r != nullptr)
-            {
-                r->width = width;
-                r->height = height;
-            }
-        }
-        else
-        {
-            if (auto* s = scene_->sprites_.get(id_); s != nullptr)
-            {
-                s->width = width;
-                s->height = height;
-            }
-        }
+    // ── Scene method definitions ──────────────────────────────────────────────
 
-        return *this;
+    Scene::Scene() : root_id_{world_.entity("root").id()}
+    {
     }
 
-    template <typename T>
-    auto NodeHandle<T>::set_color(graphics::Color color) const -> const NodeHandle<T>&
-        requires(std::same_as<T, RectNode> || std::same_as<T, CircleNode> || std::same_as<T, TextNode>)
+    auto Scene::root() const noexcept -> flecs::entity
     {
-        if constexpr (std::same_as<T, RectNode>)
-        {
-            if (auto* r = scene_->rects_.get(id_); r != nullptr)
-            {
-                r->color = color;
-            }
-        }
-        else if constexpr (std::same_as<T, CircleNode>)
-        {
-            if (auto* c = scene_->circles_.get(id_); c != nullptr)
-            {
-                c->color = color;
-            }
-        }
-        else
-        {
-            if (auto* tn = scene_->texts_.get(id_); tn != nullptr)
-            {
-                tn->color = color;
-            }
-        }
-
-        return *this;
+        return world_.entity(root_id_);
     }
 
-    template <typename T>
-    auto NodeHandle<T>::set_radius(float radius) const -> const NodeHandle<T>&
-        requires std::same_as<T, CircleNode>
+    auto Scene::raw_world() noexcept -> flecs::world&
     {
-        if (auto* c = scene_->circles_.get(id_); c != nullptr)
-        {
-            c->radius = radius;
-        }
-
-        return *this;
-    }
-
-    template <typename T>
-    auto NodeHandle<T>::set_texture(TextureId id) const -> const NodeHandle<T>&
-        requires std::same_as<T, SpriteNode>
-    {
-        if (auto* s = scene_->sprites_.get(id_); s != nullptr)
-        {
-            s->texture_id = id;
-        }
-
-        return *this;
-    }
-
-    template <typename T>
-    auto NodeHandle<T>::set_tint(graphics::Color tint) const -> const NodeHandle<T>&
-        requires std::same_as<T, SpriteNode>
-    {
-        if (auto* s = scene_->sprites_.get(id_); s != nullptr)
-        {
-            s->tint = tint;
-        }
-
-        return *this;
-    }
-
-    template <typename T>
-    auto NodeHandle<T>::set_text(std::string_view text) const -> const NodeHandle<T>&
-        requires std::same_as<T, TextNode>
-    {
-        if (auto* tn = scene_->texts_.get(id_); tn != nullptr)
-        {
-            tn->text = text;
-        }
-
-        return *this;
-    }
-
-    template <typename T>
-    auto NodeHandle<T>::set_font_size(int size) const -> const NodeHandle<T>&
-        requires std::same_as<T, TextNode>
-    {
-        if (auto* tn = scene_->texts_.get(id_); tn != nullptr)
-        {
-            tn->font_size = size;
-        }
-
-        return *this;
-    }
-
-    // ── Scene method definitions ───────────────────────────────────────────────
-
-    Scene::Scene()
-    {
-        // Synchronise the transforms pool with the root sentinel already allocated
-        // inside the HierarchyPool constructor (index 0, generation 1). Every data
-        // pool must have the same number of leading entries so subsequent
-        // allocate_at() calls stay in step with the hierarchy indices.
-        transforms_.allocate_at(hierarchy_.root().index);
-    }
-
-    auto Scene::root() noexcept -> NodeHandle<void>
-    {
-        return NodeHandle<void>{hierarchy_.root(), this};
-    }
-
-    auto Scene::build_draw_list(awn::graphics::DrawList& out) const -> void
-    {
-        awn::scene::build_draw_list(hierarchy_, transforms_, rects_, circles_, sprites_, texts_, textures_, out);
+        return world_;
     }
 
     auto Scene::load_texture(const std::string& path) -> TextureId
@@ -330,33 +146,113 @@ export namespace awn::scene
         return textures_.load(path);
     }
 
-    template <typename T>
-    auto Scene::add_child_node(NodeId parent, int local_z) -> NodeHandle<T>
+    auto Scene::build_draw_list(awn::graphics::DrawList& out) -> void
     {
-        const auto id = hierarchy_.allocate(parent, local_z);
+        // Iterative depth-first traversal driven by a stack of (entity, parent world transform) frames.
+        struct Frame
+        {
+            flecs::entity node;
+            WorldTransform parent_wt;
+        };
 
-        // Every node, regardless of its visual type, gets a transform slot so
-        // that the traversal pass can propagate world positions through void
-        // (container/group) nodes as well as typed ones.
-        transforms_.allocate_at(id.index);
+        auto stack = std::vector<Frame>{};
 
-        if constexpr (std::same_as<T, RectNode>)
+        // Collects the immediate children of parent, sorts them in descending DrawOrder::z,
+        // and pushes them onto the stack so the lowest-z child sits on top and is processed first.
+        const auto push_children = [&](flecs::entity parent, WorldTransform wt)
         {
-            rects_.allocate_at(id.index);
-        }
-        else if constexpr (std::same_as<T, CircleNode>)
-        {
-            circles_.allocate_at(id.index);
-        }
-        else if constexpr (std::same_as<T, SpriteNode>)
-        {
-            sprites_.allocate_at(id.index);
-        }
-        else if constexpr (std::same_as<T, TextNode>)
-        {
-            texts_.allocate_at(id.index);
-        }
+            auto children = std::vector<std::pair<int, flecs::entity>>{};
 
-        return NodeHandle<T>{id, this};
+            parent.children(
+                [&](flecs::entity child)
+                {
+                    const auto* order = child.try_get<DrawOrder>();
+                    children.emplace_back(order != nullptr ? order->z : 0, child);
+                });
+
+            std::ranges::sort(children,
+                              [](const auto& a, const auto& b)
+                              {
+                                  // Descending: lowest-z lands on top of the stack and is popped first.
+                                  return a.first > b.first;
+                              });
+
+            for (auto& [z, child] : children)
+            {
+                stack.push_back(Frame{.node = child, .parent_wt = wt});
+            }
+        };
+
+        push_children(world_.entity(root_id_), WorldTransform{});
+
+        while (!stack.empty())
+        {
+            auto [node, parent_wt] = stack.back();
+            stack.pop_back();
+
+            const auto* local = node.try_get<Transform>();
+
+            const auto wt = WorldTransform{
+                .x = parent_wt.x + (local != nullptr ? local->x : 0.0F),
+                .y = parent_wt.y + (local != nullptr ? local->y : 0.0F),
+            };
+
+            // Emit a draw command for whichever visual component this entity carries.
+            if (const auto* rect = node.try_get<RectNode>(); rect != nullptr)
+            {
+                out.push(awn::graphics::DrawRect{
+                    .x = wt.x,
+                    .y = wt.y,
+                    .width = rect->width,
+                    .height = rect->height,
+                    .color = rect->color,
+                });
+            }
+
+            if (const auto* circle = node.try_get<CircleNode>(); circle != nullptr)
+            {
+                out.push(awn::graphics::DrawCircle{
+                    .center_x = wt.x,
+                    .center_y = wt.y,
+                    .radius = circle->radius,
+                    .color = circle->color,
+                });
+            }
+
+            if (const auto* sprite = node.try_get<SpriteNode>(); sprite != nullptr)
+            {
+                if (const auto* tex = textures_.get(sprite->texture_id); tex != nullptr)
+                {
+                    out.push(awn::graphics::DrawSprite{
+                        .texture =
+                            {
+                                .id = tex->id,
+                                .width = tex->width,
+                                .height = tex->height,
+                                .mipmaps = tex->mipmaps,
+                                .format = tex->format,
+                            },
+                        .x = wt.x,
+                        .y = wt.y,
+                        .width = sprite->width,
+                        .height = sprite->height,
+                        .tint = sprite->tint,
+                    });
+                }
+            }
+
+            if (const auto* text = node.try_get<TextNode>(); text != nullptr)
+            {
+                out.push(awn::graphics::DrawText{
+                    .text = text->text,
+                    .x = static_cast<int>(wt.x),
+                    .y = static_cast<int>(wt.y),
+                    .font_size = text->font_size,
+                    .color = text->color,
+                });
+            }
+
+            push_children(node, wt);
+        }
     }
 }

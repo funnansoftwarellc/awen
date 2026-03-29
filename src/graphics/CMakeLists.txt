@@ -25,7 +25,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if(NOT ANDROID)
-    add_subdirectory(test)
+    # add_subdirectory(test)  # TraversalPass test removed; traversal is now tested via awen-scene-test
 endif()
 
 if(EMSCRIPTEN)

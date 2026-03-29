@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
 
-#include <string>
 #include <variant>
 #include <vector>
+
+#include <flecs.h>
 
 import awen.scene;
 import awen.graphics.draw_list;
@@ -10,74 +11,68 @@ import awen.graphics.draw_list;
 using namespace awn::scene;
 using namespace awn::graphics;
 
-// ── NodePool::allocate_at ─────────────────────────────────────────────────────
-
-TEST(NodePoolAllocateAt, ActivatesSlotAtRequestedIndex)
-{
-    auto pool = NodePool<int>{};
-    const auto id = pool.allocate_at(3);
-    EXPECT_EQ(id.index, 3U);
-    EXPECT_TRUE(id.is_valid());
-    ASSERT_NE(pool.get(id), nullptr);
-}
-
-TEST(NodePoolAllocateAt, GapSlotsReturnNullptr)
-{
-    auto pool = NodePool<int>{};
-    pool.allocate_at(2);
-
-    // Indices 0 and 1 are gap slots (generation 0, never alive).
-    EXPECT_EQ(pool.get(NodeId{.index = 0, .generation = 1}), nullptr);
-    EXPECT_EQ(pool.get(NodeId{.index = 1, .generation = 1}), nullptr);
-}
-
-TEST(NodePoolAllocateAt, SequentialAllocateAfterAllocateAtYieldsNextIndex)
-{
-    auto pool = NodePool<int>{};
-    pool.allocate_at(2);
-
-    // Normal allocate() must grow from size 3, yielding index 3.
-    const auto id = pool.allocate();
-    EXPECT_EQ(id.index, 3U);
-}
-
 // ── Scene construction ────────────────────────────────────────────────────────
 
-TEST(Scene, RootHandleIsValid)
+TEST(Scene, RootEntityIsAlive)
 {
     auto scene = Scene{};
-    EXPECT_TRUE(scene.root().node_id().is_valid());
+    EXPECT_TRUE(scene.root().is_alive());
 }
 
-// ── NodeHandle::add_child ─────────────────────────────────────────────────────
+// ── Scene::add_child ──────────────────────────────────────────────────────────
 
-TEST(Scene, AddRectChildReturnsValidHandle)
+TEST(Scene, AddRectChildReturnsAliveEntity)
 {
     auto scene = Scene{};
-    const auto rect = scene.root().add_child<RectNode>();
-    EXPECT_TRUE(rect.node_id().is_valid());
+    const auto rect = scene.add_child<RectNode>(scene.root());
+    EXPECT_TRUE(rect.is_alive());
 }
 
-TEST(Scene, AddTextChildReturnsValidHandle)
+TEST(Scene, AddTextChildReturnsAliveEntity)
 {
     auto scene = Scene{};
-    const auto text = scene.root().add_child<TextNode>();
-    EXPECT_TRUE(text.node_id().is_valid());
+    const auto text = scene.add_child<TextNode>(scene.root());
+    EXPECT_TRUE(text.is_alive());
 }
 
-TEST(Scene, AddVoidChildReturnsValidHandle)
+TEST(Scene, AddVoidChildReturnsAliveEntity)
 {
     auto scene = Scene{};
-    const auto group = scene.root().add_child<void>();
-    EXPECT_TRUE(group.node_id().is_valid());
+    const auto group = scene.add_child<void>(scene.root());
+    EXPECT_TRUE(group.is_alive());
 }
 
-TEST(Scene, AddGrandchildReturnsValidHandle)
+TEST(Scene, AddGrandchildReturnsAliveEntity)
 {
     auto scene = Scene{};
-    const auto group = scene.root().add_child<void>();
-    const auto rect = group.add_child<RectNode>();
-    EXPECT_TRUE(rect.node_id().is_valid());
+    const auto group = scene.add_child<void>(scene.root());
+    const auto rect = scene.add_child<RectNode>(group);
+    EXPECT_TRUE(rect.is_alive());
+}
+
+TEST(Scene, AddChildSetsTransformComponent)
+{
+    auto scene = Scene{};
+    const auto e = scene.add_child<RectNode>(scene.root());
+    EXPECT_NE(e.try_get<Transform>(), nullptr);
+}
+
+TEST(Scene, AddChildSetsDrawOrderComponent)
+{
+    auto scene = Scene{};
+    const auto e = scene.add_child<RectNode>(scene.root(), 3);
+    const auto* order = e.try_get<DrawOrder>();
+    ASSERT_NE(order, nullptr);
+    EXPECT_EQ(order->z, 3);
+}
+
+TEST(Scene, AddVoidChildHasNoVisualComponent)
+{
+    auto scene = Scene{};
+    const auto group = scene.add_child<void>(scene.root());
+    EXPECT_EQ(group.try_get<RectNode>(), nullptr);
+    EXPECT_EQ(group.try_get<CircleNode>(), nullptr);
+    EXPECT_EQ(group.try_get<TextNode>(), nullptr);
 }
 
 // ── DrawList output for RectNode ──────────────────────────────────────────────
@@ -85,7 +80,7 @@ TEST(Scene, AddGrandchildReturnsValidHandle)
 TEST(Scene, RectNodeEmitsDrawRect)
 {
     auto scene = Scene{};
-    scene.root().add_child<RectNode>().set_size(100.0F, 50.0F).set_color(Color{255, 0, 0, 255});
+    scene.add_child<RectNode>(scene.root()).set<RectNode>({.width = 100.0F, .height = 50.0F, .color = Color{255, 0, 0, 255}});
 
     auto dl = DrawList{};
     scene.build_draw_list(dl);
@@ -101,26 +96,26 @@ TEST(Scene, RectNodeEmitsDrawRect)
     EXPECT_EQ(cmd.color.b, 0);
 }
 
-TEST(Scene, RectNodePositionFromTransform)
+TEST(Scene, CircleNodeEmitsDrawCircle)
 {
     auto scene = Scene{};
-    scene.root().add_child<RectNode>().set_transform(Transform{.x = 30.0F, .y = 15.0F}).set_size(10.0F, 10.0F);
+    scene.add_child<CircleNode>(scene.root()).set<CircleNode>({.radius = 20.0F, .color = Color{0, 255, 0, 255}});
 
     auto dl = DrawList{};
     scene.build_draw_list(dl);
 
     ASSERT_EQ(dl.size(), 1U);
-    const auto& cmd = std::get<DrawRect>(dl.commands()[0]);
-    EXPECT_FLOAT_EQ(cmd.x, 30.0F);
-    EXPECT_FLOAT_EQ(cmd.y, 15.0F);
-}
+    ASSERT_TRUE(std::holds_alternative<DrawCircle>(dl.commands()[0]));
 
-// ── DrawList output for TextNode ──────────────────────────────────────────────
+    const auto& cmd = std::get<DrawCircle>(dl.commands()[0]);
+    EXPECT_FLOAT_EQ(cmd.radius, 20.0F);
+    EXPECT_EQ(cmd.color.g, 255);
+}
 
 TEST(Scene, TextNodeEmitsDrawText)
 {
     auto scene = Scene{};
-    scene.root().add_child<TextNode>().set_text("hello").set_font_size(24).set_color(Color{255, 255, 255, 255});
+    scene.add_child<TextNode>(scene.root()).set<TextNode>({.text = "hello", .font_size = 16, .color = Color{255, 255, 255, 255}});
 
     auto dl = DrawList{};
     scene.build_draw_list(dl);
@@ -130,30 +125,49 @@ TEST(Scene, TextNodeEmitsDrawText)
 
     const auto& cmd = std::get<DrawText>(dl.commands()[0]);
     EXPECT_EQ(cmd.text, "hello");
-    EXPECT_EQ(cmd.font_size, 24);
+    EXPECT_EQ(cmd.font_size, 16);
 }
 
-// ── Void nodes produce no draw commands ───────────────────────────────────────
-
-TEST(Scene, VoidNodeProducesNoDrawCommand)
+TEST(Scene, VoidNodeEmitsNoDrawCommand)
 {
     auto scene = Scene{};
-    scene.root().add_child<void>().set_transform(Transform{.x = 100.0F, .y = 50.0F});
+    [[maybe_unused]] const auto group = scene.add_child<void>(scene.root());
 
     auto dl = DrawList{};
     scene.build_draw_list(dl);
 
-    EXPECT_TRUE(dl.empty());
+    EXPECT_EQ(dl.size(), 0U);
 }
 
-// ── World transform propagation ───────────────────────────────────────────────
+// ── World-transform propagation ───────────────────────────────────────────────
 
-TEST(Scene, ChildWorldTransformIsParentPlusLocal)
+TEST(Scene, TransformOffsetAppliedToRect)
 {
     auto scene = Scene{};
-    auto parent = scene.root().add_child<RectNode>().set_transform(Transform{.x = 100.0F, .y = 200.0F}).set_size(1.0F, 1.0F);
+    auto e = scene.add_child<RectNode>(scene.root());
+    e.set<Transform>({.x = 100.0F, .y = 200.0F});
+    e.set<RectNode>({.width = 10.0F, .height = 10.0F, .color = {}});
 
-    parent.add_child<RectNode>().set_transform(Transform{.x = 10.0F, .y = 20.0F}).set_size(1.0F, 1.0F);
+    auto dl = DrawList{};
+    scene.build_draw_list(dl);
+
+    ASSERT_EQ(dl.size(), 1U);
+    const auto& cmd = std::get<DrawRect>(dl.commands()[0]);
+    EXPECT_FLOAT_EQ(cmd.x, 100.0F);
+    EXPECT_FLOAT_EQ(cmd.y, 200.0F);
+}
+
+TEST(Scene, ChildInheritsParentTransform)
+{
+    // Parent at (100, 200); child at (10, 20) — expected world pos (110, 220).
+    auto scene = Scene{};
+    auto parent = scene.add_child<RectNode>(scene.root());
+    parent.set<Transform>({.x = 100.0F, .y = 200.0F});
+    parent.set<RectNode>({.width = 1.0F, .height = 1.0F, .color = {}});
+
+    auto child = scene.add_child<RectNode>(parent);
+    child.set<Transform>({.x = 10.0F, .y = 20.0F});
+    child.set<RectNode>({.width = 1.0F, .height = 1.0F, .color = {}});
 
     auto dl = DrawList{};
     scene.build_draw_list(dl);
@@ -171,15 +185,15 @@ TEST(Scene, ChildWorldTransformIsParentPlusLocal)
 
 TEST(Scene, VoidGroupOffsetsPropagateToChildren)
 {
-    // A void group node at (50, 50) with a rect child at (10, 10).
+    // A void group at (50, 50) with a rect child at (10, 10).
     // Expected world position of rect: (60, 60).
     auto scene = Scene{};
-    scene.root()
-        .add_child<void>()
-        .set_transform(Transform{.x = 50.0F, .y = 50.0F})
-        .add_child<RectNode>()
-        .set_transform(Transform{.x = 10.0F, .y = 10.0F})
-        .set_size(1.0F, 1.0F);
+    auto group = scene.add_child<void>(scene.root());
+    group.set<Transform>({.x = 50.0F, .y = 50.0F});
+
+    auto child = scene.add_child<RectNode>(group);
+    child.set<Transform>({.x = 10.0F, .y = 10.0F});
+    child.set<RectNode>({.width = 1.0F, .height = 1.0F, .color = {}});
 
     auto dl = DrawList{};
     scene.build_draw_list(dl);
@@ -195,12 +209,12 @@ TEST(Scene, VoidGroupOffsetsPropagateToChildren)
 TEST(Scene, SiblingsEmittedInAscendingZOrder)
 {
     auto scene = Scene{};
-    auto root = scene.root();
+    const auto root = scene.root();
 
     // Add in reverse z order; draw list must reflect ascending z.
-    root.add_child<RectNode>(2).set_size(1.0F, 1.0F).set_color(Color{2, 0, 0, 255});
-    root.add_child<RectNode>(0).set_size(1.0F, 1.0F).set_color(Color{0, 0, 0, 255});
-    root.add_child<RectNode>(1).set_size(1.0F, 1.0F).set_color(Color{1, 0, 0, 255});
+    scene.add_child<RectNode>(root, 2).set<RectNode>({.width = 1.0F, .height = 1.0F, .color = Color{2, 0, 0, 255}});
+    scene.add_child<RectNode>(root, 0).set<RectNode>({.width = 1.0F, .height = 1.0F, .color = Color{0, 0, 0, 255}});
+    scene.add_child<RectNode>(root, 1).set<RectNode>({.width = 1.0F, .height = 1.0F, .color = Color{1, 0, 0, 255}});
 
     auto dl = DrawList{};
     scene.build_draw_list(dl);
@@ -211,12 +225,12 @@ TEST(Scene, SiblingsEmittedInAscendingZOrder)
     EXPECT_EQ(std::get<DrawRect>(dl.commands()[2]).color.r, 2);
 }
 
-// ── build_draw_list is additive (does not clear) ─────────────────────────────
+// ── build_draw_list is additive (does not clear) ──────────────────────────────
 
 TEST(Scene, BuildDrawListAppendsToExistingList)
 {
     auto scene = Scene{};
-    scene.root().add_child<RectNode>().set_size(1.0F, 1.0F);
+    scene.add_child<RectNode>(scene.root()).set<RectNode>({.width = 1.0F, .height = 1.0F, .color = {}});
 
     auto dl = DrawList{};
 

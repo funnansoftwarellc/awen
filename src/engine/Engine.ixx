@@ -3,6 +3,8 @@ module;
 #include <initializer_list>
 #include <utility>
 
+#include <flecs.h>
+
 export module awen.engine;
 
 export import awen.graphics;
