@@ -197,6 +197,7 @@ auto main() -> int
         reset_ball(state.ball, 1, ScreenSize{.w = sw0, .h = sh0});
 
         auto scene = Scene{};
+        auto& world = scene.raw_world();
         const auto root = scene.root();
 
         // Dashed center line (z = 0).
@@ -205,34 +206,34 @@ auto main() -> int
 
         for (auto i = 0; i < max_dashes; ++i)
         {
-            dashes.push_back(scene.add_child<RectNode>(root).set<RectNode>(
+            dashes.push_back(world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 0}).set<DrawRect>(
                 {.width = dash_width, .height = static_cast<float>(dash_height), .color = colors::dark_gray}));
         }
 
         // Paddles (z = 1).
-        auto left_paddle = scene.add_child<RectNode>(root, 1);
-        left_paddle.set<RectNode>({.width = paddle_width, .height = paddle_height, .color = colors::white});
+        auto left_paddle = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawRect>(
+            {.width = paddle_width, .height = paddle_height, .color = colors::white});
 
-        auto right_paddle = scene.add_child<RectNode>(root, 1);
-        right_paddle.set<RectNode>({.width = paddle_width, .height = paddle_height, .color = colors::white});
+        auto right_paddle = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawRect>(
+            {.width = paddle_width, .height = paddle_height, .color = colors::white});
 
         // Ball (z = 1).
-        auto ball_node = scene.add_child<CircleNode>(root, 1);
-        ball_node.set<CircleNode>({.radius = ball_radius, .color = colors::white});
+        auto ball_node = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawCircle>(
+            {.radius = ball_radius, .color = colors::white});
 
         // Scores (z = 2).
-        auto left_score = scene.add_child<TextNode>(root, 2);
-        left_score.set<TextNode>({.text = {}, .font_size = score_font_size, .color = colors::white});
+        auto left_score = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
+            {.text = {}, .font_size = score_font_size, .color = colors::white});
 
-        auto right_score = scene.add_child<TextNode>(root, 2);
-        right_score.set<TextNode>({.text = {}, .font_size = score_font_size, .color = colors::white});
+        auto right_score = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
+            {.text = {}, .font_size = score_font_size, .color = colors::white});
 
         // Hints (z = 2).
-        auto left_hint = scene.add_child<TextNode>(root, 2);
-        left_hint.set<TextNode>({.text = "W / S", .font_size = hint_font_size, .color = colors::dark_gray});
+        auto left_hint = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
+            {.text = "W / S", .font_size = hint_font_size, .color = colors::dark_gray});
 
-        auto right_hint = scene.add_child<TextNode>(root, 2);
-        right_hint.set<TextNode>({.text = {}, .font_size = hint_font_size, .color = colors::dark_gray});
+        auto right_hint = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
+            {.text = {}, .font_size = hint_font_size, .color = colors::dark_gray});
 
         engine.on_event(
             [&state](const EventKeyboard& ev)
@@ -316,7 +317,7 @@ auto main() -> int
                        const auto left_score_str = std::to_string(state.left_pad.score);
                        const auto right_score_str = std::to_string(state.right_pad.score);
 
-                       left_score.set<TextNode>({
+                       left_score.set<DrawText>({
                            .text = left_score_str,
                            .font_size = score_font_size,
                            .color = colors::white,
@@ -326,7 +327,7 @@ auto main() -> int
                            .y = static_cast<float>(score_y),
                        });
 
-                       right_score.set<TextNode>({
+                       right_score.set<DrawText>({
                            .text = right_score_str,
                            .font_size = score_font_size,
                            .color = colors::white,
@@ -342,7 +343,7 @@ auto main() -> int
 
                        const auto* p2_text = state.p2_ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
 
-                       right_hint.set<TextNode>({
+                       right_hint.set<DrawText>({
                            .text = p2_text,
                            .font_size = hint_font_size,
                            .color = colors::dark_gray,

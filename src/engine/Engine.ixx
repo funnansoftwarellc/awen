@@ -77,7 +77,7 @@ export namespace awn
                 on_update(dt);
 
                 draw_list_.clear();
-                draw_list_.push(graphics::DrawClear{.color = clear_color_});
+                draw_list_.push(graphics::RenderClear{.color = clear_color_});
                 scene.build_draw_list(draw_list_);
 
                 graphics::Renderer::begin();

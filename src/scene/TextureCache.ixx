@@ -9,7 +9,7 @@ module;
 
 export module awen.scene.texture_cache;
 
-export import awen.scene.texture_id;
+export import awen.graphics.texture_id;
 
 export namespace awn::scene
 {
@@ -43,7 +43,7 @@ export namespace awn::scene
         /// @brief Loads a texture from @p path, or returns the cached TextureId if already loaded.
         /// @param path File path of the image to load.
         /// @return A TextureId that can be passed to get().
-        [[nodiscard]] auto load(const std::string& path) -> TextureId
+        [[nodiscard]] auto load(const std::string& path) -> awn::graphics::TextureId
         {
             const auto it = path_to_id_.find(path);
 
@@ -61,7 +61,7 @@ export namespace awn::scene
             const auto index = static_cast<uint32_t>(std::size(textures_));
             textures_.push_back(LoadTexture(path.c_str()));
 
-            const auto id = TextureId{.index = index};
+            const auto id = awn::graphics::TextureId{.index = index};
             path_to_id_.emplace(path, id);
 
             return id;
@@ -70,7 +70,7 @@ export namespace awn::scene
         /// @brief Returns a const pointer to the Texture2D for @p id, or nullptr if invalid.
         /// @param id TextureId returned by a previous call to load().
         /// @return Const pointer to the Texture2D, or nullptr if id is null or out of range.
-        [[nodiscard]] auto get(TextureId id) const -> const Texture2D*
+        [[nodiscard]] auto get(awn::graphics::TextureId id) const -> const Texture2D*
         {
             if (!id.is_valid() || id.index >= static_cast<uint32_t>(std::size(textures_)))
             {
@@ -83,6 +83,6 @@ export namespace awn::scene
     private:
         // textures_[0] is a dummy null sentinel; valid textures start at index 1.
         std::vector<Texture2D> textures_;
-        std::unordered_map<std::string, TextureId> path_to_id_;
+        std::unordered_map<std::string, awn::graphics::TextureId> path_to_id_;
     };
 }

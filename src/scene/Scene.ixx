@@ -2,8 +2,6 @@ module;
 
 #include <algorithm>
 #include <string>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 #include <awen/flecs.h>
@@ -11,11 +9,10 @@ module;
 export module awen.scene;
 
 export import awen.scene.transform;
-export import awen.scene.texture_id;
 export import awen.scene.texture_cache;
-export import awen.scene.scene_nodes;
 
 import awen.graphics.draw_list;
+import awen.graphics.draw_components;
 
 export namespace awn::scene
 {
@@ -69,20 +66,6 @@ export namespace awn::scene
         /// common ancestor for all top-level scene entities.
         [[nodiscard]] auto root() const noexcept -> flecs::entity;
 
-        /// @brief Creates a child entity under @p parent and attaches it to the hierarchy.
-        ///
-        /// Every entity receives a default-constructed Transform and a DrawOrder
-        /// component. When T is a concrete visual type (RectNode, CircleNode,
-        /// SpriteNode, or TextNode) a default-constructed T component is also
-        /// added. When T is void the entity acts as a pure group/container node.
-        ///
-        /// @tparam T  Visual component type, or void for a group node.
-        /// @param parent   Parent entity; pass scene.root() for top-level nodes.
-        /// @param local_z  Draw order relative to siblings — lower values first.
-        /// @return The newly created flecs::entity ready for component mutation.
-        template <typename T>
-        [[nodiscard]] auto add_child(flecs::entity parent, int local_z = 0) -> flecs::entity;
-
         /// @brief Render system — performs a depth-first traversal and appends draw commands to @p out.
         ///
         /// World transforms are propagated from parent to child during the walk.
@@ -95,8 +78,8 @@ export namespace awn::scene
 
         /// @brief Loads a texture from @p path or returns the cached TextureId if already loaded.
         /// @param path File path of the image to load.
-        /// @return TextureId that can be passed to a SpriteNode component.
-        [[nodiscard]] auto load_texture(const std::string& path) -> TextureId;
+        /// @return TextureId that can be passed to a DrawSprite component.
+        [[nodiscard]] auto load_texture(const std::string& path) -> awn::graphics::TextureId;
 
         /// @brief Returns the underlying flecs world for direct ECS access.
         [[nodiscard]] auto raw_world() noexcept -> flecs::world&;
@@ -109,21 +92,6 @@ export namespace awn::scene
 
         TextureCache textures_;
     };
-
-    // ── add_child<T> ─────────────────────────────────────────────────────────
-
-    template <typename T>
-    auto Scene::add_child(flecs::entity parent, int local_z) -> flecs::entity
-    {
-        auto e = world_.entity().child_of(parent).set<Transform>({}).set<DrawOrder>({.z = local_z});
-
-        if constexpr (!std::is_void_v<T>)
-        {
-            e.set<T>({});
-        }
-
-        return e;
-    }
 
     // ── Scene method definitions ──────────────────────────────────────────────
 
@@ -141,7 +109,7 @@ export namespace awn::scene
         return world_;
     }
 
-    auto Scene::load_texture(const std::string& path) -> TextureId
+    auto Scene::load_texture(const std::string& path) -> awn::graphics::TextureId
     {
         return textures_.load(path);
     }
@@ -198,9 +166,9 @@ export namespace awn::scene
             };
 
             // Emit a draw command for whichever visual component this entity carries.
-            if (const auto* rect = node.try_get<RectNode>(); rect != nullptr)
+            if (const auto* rect = node.try_get<awn::graphics::DrawRect>(); rect != nullptr)
             {
-                out.push(awn::graphics::DrawRect{
+                out.push(awn::graphics::RenderRect{
                     .x = wt.x,
                     .y = wt.y,
                     .width = rect->width,
@@ -209,21 +177,21 @@ export namespace awn::scene
                 });
             }
 
-            if (const auto* circle = node.try_get<CircleNode>(); circle != nullptr)
+            if (const auto* circle = node.try_get<awn::graphics::DrawCircle>(); circle != nullptr)
             {
-                out.push(awn::graphics::DrawCircle{
-                    .center_x = wt.x,
-                    .center_y = wt.y,
+                out.push(awn::graphics::RenderCircle{
+                    .x = wt.x,
+                    .y = wt.y,
                     .radius = circle->radius,
                     .color = circle->color,
                 });
             }
 
-            if (const auto* sprite = node.try_get<SpriteNode>(); sprite != nullptr)
+            if (const auto* sprite = node.try_get<awn::graphics::DrawSprite>(); sprite != nullptr)
             {
                 if (const auto* tex = textures_.get(sprite->texture_id); tex != nullptr)
                 {
-                    out.push(awn::graphics::DrawSprite{
+                    out.push(awn::graphics::RenderSprite{
                         .texture =
                             {
                                 .id = tex->id,
@@ -241,9 +209,9 @@ export namespace awn::scene
                 }
             }
 
-            if (const auto* text = node.try_get<TextNode>(); text != nullptr)
+            if (const auto* text = node.try_get<awn::graphics::DrawText>(); text != nullptr)
             {
-                out.push(awn::graphics::DrawText{
+                out.push(awn::graphics::RenderText{
                     .text = text->text,
                     .x = static_cast<int>(wt.x),
                     .y = static_cast<int>(wt.y),
