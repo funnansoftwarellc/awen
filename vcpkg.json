@@ -9,7 +9,10 @@
         "gtest",
         "magic-enum",
         "raylib",
-        "glfw3",
+        {
+            "name": "glfw3",
+            "platform": "!android"
+        },
         {
             "name": "glfw3",
             "features": [
