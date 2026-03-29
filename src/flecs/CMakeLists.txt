@@ -8,12 +8,15 @@ target_include_directories(${PROJECT_NAME} INTERFACE
     include
 )
 
-# /external:anglebrackets marks all <...> angle-bracket includes as external headers.
-# Combined with /external:W0 (added by CMake for SYSTEM includes), this suppresses
-# warnings from third-party headers such as flecs in C++ module global fragments,
-# where #pragma warning(push, 0) is not reliably honoured by MSVC.
+# /external:anglebrackets — treat all <...> angle-bracket includes as external headers.
+# /external:W0          — suppress all warnings from external headers.
+# /external:templates-  — use the template *definition* location (external) rather than
+#                         the *instantiation* location (user code) when deciding whether
+#                         to suppress warnings. Without this, MSVC emits warnings for
+#                         templates defined in external headers (e.g. flecs component.hpp)
+#                         when they are instantiated from user code (e.g. Scene.ixx).
 target_compile_options(${PROJECT_NAME} INTERFACE
-    $<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0>
+    $<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /external:templates->
 )
 
 target_link_libraries(${PROJECT_NAME} INTERFACE
