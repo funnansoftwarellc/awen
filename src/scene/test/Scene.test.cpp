@@ -181,13 +181,15 @@ TEST(Scene, ChildInheritsParentTransform)
     // Parent at (100, 200); child at (10, 20) — expected world pos (110, 220).
     auto f = Fixture{};
 
-    auto parent =
-        f.world.entity().set<Transform>({.x = 100.0F, .y = 200.0F}).set<DrawOrder>({}).set<DrawRect>({.width = 1.0F, .height = 1.0F, .color = {}});
+    auto parent = f.world.entity()
+                      .set<Transform>({.x = 100.0F, .y = 200.0F})
+                      .set<DrawOrder>({.z = 0})
+                      .set<DrawRect>({.width = 1.0F, .height = 1.0F, .color = {}});
 
     [[maybe_unused]] auto child = f.world.entity()
                                       .child_of(parent)
                                       .set<Transform>({.x = 10.0F, .y = 20.0F})
-                                      .set<DrawOrder>({})
+                                      .set<DrawOrder>({.z = 1})
                                       .set<DrawRect>({.width = 1.0F, .height = 1.0F, .color = {}});
 
     auto dl = DrawList{};

@@ -1,8 +1,6 @@
 module;
 
-#include <algorithm>
 #include <string>
-#include <vector>
 
 #include <awen/flecs.h>
 
@@ -16,7 +14,8 @@ import awen.graphics.draw_components;
 
 export namespace awn::scene
 {
-    /// @brief Draw order for a scene entity — lower z values are rendered first among siblings.
+    /// @brief Global draw order — lower z values are rendered before higher z values within
+    ///        each visual archetype (DrawRect, DrawCircle, DrawText, DrawSprite).
     struct DrawOrder
     {
         int z{};
@@ -28,16 +27,25 @@ export namespace awn::scene
     ///   - Registers Transform, WorldTransform, and DrawOrder as named components.
     ///   - Registers an observer that zero-initialises WorldTransform whenever Transform
     ///     is added to an entity, so the propagation system always has a writable target.
-    ///   - Registers the PropagateWorldTransforms system with three terms (own Transform, mutable
-    ///     WorldTransform, and parent WorldTransform via cascade-ordered optional traversal), so
-    ///   - Pre-builds a cached query for top-level scene entities (those with Transform
-    ///     but no ChildOf relationship), used by build_draw_list().
+    ///   - Registers the PropagateWorldTransforms system with cascade-ordered iteration
+    ///     (parent-before-child) so each entity accumulates its ancestors' positions correctly.
+    ///   - Pre-builds per-archetype z-sorted queries (DrawRect, DrawCircle, DrawText, DrawSprite)
+    ///     used by build_draw_list() to emit render commands without heap-allocated traversal.
     struct SceneModule
     {
-        /// @brief Cached query for entities that are roots — have Transform but no parent.
-        flecs::query<const Transform> roots_query;
+        /// @brief Pre-built query that emits all rect entities in ascending DrawOrder.z order.
+        flecs::query<const WorldTransform, const awn::graphics::DrawRect, const DrawOrder> rect_query;
 
-        /// @brief Constructs the module: registers components, observer, and systems with @p world.
+        /// @brief Pre-built query that emits all circle entities in ascending DrawOrder.z order.
+        flecs::query<const WorldTransform, const awn::graphics::DrawCircle, const DrawOrder> circle_query;
+
+        /// @brief Pre-built query that emits all text entities in ascending DrawOrder.z order.
+        flecs::query<const WorldTransform, const awn::graphics::DrawText, const DrawOrder> text_query;
+
+        /// @brief Pre-built query that emits all sprite entities in ascending DrawOrder.z order.
+        flecs::query<const WorldTransform, const awn::graphics::DrawSprite, const DrawOrder> sprite_query;
+
+        /// @brief Constructs the module: registers components, observer, systems, and queries with @p world.
         /// @param world The flecs world to register into.
         explicit SceneModule(flecs::world& world)
         {
@@ -69,18 +77,33 @@ export namespace awn::scene
                         wt.y = t.y + (parent_wt != nullptr ? parent_wt->y : 0.0F);
                     });
 
-            // Pre-build the query that seeds the draw-list DFS traversal with the set of
-            // top-level scene entities (have Transform, no ChildOf parent).
-            roots_query = world.query_builder<const Transform>().without(flecs::ChildOf, flecs::Wildcard).build();
+            // Ascending comparator shared by all per-archetype queries below.
+            const auto ascending_z = [](flecs::entity_t, const DrawOrder* a, flecs::entity_t, const DrawOrder* b) -> int
+            { return (a->z > b->z) - (a->z < b->z); };
+
+            rect_query =
+                world.query_builder<const WorldTransform, const awn::graphics::DrawRect, const DrawOrder>().order_by<DrawOrder>(ascending_z).build();
+
+            circle_query = world.query_builder<const WorldTransform, const awn::graphics::DrawCircle, const DrawOrder>()
+                               .order_by<DrawOrder>(ascending_z)
+                               .build();
+
+            text_query =
+                world.query_builder<const WorldTransform, const awn::graphics::DrawText, const DrawOrder>().order_by<DrawOrder>(ascending_z).build();
+
+            sprite_query = world.query_builder<const WorldTransform, const awn::graphics::DrawSprite, const DrawOrder>()
+                               .order_by<DrawOrder>(ascending_z)
+                               .build();
         }
     };
 
-    /// @brief Performs a depth-first, z-ordered traversal of all scene entities and appends
-    ///        draw commands to @p out.
+    /// @brief Iterates all visual entities via per-archetype pre-built queries and appends
+    ///        render commands to @p out.
     ///
-    /// Reads the WorldTransform component written by the PropagateWorldTransforms system
-    /// (call @c world.progress() before this function each frame). The traversal seeds itself
-    /// from entities with Transform and no parent, so no root sentinel entity is required.
+    /// Within each archetype, commands are emitted in ascending DrawOrder.z order.
+    /// Archetypes are emitted in the fixed sequence: DrawRect, DrawCircle, DrawText, DrawSprite.
+    /// Reads the WorldTransform component written by the PropagateWorldTransforms system —
+    /// call @c world.progress() before this function each frame.
     /// The list is not cleared before appending; callers must call DrawList::clear() first.
     ///
     /// @param world    The flecs world containing all scene entities; must have SceneModule imported.
@@ -92,121 +115,64 @@ export namespace awn::scene
 
     inline auto build_draw_list(flecs::world& world, TextureCache& textures, awn::graphics::DrawList& out) -> void
     {
-        // Z-ordered DFS. WorldTransforms have already been stamped by PropagateWorldTransforms.
-        // Entities without a WorldTransform component are silently skipped.
-        auto stack = std::vector<flecs::entity>{};
-
-        // Pushes the z-sorted children of @p parent onto the stack in descending order so
-        // the lowest-z child sits on top and is popped (processed) first.
-        const auto push_children = [&](flecs::entity parent)
-        {
-            auto children = std::vector<std::pair<int, flecs::entity>>{};
-
-            parent.children(
-                [&](flecs::entity child)
-                {
-                    if (child.has<DrawOrder>())
-                    {
-                        const auto* order = child.try_get<DrawOrder>();
-                        children.emplace_back(order != nullptr ? order->z : 0, child);
-                    }
-                });
-
-            std::ranges::sort(children, [](const auto& a, const auto& b) { return a.first > b.first; });
-
-            for (auto& [z, child] : children)
-            {
-                stack.push_back(child);
-            }
-        };
-
-        // Seed the DFS from top-level scene entities, z-sorted among themselves.
         const auto& mod = world.get<SceneModule>();
 
-        auto roots = std::vector<std::pair<int, flecs::entity>>{};
-
-        mod.roots_query.each(
-            [&](flecs::entity e, const Transform&)
+        mod.rect_query.each(
+            [&](const WorldTransform& wt, const awn::graphics::DrawRect& rect, const DrawOrder&)
             {
-                if (e.has<DrawOrder>())
-                {
-                    const auto* order = e.try_get<DrawOrder>();
-                    roots.emplace_back(order != nullptr ? order->z : 0, e);
-                }
+                out.push(awn::graphics::RenderRect{
+                    .x = wt.x,
+                    .y = wt.y,
+                    .width = rect.width,
+                    .height = rect.height,
+                    .color = rect.color,
+                });
             });
 
-        std::ranges::sort(roots, [](const auto& a, const auto& b) { return a.first > b.first; });
-
-        for (auto& [z, e] : roots)
-        {
-            stack.push_back(e);
-        }
-
-        while (!stack.empty())
-        {
-            const auto node = stack.back();
-            stack.pop_back();
-
-            const auto* wt = node.try_get<WorldTransform>();
-
-            if (wt != nullptr)
+        mod.circle_query.each(
+            [&](const WorldTransform& wt, const awn::graphics::DrawCircle& circle, const DrawOrder&)
             {
-                if (const auto* rect = node.try_get<awn::graphics::DrawRect>(); rect != nullptr)
+                out.push(awn::graphics::RenderCircle{
+                    .x = wt.x,
+                    .y = wt.y,
+                    .radius = circle.radius,
+                    .color = circle.color,
+                });
+            });
+
+        mod.text_query.each(
+            [&](const WorldTransform& wt, const awn::graphics::DrawText& text, const DrawOrder&)
+            {
+                out.push(awn::graphics::RenderText{
+                    .text = text.text,
+                    .x = static_cast<int>(wt.x),
+                    .y = static_cast<int>(wt.y),
+                    .font_size = text.font_size,
+                    .color = text.color,
+                });
+            });
+
+        mod.sprite_query.each(
+            [&](const WorldTransform& wt, const awn::graphics::DrawSprite& sprite, const DrawOrder&)
+            {
+                if (const auto* tex = textures.get(sprite.texture_id); tex != nullptr)
                 {
-                    out.push(awn::graphics::RenderRect{
-                        .x = wt->x,
-                        .y = wt->y,
-                        .width = rect->width,
-                        .height = rect->height,
-                        .color = rect->color,
+                    out.push(awn::graphics::RenderSprite{
+                        .texture =
+                            {
+                                .id = tex->id,
+                                .width = tex->width,
+                                .height = tex->height,
+                                .mipmaps = tex->mipmaps,
+                                .format = tex->format,
+                            },
+                        .x = wt.x,
+                        .y = wt.y,
+                        .width = sprite.width,
+                        .height = sprite.height,
+                        .tint = sprite.tint,
                     });
                 }
-
-                if (const auto* circle = node.try_get<awn::graphics::DrawCircle>(); circle != nullptr)
-                {
-                    out.push(awn::graphics::RenderCircle{
-                        .x = wt->x,
-                        .y = wt->y,
-                        .radius = circle->radius,
-                        .color = circle->color,
-                    });
-                }
-
-                if (const auto* sprite = node.try_get<awn::graphics::DrawSprite>(); sprite != nullptr)
-                {
-                    if (const auto* tex = textures.get(sprite->texture_id); tex != nullptr)
-                    {
-                        out.push(awn::graphics::RenderSprite{
-                            .texture =
-                                {
-                                    .id = tex->id,
-                                    .width = tex->width,
-                                    .height = tex->height,
-                                    .mipmaps = tex->mipmaps,
-                                    .format = tex->format,
-                                },
-                            .x = wt->x,
-                            .y = wt->y,
-                            .width = sprite->width,
-                            .height = sprite->height,
-                            .tint = sprite->tint,
-                        });
-                    }
-                }
-
-                if (const auto* text = node.try_get<awn::graphics::DrawText>(); text != nullptr)
-                {
-                    out.push(awn::graphics::RenderText{
-                        .text = text->text,
-                        .x = static_cast<int>(wt->x),
-                        .y = static_cast<int>(wt->y),
-                        .font_size = text->font_size,
-                        .color = text->color,
-                    });
-                }
-            }
-
-            push_children(node);
-        }
+            });
     }
 }
