@@ -196,9 +196,7 @@ auto main() -> int
 
         reset_ball(state.ball, 1, ScreenSize{.w = sw0, .h = sh0});
 
-        auto scene = Scene{};
-        auto& world = scene.raw_world();
-        const auto root = scene.root();
+        auto& world = engine.raw_world();
 
         // Dashed center line (z = 0).
         auto dashes = std::vector<flecs::entity>{};
@@ -206,33 +204,32 @@ auto main() -> int
 
         for (auto i = 0; i < max_dashes; ++i)
         {
-            dashes.push_back(world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 0}).set<DrawRect>(
+            dashes.push_back(world.entity().set<Transform>({}).set<DrawOrder>({.z = 0}).set<DrawRect>(
                 {.width = dash_width, .height = static_cast<float>(dash_height), .color = colors::dark_gray}));
         }
 
         // Paddles (z = 1).
-        auto left_paddle = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawRect>(
+        auto left_paddle = world.entity().set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawRect>(
             {.width = paddle_width, .height = paddle_height, .color = colors::white});
 
-        auto right_paddle = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawRect>(
+        auto right_paddle = world.entity().set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawRect>(
             {.width = paddle_width, .height = paddle_height, .color = colors::white});
 
         // Ball (z = 1).
-        auto ball_node = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawCircle>(
-            {.radius = ball_radius, .color = colors::white});
+        auto ball_node = world.entity().set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawCircle>({.radius = ball_radius, .color = colors::white});
 
         // Scores (z = 2).
-        auto left_score = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
+        auto left_score = world.entity().set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
             {.text = {}, .font_size = score_font_size, .color = colors::white});
 
-        auto right_score = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
+        auto right_score = world.entity().set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
             {.text = {}, .font_size = score_font_size, .color = colors::white});
 
         // Hints (z = 2).
-        auto left_hint = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
+        auto left_hint = world.entity().set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
             {.text = "W / S", .font_size = hint_font_size, .color = colors::dark_gray});
 
-        auto right_hint = world.entity().child_of(root).set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
+        auto right_hint = world.entity().set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
             {.text = {}, .font_size = hint_font_size, .color = colors::dark_gray});
 
         engine.on_event(
@@ -244,115 +241,115 @@ auto main() -> int
                 }
             });
 
-        engine.run(scene,
-                   [&](float dt)
-                   {
-                       const auto sw = static_cast<float>(Window::get_screen_width());
-                       const auto sh = static_cast<float>(Window::get_screen_height());
-                       const auto screen = ScreenSize{.w = sw, .h = sh};
+        engine.run(
+            [&](float dt)
+            {
+                const auto sw = static_cast<float>(Window::get_screen_width());
+                const auto sh = static_cast<float>(Window::get_screen_height());
+                const auto screen = ScreenSize{.w = sw, .h = sh};
 
-                       state.right_pad.x = sw - paddle_offset - paddle_width;
+                state.right_pad.x = sw - paddle_offset - paddle_width;
 
-                       // Player 1 input.
-                       if (Window::is_key_down(EventKeyboard::Key::w))
-                       {
-                           state.left_pad.y -= paddle_speed * dt;
-                       }
+                // Player 1 input.
+                if (Window::is_key_down(EventKeyboard::Key::w))
+                {
+                    state.left_pad.y -= paddle_speed * dt;
+                }
 
-                       if (Window::is_key_down(EventKeyboard::Key::s))
-                       {
-                           state.left_pad.y += paddle_speed * dt;
-                       }
+                if (Window::is_key_down(EventKeyboard::Key::s))
+                {
+                    state.left_pad.y += paddle_speed * dt;
+                }
 
-                       clamp_paddle(state.left_pad, sh);
+                clamp_paddle(state.left_pad, sh);
 
-                       // Player 2 input.
-                       if (state.p2_ai)
-                       {
-                           update_ai(state.right_pad, state.ball, screen, dt);
-                       }
-                       else
-                       {
-                           if (Window::is_key_down(EventKeyboard::Key::up))
-                           {
-                               state.right_pad.y -= paddle_speed * dt;
-                           }
+                // Player 2 input.
+                if (state.p2_ai)
+                {
+                    update_ai(state.right_pad, state.ball, screen, dt);
+                }
+                else
+                {
+                    if (Window::is_key_down(EventKeyboard::Key::up))
+                    {
+                        state.right_pad.y -= paddle_speed * dt;
+                    }
 
-                           if (Window::is_key_down(EventKeyboard::Key::down))
-                           {
-                               state.right_pad.y += paddle_speed * dt;
-                           }
+                    if (Window::is_key_down(EventKeyboard::Key::down))
+                    {
+                        state.right_pad.y += paddle_speed * dt;
+                    }
 
-                           clamp_paddle(state.right_pad, sh);
-                       }
+                    clamp_paddle(state.right_pad, sh);
+                }
 
-                       update_physics(state, screen, dt);
+                update_physics(state, screen, dt);
 
-                       // Update scene entities.
-                       const auto half_w = sw * half;
-                       const auto screen_w_i = static_cast<int>(sw);
-                       const auto screen_h_i = static_cast<int>(sh);
+                // Update scene entities.
+                const auto half_w = sw * half;
+                const auto screen_w_i = static_cast<int>(sw);
+                const auto screen_h_i = static_cast<int>(sh);
 
-                       // Dashes.
-                       auto dash_idx = 0;
+                // Dashes.
+                auto dash_idx = 0;
 
-                       for (auto y = 0; y < screen_h_i && dash_idx < max_dashes; y += dash_gap, ++dash_idx)
-                       {
-                           dashes[static_cast<std::size_t>(dash_idx)].set<Transform>({.x = half_w - dash_center_offset, .y = static_cast<float>(y)});
-                       }
+                for (auto y = 0; y < screen_h_i && dash_idx < max_dashes; y += dash_gap, ++dash_idx)
+                {
+                    dashes[static_cast<std::size_t>(dash_idx)].set<Transform>({.x = half_w - dash_center_offset, .y = static_cast<float>(y)});
+                }
 
-                       for (; dash_idx < max_dashes; ++dash_idx)
-                       {
-                           dashes[static_cast<std::size_t>(dash_idx)].set<Transform>({.x = -dash_width, .y = -static_cast<float>(dash_height)});
-                       }
+                for (; dash_idx < max_dashes; ++dash_idx)
+                {
+                    dashes[static_cast<std::size_t>(dash_idx)].set<Transform>({.x = -dash_width, .y = -static_cast<float>(dash_height)});
+                }
 
-                       // Paddles.
-                       left_paddle.set<Transform>({.x = state.left_pad.x, .y = state.left_pad.y});
-                       right_paddle.set<Transform>({.x = state.right_pad.x, .y = state.right_pad.y});
+                // Paddles.
+                left_paddle.set<Transform>({.x = state.left_pad.x, .y = state.left_pad.y});
+                right_paddle.set<Transform>({.x = state.right_pad.x, .y = state.right_pad.y});
 
-                       // Ball.
-                       ball_node.set<Transform>({.x = state.ball.x, .y = state.ball.y});
+                // Ball.
+                ball_node.set<Transform>({.x = state.ball.x, .y = state.ball.y});
 
-                       // Scores.
-                       const auto left_score_str = std::to_string(state.left_pad.score);
-                       const auto right_score_str = std::to_string(state.right_pad.score);
+                // Scores.
+                const auto left_score_str = std::to_string(state.left_pad.score);
+                const auto right_score_str = std::to_string(state.right_pad.score);
 
-                       left_score.set<DrawText>({
-                           .text = left_score_str,
-                           .font_size = score_font_size,
-                           .color = colors::white,
-                       });
-                       left_score.set<Transform>({
-                           .x = static_cast<float>(static_cast<int>(half_w) - score_x_left),
-                           .y = static_cast<float>(score_y),
-                       });
+                left_score.set<DrawText>({
+                    .text = left_score_str,
+                    .font_size = score_font_size,
+                    .color = colors::white,
+                });
+                left_score.set<Transform>({
+                    .x = static_cast<float>(static_cast<int>(half_w) - score_x_left),
+                    .y = static_cast<float>(score_y),
+                });
 
-                       right_score.set<DrawText>({
-                           .text = right_score_str,
-                           .font_size = score_font_size,
-                           .color = colors::white,
-                       });
-                       right_score.set<Transform>({
-                           .x = static_cast<float>(static_cast<int>(half_w) + score_x_left
-                                                   - Renderer::measure_text(right_score_str.c_str(), score_font_size)),
-                           .y = static_cast<float>(score_y),
-                       });
+                right_score.set<DrawText>({
+                    .text = right_score_str,
+                    .font_size = score_font_size,
+                    .color = colors::white,
+                });
+                right_score.set<Transform>({
+                    .x = static_cast<float>(static_cast<int>(half_w) + score_x_left
+                                            - Renderer::measure_text(right_score_str.c_str(), score_font_size)),
+                    .y = static_cast<float>(score_y),
+                });
 
-                       // Hints.
-                       left_hint.set<Transform>({.x = static_cast<float>(hint_x), .y = static_cast<float>(screen_h_i - hint_y_from_bottom)});
+                // Hints.
+                left_hint.set<Transform>({.x = static_cast<float>(hint_x), .y = static_cast<float>(screen_h_i - hint_y_from_bottom)});
 
-                       const auto* p2_text = state.p2_ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
+                const auto* p2_text = state.p2_ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
 
-                       right_hint.set<DrawText>({
-                           .text = p2_text,
-                           .font_size = hint_font_size,
-                           .color = colors::dark_gray,
-                       });
-                       right_hint.set<Transform>({
-                           .x = static_cast<float>(screen_w_i - Renderer::measure_text(p2_text, hint_font_size) - hint_x),
-                           .y = static_cast<float>(screen_h_i - hint_y_from_bottom),
-                       });
-                   });
+                right_hint.set<DrawText>({
+                    .text = p2_text,
+                    .font_size = hint_font_size,
+                    .color = colors::dark_gray,
+                });
+                right_hint.set<Transform>({
+                    .x = static_cast<float>(screen_w_i - Renderer::measure_text(p2_text, hint_font_size) - hint_x),
+                    .y = static_cast<float>(screen_h_i - hint_y_from_bottom),
+                });
+            });
 
         return EXIT_SUCCESS;
     }
