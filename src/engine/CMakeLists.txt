@@ -10,8 +10,5 @@ target_sources(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         awen-flecs
-        awen-core
-        awen-graphics
-        awen-scene
-        awen-widgets
+    awen-core
 )

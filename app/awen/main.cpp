@@ -181,19 +181,35 @@ auto main() -> int
 {
     try
     {
+        using namespace awn::graphics;
+        using namespace awn::scene;
+        using awn::widgets::DrawOrder;
+        using namespace awn::widgets::z_layers;
+
+        auto window = Window{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable, ConfigFlag::high_dpi}};
+        Window::set_target_fps(target_fps);
+
         auto world = flecs::world{};
         world.import<awn::core::Module>();
         world.import<awn::graphics::Module>();
         world.import<awn::scene::Module>();
         world.import<awn::widgets::Module>();
 
-        using namespace awn::graphics;
-        using namespace awn::scene;
-        using awn::widgets::DrawOrder;
+        auto engine = awn::core::Engine{world};
+        auto textures = awn::widgets::TextureCache{};
+        auto clear_color = Color{.r = 0, .g = 0, .b = 0, .a = 120};
 
-        auto engine = awn::core::Engine{world, "Awen - Pong", init_width, init_height, {ConfigFlag::resizable, ConfigFlag::high_dpi}};
-        awn::core::Engine::set_target_fps(target_fps);
-        engine.set_clear_color(Color{.r = 0, .g = 0, .b = 0, .a = 120});
+        auto update_pipeline = world.pipeline().with(flecs::System).with(flecs::Phase, flecs::OnUpdate).build();
+
+        auto render_pipeline = world.pipeline().with(flecs::System).with(flecs::Phase, flecs::PostUpdate).build();
+
+        engine.set_update_pipeline(update_pipeline);
+        engine.set_render_pipeline(render_pipeline);
+
+        engine.on_pre_update([&](float) { window.poll_events(); });
+        awn::widgets::configure_rendering(world, textures, clear_color);
+
+        const auto widget_root = awn::widgets::create_window(world);
 
         const auto sw0 = static_cast<float>(init_width);
         const auto sh0 = static_cast<float>(init_height);
@@ -213,35 +229,60 @@ auto main() -> int
 
         for (auto i = 0; i < max_dashes; ++i)
         {
-            dashes.push_back(world.entity().set<Transform>({}).set<DrawOrder>({.z = 0}).set<DrawRect>(
-                {.width = dash_width, .height = static_cast<float>(dash_height), .color = colors::dark_gray}));
+            dashes.push_back(world.entity()
+                                 .child_of(widget_root)
+                                 .set<Transform>({})
+                                 .set<DrawOrder>({.z = game_background})
+                                 .set<DrawRect>({.width = dash_width, .height = static_cast<float>(dash_height), .color = colors::dark_gray}));
         }
 
         // Paddles (z = 1).
-        auto left_paddle = world.entity().set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawRect>(
-            {.width = paddle_width, .height = paddle_height, .color = colors::white});
+        auto left_paddle = world.entity()
+                               .child_of(widget_root)
+                               .set<Transform>({})
+                               .set<DrawOrder>({.z = game_playfield})
+                               .set<DrawRect>({.width = paddle_width, .height = paddle_height, .color = colors::white});
 
-        auto right_paddle = world.entity().set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawRect>(
-            {.width = paddle_width, .height = paddle_height, .color = colors::white});
+        auto right_paddle = world.entity()
+                                .child_of(widget_root)
+                                .set<Transform>({})
+                                .set<DrawOrder>({.z = game_playfield})
+                                .set<DrawRect>({.width = paddle_width, .height = paddle_height, .color = colors::white});
 
         // Ball (z = 1).
-        auto ball_node = world.entity().set<Transform>({}).set<DrawOrder>({.z = 1}).set<DrawCircle>({.radius = ball_radius, .color = colors::white});
+        auto ball_node = world.entity()
+                             .child_of(widget_root)
+                             .set<Transform>({})
+                             .set<DrawOrder>({.z = game_playfield})
+                             .set<DrawCircle>({.radius = ball_radius, .color = colors::white});
 
         // Scores (z = 2).
-        auto left_score = world.entity().set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
-            {.text = {}, .font_size = score_font_size, .color = colors::white});
+        auto left_score = world.entity()
+                              .child_of(widget_root)
+                              .set<Transform>({})
+                              .set<DrawOrder>({.z = game_overlay})
+                              .set<DrawText>({.text = {}, .font_size = score_font_size, .color = colors::white});
 
-        auto right_score = world.entity().set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
-            {.text = {}, .font_size = score_font_size, .color = colors::white});
+        auto right_score = world.entity()
+                               .child_of(widget_root)
+                               .set<Transform>({})
+                               .set<DrawOrder>({.z = game_overlay})
+                               .set<DrawText>({.text = {}, .font_size = score_font_size, .color = colors::white});
 
         // Hints (z = 2).
-        auto left_hint = world.entity().set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
-            {.text = "W / S", .font_size = hint_font_size, .color = colors::dark_gray});
+        auto left_hint = world.entity()
+                             .child_of(widget_root)
+                             .set<Transform>({})
+                             .set<DrawOrder>({.z = game_overlay})
+                             .set<DrawText>({.text = "W / S", .font_size = hint_font_size, .color = colors::dark_gray});
 
-        auto right_hint = world.entity().set<Transform>({}).set<DrawOrder>({.z = 2}).set<DrawText>(
-            {.text = {}, .font_size = hint_font_size, .color = colors::dark_gray});
+        auto right_hint = world.entity()
+                              .child_of(widget_root)
+                              .set<Transform>({})
+                              .set<DrawOrder>({.z = game_overlay})
+                              .set<DrawText>({.text = {}, .font_size = hint_font_size, .color = colors::dark_gray});
 
-        engine.on_event(
+        window.on_event(
             [&state](const EventKeyboard& ev)
             {
                 if (ev.key == EventKeyboard::Key::space && ev.type == EventKeyboard::Type::pressed)
@@ -250,7 +291,7 @@ auto main() -> int
                 }
             });
 
-        engine.run(
+        engine.on_post_update(
             [&](float dt)
             {
                 const auto sw = static_cast<float>(Window::get_screen_width());
@@ -359,6 +400,8 @@ auto main() -> int
                     .y = static_cast<float>(screen_h_i - hint_y_from_bottom),
                 });
             });
+
+        engine.run([]() -> bool { return Window::is_open(); }, []() -> float { return Window::get_frame_time(); });
 
         return EXIT_SUCCESS;
     }

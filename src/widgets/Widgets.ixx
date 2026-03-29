@@ -10,6 +10,15 @@ export import awen.widgets.texture_cache;
 
 export namespace awn::widgets
 {
+    /// @brief Shared draw-order bands used by widget and game composition.
+    namespace z_layers
+    {
+        inline constexpr auto game_background = 0;
+        inline constexpr auto game_playfield = 100;
+        inline constexpr auto game_overlay = 200;
+        inline constexpr auto ui_base = 1000;
+    }
+
     /// @brief Global draw order for visual entities.
     struct DrawOrder
     {
@@ -20,6 +29,20 @@ export namespace awn::widgets
     struct Window
     {
     };
+
+    /// @brief Rendering context consumed by the widgets render system.
+    struct RenderContext
+    {
+        TextureCache* textures{};
+        awn::graphics::Color clear_color{};
+        bool enabled{};
+    };
+
+    /// @brief Renders one frame by building a draw list and submitting it through graphics renderer.
+    /// @param world Flecs world with widgets Module imported.
+    /// @param textures Texture cache used to resolve sprite textures.
+    /// @param clear_color Background clear color.
+    inline auto render_frame(flecs::world& world, TextureCache& textures, awn::graphics::Color clear_color) -> void;
 
     /// @brief Flecs module that provides widget composition and render traversal queries.
     struct Module
@@ -42,6 +65,7 @@ export namespace awn::widgets
 
             world.component<DrawOrder>("DrawOrder");
             world.component<Window>("Window");
+            world.component<RenderContext>("RenderContext");
 
             const auto ascending_z = [](flecs::entity_t, const DrawOrder* a, flecs::entity_t, const DrawOrder* b) -> int
             { return (a->z > b->z) - (a->z < b->z); };
@@ -61,6 +85,21 @@ export namespace awn::widgets
             sprite_query = world.query_builder<const awn::scene::WorldTransform, const awn::graphics::DrawSprite, const DrawOrder>()
                                .order_by<DrawOrder>(ascending_z)
                                .build();
+
+            world.system<>("RenderFrame")
+                .kind(flecs::PostUpdate)
+                .each(
+                    [&world]()
+                    {
+                        const auto* context = world.try_get<RenderContext>();
+
+                        if (context == nullptr || !context->enabled || context->textures == nullptr)
+                        {
+                            return;
+                        }
+
+                        render_frame(world, *context->textures, context->clear_color);
+                    });
         }
     };
 
@@ -69,7 +108,7 @@ export namespace awn::widgets
     /// @return The created root entity with Window, Transform, and DrawOrder components.
     [[nodiscard]] inline auto create_window(flecs::world& world) -> flecs::entity
     {
-        return world.entity().set<Window>({}).set<awn::scene::Transform>({}).set<DrawOrder>({.z = 0});
+        return world.entity().add<Window>().set<awn::scene::Transform>({}).set<DrawOrder>({.z = z_layers::ui_base});
     }
 
     /// @brief Appends render commands for all widget-compatible draw components.
@@ -137,6 +176,34 @@ export namespace awn::widgets
                     });
                 }
             });
+    }
+
+    /// @brief Renders one frame by building a draw list and submitting it through graphics renderer.
+    /// @param world Flecs world with widgets Module imported.
+    /// @param textures Texture cache used to resolve sprite textures.
+    /// @param clear_color Background clear color.
+    inline auto render_frame(flecs::world& world, TextureCache& textures, awn::graphics::Color clear_color) -> void
+    {
+        auto draw_list = awn::graphics::DrawList{};
+        draw_list.push(awn::graphics::RenderClear{.color = clear_color});
+        build_draw_list(world, textures, draw_list);
+
+        awn::graphics::Renderer::begin();
+        awn::graphics::Renderer::submit(draw_list);
+        awn::graphics::Renderer::end();
+    }
+
+    /// @brief Configures world-level render context for the widgets render system.
+    /// @param world Flecs world with widgets Module imported.
+    /// @param textures Texture cache used during render command generation.
+    /// @param clear_color Background clear color.
+    inline auto configure_rendering(flecs::world& world, TextureCache& textures, awn::graphics::Color clear_color) -> void
+    {
+        world.set<RenderContext>({
+            .textures = &textures,
+            .clear_color = clear_color,
+            .enabled = true,
+        });
     }
 }
 

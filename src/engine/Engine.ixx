@@ -1,31 +1,24 @@
 module;
 
-#include <initializer_list>
-#include <string>
+#include <functional>
 #include <utility>
+#include <vector>
 
 #include <awen/flecs.h>
 
 export module awen.core.engine;
 
-export import awen.graphics;
-export import awen.scene;
-export import awen.widgets;
-
 export namespace awn::core
 {
-    /// @brief Owns the application window and drives the main game loop.
+    /// @brief Owns the frame loop and executes world pipelines and hooks.
     class Engine
     {
     public:
-        /// @brief Creates the application window and binds the engine to an existing ECS world.
+        using hook_t = std::function<void(float)>;
+
+        /// @brief Binds the engine to an existing ECS world.
         /// @param world ECS world that already imported all required modules.
-        /// @param title Window title bar text.
-        /// @param width Initial width in pixels.
-        /// @param height Initial height in pixels.
-        /// @param flags Optional window configuration flags.
-        Engine(flecs::world& world, const char* title, int width, int height, std::initializer_list<graphics::ConfigFlag> flags = {})
-            : window_{title, width, height, flags}, world_{world}
+        explicit Engine(flecs::world& world) : world_{world}
         {
         }
 
@@ -36,67 +29,100 @@ export namespace awn::core
         Engine(Engine&&) = delete;
         auto operator=(Engine&&) -> Engine& = delete;
 
-        /// @brief Sets the target frame rate.
-        /// @param fps Desired frames per second.
-        static auto set_target_fps(int fps) -> void
-        {
-            graphics::Window::set_target_fps(fps);
-        }
-
-        /// @brief Sets the background colour used to clear each frame.
-        /// @param color Colour written as a RenderClear command before scene commands.
-        auto set_clear_color(graphics::Color color) -> void
-        {
-            clear_color_ = color;
-        }
-
         /// @brief Returns the ECS world reference provided at construction.
         [[nodiscard]] auto raw_world() noexcept -> flecs::world&
         {
             return world_;
         }
 
-        /// @brief Loads a texture from @p path or returns the cached TextureId if already loaded.
-        [[nodiscard]] auto load_texture(const std::string& path) -> graphics::TextureId
+        /// @brief Sets the update pipeline used for the simulation phase.
+        /// @param pipeline Pipeline entity to run for update.
+        auto set_update_pipeline(flecs::entity pipeline) -> void
         {
-            return textures_.load(path);
+            update_pipeline_ = pipeline;
         }
 
-        /// @brief Registers an event handler forwarded to the underlying Window.
-        template <typename F>
-        auto on_event(F&& handler) -> void
+        /// @brief Sets the render pipeline used for the render phase.
+        /// @param pipeline Pipeline entity to run for render.
+        auto set_render_pipeline(flecs::entity pipeline) -> void
         {
-            window_.on_event(std::forward<F>(handler));
+            render_pipeline_ = pipeline;
         }
 
-        /// @brief Runs the main loop until the window is closed.
-        /// @param on_update Callback invoked once per frame with the delta time in seconds.
-        template <typename F>
-        auto run(const F& on_update) -> void
+        /// @brief Registers a callback executed before update phase.
+        auto on_pre_update(hook_t hook) -> void
         {
-            while (graphics::Window::is_open())
+            pre_update_hooks_.push_back(std::move(hook));
+        }
+
+        /// @brief Registers a callback executed after update phase.
+        auto on_post_update(hook_t hook) -> void
+        {
+            post_update_hooks_.push_back(std::move(hook));
+        }
+
+        /// @brief Registers a callback executed before render phase.
+        auto on_pre_render(hook_t hook) -> void
+        {
+            pre_render_hooks_.push_back(std::move(hook));
+        }
+
+        /// @brief Registers a callback executed after render phase.
+        auto on_post_render(hook_t hook) -> void
+        {
+            post_render_hooks_.push_back(std::move(hook));
+        }
+
+        /// @brief Runs one frame tick using configured hooks and pipelines.
+        /// @param dt Delta time in seconds.
+        auto tick(float dt) -> void
+        {
+            run_hooks(pre_update_hooks_, dt);
+            run_pipeline(update_pipeline_, dt);
+            run_hooks(post_update_hooks_, dt);
+
+            run_hooks(pre_render_hooks_, dt);
+            run_pipeline(render_pipeline_, dt);
+            run_hooks(post_render_hooks_, dt);
+        }
+
+        /// @brief Runs the main loop while @p should_continue returns true.
+        /// @param should_continue Callback that controls loop lifetime.
+        /// @param get_delta_time Callback that provides the frame delta time in seconds.
+        template <typename ContinueFn, typename DeltaFn>
+        auto run(const ContinueFn& should_continue, const DeltaFn& get_delta_time) -> void
+        {
+            while (should_continue())
             {
-                window_.poll_events();
-                const auto dt = graphics::Window::get_frame_time();
-
-                on_update(dt);
-                world_.progress(dt);
-
-                draw_list_.clear();
-                draw_list_.push(graphics::RenderClear{.color = clear_color_});
-                widgets::build_draw_list(world_, textures_, draw_list_);
-
-                graphics::Renderer::begin();
-                graphics::Renderer::submit(draw_list_);
-                graphics::Renderer::end();
+                tick(get_delta_time());
             }
         }
 
     private:
-        graphics::Window window_;
+        static auto run_hooks(const std::vector<hook_t>& hooks, float dt) -> void
+        {
+            for (const auto& hook : hooks)
+            {
+                hook(dt);
+            }
+        }
+
+        auto run_pipeline(flecs::entity pipeline, float dt) -> void
+        {
+            if (pipeline.is_valid())
+            {
+                world_.set_pipeline(pipeline);
+            }
+
+            world_.progress(dt);
+        }
+
         flecs::world& world_;
-        widgets::TextureCache textures_;
-        graphics::DrawList draw_list_;
-        graphics::Color clear_color_{};
+        flecs::entity update_pipeline_{};
+        flecs::entity render_pipeline_{};
+        std::vector<hook_t> pre_update_hooks_{};
+        std::vector<hook_t> post_update_hooks_{};
+        std::vector<hook_t> pre_render_hooks_{};
+        std::vector<hook_t> post_render_hooks_{};
     };
 }
