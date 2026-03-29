@@ -3,7 +3,7 @@
 #include <variant>
 #include <vector>
 
-#include <flecs.h>
+#include <awen/flecs.h>
 
 import awen.scene;
 import awen.graphics.draw_list;

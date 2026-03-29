@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <flecs.h>
+#include <awen/flecs.h>
 
 import awen.engine;
 

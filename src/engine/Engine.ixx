@@ -3,7 +3,7 @@ module;
 #include <initializer_list>
 #include <utility>
 
-#include <flecs.h>
+#include <awen/flecs.h>
 
 export module awen.engine;
 

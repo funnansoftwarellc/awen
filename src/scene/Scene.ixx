@@ -6,7 +6,7 @@ module;
 #include <utility>
 #include <vector>
 
-#include <flecs.h>
+#include <awen/flecs.h>
 
 export module awen.scene;
 

@@ -11,12 +11,10 @@ target_sources(${PROJECT_NAME} PUBLIC
         Scene.ixx
 )
 
-find_package(flecs CONFIG REQUIRED)
-
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         awen-graphics
-        $<IF:$<TARGET_EXISTS:flecs::flecs>,flecs::flecs,flecs::flecs_static>
+        awen-flecs
 )
 
 if(NOT ANDROID)
