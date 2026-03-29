@@ -8,17 +8,15 @@ target_include_directories(${PROJECT_NAME} INTERFACE
     include
 )
 
-# /external:anglebrackets — treat all <...> angle-bracket includes as external headers.
-# /external:W0          — suppress all warnings from external headers.
-# /external:templates   — suppress warnings from templates *defined* in external headers
-#                         even when instantiated from user code (e.g. Scene.ixx
-#                         instantiating flecs::_::type_impl<TextNode> defined in
-#                         component.hpp). Without this flag (or with /external:templates-
-#                         which disables the feature), MSVC attributes the warning to
-#                         the instantiation site in user code and /external:W0 has no
-#                         effect.
+# MSVC's /external mechanism cannot suppress warnings that originate from template
+# instantiations: even with /external:anglebrackets and /external:W0, the warning is
+# attributed to the instantiation site in user code (e.g. Scene.ixx) rather than to
+# the template definition in the external header (e.g. component.hpp).
+# The only reliable fix is per-warning /wd suppressions:
+#   /wd4702 — unreachable code        (flecs component.hpp uses after-return statements)
+#   /wd4127 — conditional expression is constant  (flecs uses non-constexpr if guards)
 target_compile_options(${PROJECT_NAME} INTERFACE
-    $<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /external:templates>
+    $<$<CXX_COMPILER_ID:MSVC>:/external:anglebrackets /external:W0 /wd4702 /wd4127>
 )
 
 target_link_libraries(${PROJECT_NAME} INTERFACE
