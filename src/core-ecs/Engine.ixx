@@ -2,6 +2,7 @@ module;
 
 #include <awen/flecs.h>
 
+#include <chrono>
 #include <cstdlib>
 #include <functional>
 #include <memory>
@@ -9,84 +10,85 @@ module;
 #include <vector>
 
 export module awen.core.ecs.engine;
+export import awen.core.ecs.phases;
 
 export namespace awn::core
 {
+    struct RunState
+    {
+        enum class Type : std::uint8_t
+        {
+            running,
+            stopping,
+        };
+
+        Type type{Type::running};
+    };
+
     /// @brief Owns an ECS world and runs update/render pipelines.
     class Engine
     {
     public:
-        using hook_t = std::function<void(float)>;
-
-        explicit Engine(std::unique_ptr<flecs::world> world) : world_{std::move(world)}
+        template <typename T>
+        auto load() -> void
         {
-        }
-
-        auto on_pre_update(hook_t callback) -> void
-        {
-            pre_update_hooks_.push_back(std::move(callback));
-        }
-
-        auto on_post_update(hook_t callback) -> void
-        {
-            post_update_hooks_.push_back(std::move(callback));
-        }
-
-        auto set_update_pipeline(flecs::entity pipeline) -> void
-        {
-            update_pipeline_ = pipeline;
-        }
-
-        auto set_render_pipeline(flecs::entity pipeline) -> void
-        {
-            render_pipeline_ = pipeline;
+            world_.import<T>();
         }
 
         auto stop() -> void
         {
-            running_ = false;
+            world_.set<RunState>({.type = RunState::Type::stopping});
+        }
+
+        auto world() -> flecs::world&
+        {
+            return world_;
         }
 
         auto run() -> int
         {
-            while (running_)
+            start_ = std::chrono::steady_clock::now();
+
+            while (world_.ensure<RunState>().type == RunState::Type::running)
             {
-                constexpr auto dt = 0.1F;
+                const auto now = std::chrono::steady_clock::now();
+                const auto dt = now - start_;
+                const auto dt_s = std::chrono::duration<float>(dt).count();
 
-                for (const auto& callback : pre_update_hooks_)
+                start_ = now;
+                accumulated_dt_ += dt;
+
+                world_.run_pipeline(pipeline_event_, dt_s);
+                world_.run_pipeline(pipeline_update_, dt_s);
+
+                auto count = 0;
+
+                while (accumulated_dt_ >= fixed_timestep_ && count < count_limit_)
                 {
-                    callback(dt);
+                    world_.run_pipeline(pipeline_update_fixed_, fixed_timestep_s_.count());
+                    accumulated_dt_ -= fixed_timestep_;
+                    ++count;
                 }
 
-                run_pipeline(update_pipeline_, dt);
-
-                for (const auto& callback : post_update_hooks_)
-                {
-                    callback(dt);
-                }
-
-                run_pipeline(render_pipeline_, dt);
+                world_.run_pipeline(pipeline_render_, dt_s);
             }
 
             return EXIT_SUCCESS;
         }
 
     private:
-        auto run_pipeline(flecs::entity pipeline, float dt) -> void
-        {
-            if (pipeline.is_valid())
-            {
-                world_->set_pipeline(pipeline);
-            }
+        flecs::world world_;
+        flecs::entity pipeline_event_{world_.pipeline().with(flecs::System).with<ecs::phases::OnEvent>().build()};
+        flecs::entity pipeline_update_{world_.pipeline().with(flecs::System).with<ecs::phases::OnUpdate>().build()};
+        flecs::entity pipeline_update_fixed_{world_.pipeline().with(flecs::System).with<ecs::phases::OnUpdateFixed>().build()};
+        flecs::entity pipeline_render_{world_.pipeline().with(flecs::System).with<ecs::phases::OnRender>().build()};
 
-            world_->progress(dt);
-        }
+        std::chrono::steady_clock::time_point start_{};
+        std::chrono::steady_clock::duration accumulated_dt_{};
+        static constexpr std::chrono::milliseconds fixed_timestep_{10};
+        static constexpr std::chrono::duration<float> fixed_timestep_s_{std::chrono::duration<float>(fixed_timestep_).count()};
+        static constexpr auto count_limit_{5};
 
-        std::unique_ptr<flecs::world> world_;
-        flecs::entity update_pipeline_{};
-        flecs::entity render_pipeline_{};
-        std::vector<hook_t> pre_update_hooks_{};
-        std::vector<hook_t> post_update_hooks_{};
-        bool running_{true};
+        RunState run_state_;
     };
 }
