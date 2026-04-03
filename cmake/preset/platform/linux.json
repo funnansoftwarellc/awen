@@ -8,10 +8,24 @@
         "../ninja.json",
         "../release.json",
         "../vcpkg.json",
+        "../host/arm64-linux.json",
         "../host/x64-linux.json",
+        "../target/arm64-linux.json",
         "../target/x64-linux.json"
     ],
     "configurePresets": [
+        {
+            "name": "arm64-linux-gcc-release",
+            "inherits": [
+                "binarydir",
+                "release",
+                "compiler-gcc",
+                "ninja",
+                "vcpkg",
+                "host-arm64-linux",
+                "target-arm64-linux"
+            ]
+        },
         {
             "name": "x64-linux-gcc-debug",
             "inherits": [
@@ -63,6 +77,10 @@
     ],
     "buildPresets": [
         {
+            "name": "arm64-linux-gcc-release",
+            "configurePreset": "arm64-linux-gcc-release"
+        },
+        {
             "name": "x64-linux-gcc-debug",
             "configurePreset": "x64-linux-gcc-debug"
         },
@@ -80,6 +98,13 @@
         }
     ],
     "testPresets": [
+        {
+            "name": "arm64-linux-gcc-release",
+            "configurePreset": "arm64-linux-gcc-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
         {
             "name": "x64-linux-gcc-debug",
             "configurePreset": "x64-linux-gcc-debug",

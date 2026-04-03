@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     cmake \
+    make \
     ninja-build \
     pkg-config \
     python3 \
@@ -54,3 +55,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1-mesa-dev libx11-dev libxrandr-dev libwayland-dev libxkbcommon-dev \
     libdecor-0-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Qt dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    autoconf autoconf-archive automake libtool \
+    '^libxcb.*-dev' \
+    libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev \
+    libxkbcommon-x11-dev libegl1-mesa-dev
