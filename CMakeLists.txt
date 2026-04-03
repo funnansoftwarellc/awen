@@ -14,5 +14,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(CTest)
 include(GoogleTest)
 
+find_package(Qt6 6.10 CONFIG REQUIRED COMPONENTS Quick)
+
+qt_standard_project_setup(REQUIRES 6.10)
+
+
 add_subdirectory(app)
 add_subdirectory(src)

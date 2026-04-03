@@ -1,64 +1,28 @@
-project(awen)
-
-# Android NativeActivity requires a shared library (.so), not an executable
-if(ANDROID)
-    add_library(${PROJECT_NAME} SHARED)
-else()
-    add_executable(${PROJECT_NAME})
-endif()
-
-target_sources(${PROJECT_NAME}
-    PRIVATE
-        main.cpp
+qt_add_executable(awen
+    main.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    awen-core
-    awen-core-engine
-    awen-graphics
-    awen-scene
-    awen-widgets
-    awen-flecs
+qt_add_qml_module(awen
+    URI AweApp
+    VERSION 1.0
+    QML_FILES
+        Main.qml
 )
 
-if(EMSCRIPTEN)
-    set(awen_shell_file "${CMAKE_CURRENT_SOURCE_DIR}/shell.html")
+target_link_libraries(awen
+    PRIVATE Qt6::Quick
+)
 
-    target_link_options(${PROJECT_NAME}
-        PRIVATE
-            -sASYNCIFY
-            --shell-file
-            "${awen_shell_file}"
-    )
+install(TARGETS awen
+    BUNDLE DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
-    # Emscripten defaults executables to .js output.
-    # Override the target suffix so the install step also gets an HTML launcher.
-    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
+qt_generate_deploy_qml_app_script(
+    TARGET awen
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
 
-    install(FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.html
-        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.js
-        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.wasm
-        ${CMAKE_SOURCE_DIR}/banner.png
-        DESTINATION web
-    )
-endif()
+install(SCRIPT ${deploy_script})
 
-if(ANDROID)
-    # ANativeActivity_onCreate is in raylib's static archive but called by the
-    # Android runtime at load time (not via a link reference), so the linker
-    # would otherwise strip it as unreferenced. Force it to be kept.
-    target_link_options(${PROJECT_NAME}
-        PRIVATE
-            "-Wl,-u,ANativeActivity_onCreate"
-    )
-endif()
-
-if(NOT EMSCRIPTEN)
-    install(TARGETS ${PROJECT_NAME}
-        BUNDLE DESTINATION .
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
-endif()

@@ -5,20 +5,48 @@
     "description": "A modern C++ game engine for creation and exploration.",
     "homepage": "https://github.com/funnansoftwarellc/awen",
     "dependencies": [
-        "flecs",
-        "gtest",
-        "magic-enum",
-        "raylib",
         {
-            "name": "glfw3",
-            "platform": "!android"
+            "name": "qtbase",
+            "default-features": false,
+            "host": true
         },
         {
-            "name": "glfw3",
+            "name": "qtbase",
+            "default-features": false,
             "features": [
-                "wayland"
+                "png"
+            ]
+        },
+        {
+            "name": "qtbase",
+            "default-features": false,
+            "features": [
+                "egl",
+                "fontconfig",
+                "xcb",
+                "xcb-xlib",
+                "xrender"
             ],
             "platform": "linux"
-        }
+        },
+        {
+            "name": "qtbase",
+            "default-features": false,
+            "features": [
+                "egl",
+                "gles2"
+            ],
+            "platform": "android"
+        },
+        {
+            "name": "qtbase",
+            "default-features": false,
+            "features": [
+                "gles2"
+            ],
+            "platform": "emscripten"
+        },
+        "qtdeclarative",
+        "gtest"
     ]
 }
