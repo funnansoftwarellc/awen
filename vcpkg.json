@@ -5,10 +5,14 @@
     "description": "A modern C++ game engine for creation and exploration.",
     "homepage": "https://github.com/funnansoftwarellc/awen",
     "dependencies": [
+        "flecs",
         "gtest",
         "magic-enum",
         "raylib",
-        "glfw3",
+        {
+            "name": "glfw3",
+            "platform": "!android"
+        },
         {
             "name": "glfw3",
             "features": [

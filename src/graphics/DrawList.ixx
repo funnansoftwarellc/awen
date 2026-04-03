@@ -11,14 +11,14 @@ export import awen.graphics.color;
 
 export namespace awn::graphics
 {
-    /// @brief Draw command that clears the background to a solid colour.
-    struct DrawClear
+    /// @brief Render command that clears the background to a solid colour.
+    struct RenderClear
     {
         Color color{};
     };
 
-    /// @brief Draw command that renders a filled axis-aligned rectangle.
-    struct DrawRect
+    /// @brief Render command that draws a filled axis-aligned rectangle at a world position.
+    struct RenderRect
     {
         float x{};
         float y{};
@@ -27,17 +27,17 @@ export namespace awn::graphics
         Color color{};
     };
 
-    /// @brief Draw command that renders a filled circle.
-    struct DrawCircle
+    /// @brief Render command that draws a filled circle at a world position.
+    struct RenderCircle
     {
-        float center_x{};
-        float center_y{};
+        float x{};
+        float y{};
         float radius{};
         Color color{};
     };
 
-    /// @brief Draw command that renders a line segment between two points.
-    struct DrawLine
+    /// @brief Render command that draws a line segment between two world-space points.
+    struct RenderLine
     {
         float start_x{};
         float start_y{};
@@ -46,8 +46,8 @@ export namespace awn::graphics
         Color color{};
     };
 
-    /// @brief Draw command that renders a string of text using the default font.
-    struct DrawText
+    /// @brief Render command that draws a string of text at a world position using the default font.
+    struct RenderText
     {
         std::string text;
         int x{};
@@ -56,11 +56,11 @@ export namespace awn::graphics
         Color color{};
     };
 
-    /// @brief Draw command that begins a scissor (clipping) rectangle.
+    /// @brief Render command that begins a scissor (clipping) rectangle.
     ///
-    /// All subsequent draw commands until a matching DrawEndScissor are clipped
+    /// All subsequent render commands until a matching RenderEndScissor are clipped
     /// to the region defined by this command.
-    struct DrawBeginScissor
+    struct RenderBeginScissor
     {
         int x{};
         int y{};
@@ -68,8 +68,8 @@ export namespace awn::graphics
         int height{};
     };
 
-    /// @brief Draw command that ends the current scissor region.
-    struct DrawEndScissor
+    /// @brief Render command that ends the current scissor region.
+    struct RenderEndScissor
     {
     };
 
@@ -87,8 +87,8 @@ export namespace awn::graphics
         int format{};
     };
 
-    /// @brief Draw command that renders a textured rectangle.
-    struct DrawSprite
+    /// @brief Render command that draws a textured rectangle at a world position.
+    struct RenderSprite
     {
         TextureHandle texture{};
         float x{};
@@ -99,7 +99,8 @@ export namespace awn::graphics
     };
 
     /// @brief A single entry in a DrawList, holding one draw command of any supported type.
-    using DrawCommand = std::variant<DrawClear, DrawRect, DrawCircle, DrawLine, DrawText, DrawBeginScissor, DrawEndScissor, DrawSprite>;
+    using DrawCommand =
+        std::variant<RenderClear, RenderRect, RenderCircle, RenderLine, RenderText, RenderBeginScissor, RenderEndScissor, RenderSprite>;
 
     /// @brief An ordered list of draw commands consumed by Renderer::submit().
     ///

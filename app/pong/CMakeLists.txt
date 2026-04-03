@@ -1,4 +1,4 @@
-project(awen)
+project(awen-pong)
 
 # Android NativeActivity requires a shared library (.so), not an executable
 if(ANDROID)
@@ -14,12 +14,9 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-    awen-core
-    awen-core-engine
-    awen-graphics
-    awen-scene
-    awen-widgets
-    awen-flecs
+        awen-graphics-ecs
+        awen-core-ecs
+        awen-flecs
 )
 
 if(EMSCRIPTEN)

@@ -3,9 +3,9 @@ module;
 #include <compare>
 #include <cstdint>
 
-export module awen.scene.texture_id;
+export module awen.graphics.texture_id;
 
-export namespace awn::scene
+export namespace awn::graphics
 {
     /// @brief Opaque handle to a texture managed by TextureCache.
     ///

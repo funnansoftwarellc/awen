@@ -77,16 +77,16 @@ export namespace awn::graphics
             {
                 std::visit(
                     awn::Overloaded{
-                        [](const DrawClear& c) { ClearBackground(to_raylib(c.color)); },
-                        [](const DrawRect& c)
+                        [](const RenderClear& c) { ClearBackground(to_raylib(c.color)); },
+                        [](const RenderRect& c)
                         { DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, to_raylib(c.color)); },
-                        [](const DrawCircle& c) { DrawCircleV(::Vector2{.x = c.center_x, .y = c.center_y}, c.radius, to_raylib(c.color)); },
-                        [](const DrawLine& c)
+                        [](const RenderCircle& c) { DrawCircleV(::Vector2{.x = c.x, .y = c.y}, c.radius, to_raylib(c.color)); },
+                        [](const RenderLine& c)
                         { DrawLineV(::Vector2{.x = c.start_x, .y = c.start_y}, ::Vector2{.x = c.end_x, .y = c.end_y}, to_raylib(c.color)); },
-                        [](const DrawText& c) { ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color)); },
-                        [](const DrawBeginScissor& c) { BeginScissorMode(c.x, c.y, c.width, c.height); },
-                        [](const DrawEndScissor&) { EndScissorMode(); },
-                        [](const DrawSprite& c)
+                        [](const RenderText& c) { ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color)); },
+                        [](const RenderBeginScissor& c) { BeginScissorMode(c.x, c.y, c.width, c.height); },
+                        [](const RenderEndScissor&) { EndScissorMode(); },
+                        [](const RenderSprite& c)
                         {
                             const auto tex = Texture2D{
                                 .id = c.texture.id,
