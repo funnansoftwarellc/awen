@@ -127,7 +127,7 @@ export namespace awn
         }
 
     private:
-        template <typename...>
+        template <typename>
         friend class Signal;
 
         Connection(std::weak_ptr<bool> alive, std::function<void()> fn) : alive_(std::move(alive)), disconnect_fn_(std::move(fn))
@@ -209,13 +209,24 @@ export namespace awn
 
     /// @brief Signal that broadcasts to all connected slots when emitted.
     ///
+    /// Declared using function-signature syntax: @c Signal<R(Args...)>.
+    /// The return type @p R must be @c void; it is accepted for consistency with
+    /// the @c std::function declaration style (e.g. @c Signal<void()>).
+    ///
+    /// @note Only the @c R(Args...) partial specialisation is defined.
+    template <typename Signature>
+    class Signal;
+
+    /// @brief Partial specialisation of Signal for function-signature syntax.
+    ///
     /// Non-copyable but movable. Existing Connection handles remain valid after a
     /// move. Slots are invoked in connection order. Slots may safely disconnect
     /// themselves or other slots during emit.
     ///
-    /// @tparam Args Argument types forwarded to each slot on emit.
-    template <typename... Args>
-    class Signal
+    /// @tparam R     Return type (must be @c void; declared for consistency with function-signature syntax).
+    /// @tparam Args  Argument types forwarded to each slot on emit.
+    template <typename R, typename... Args>
+    class Signal<R(Args...)>
     {
     public:
         Signal() : core_(std::make_shared<detail::SignalCore<Args...>>())
