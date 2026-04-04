@@ -51,7 +51,13 @@ export namespace awn
             }
 
             x->parent_ = this;
-            children_.push_back(std::move(x));
+            children_.emplace_back(std::move(x));
+
+            // If this object has already started, immediately notify the new child.
+            if (started_)
+            {
+                children_.back()->startup();
+            }
         }
 
         /// @brief Removes this object from its parent.
@@ -89,11 +95,30 @@ export namespace awn
             return parent_;
         }
 
+        auto startup() -> void
+        {
+            if (started_)
+            {
+                return;
+            }
+
+            started_ = true;
+
+            on_startup.emit();
+
+            for (const auto& child : children_)
+            {
+                child->startup();
+            }
+        }
+
         Signal<void()> on_destroyed;
+        Signal<void()> on_startup;
 
     private:
         std::vector<std::unique_ptr<Object>> children_;
         std::string_view name_;
         Object* parent_ = nullptr;
+        bool started_ = false;
     };
 }

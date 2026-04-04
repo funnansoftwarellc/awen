@@ -101,3 +101,51 @@ TEST(Object, OnDestroyedSignalWithChildren)
     EXPECT_EQ(parent_destroyed_count, 1);
     EXPECT_EQ(child_destroyed_count, 1);
 }
+
+TEST(Object, OnStartupSignal)
+{
+    auto object = std::make_unique<awn::Object>();
+    auto startup_count = int{};
+
+    object->on_startup.connect([&] { ++startup_count; });
+
+    EXPECT_EQ(startup_count, 0);
+    object->startup();
+    EXPECT_EQ(startup_count, 1);
+}
+
+TEST(Object, OnStartupSignalWithChildren)
+{
+    auto parent = std::make_unique<awn::Object>();
+    auto child = std::make_unique<awn::Object>();
+    parent->add_child(std::move(child));
+
+    auto parent_startup_count = int{};
+    auto child_startup_count = int{};
+
+    parent->on_startup.connect([&] { ++parent_startup_count; });
+    parent->get_children()[0]->on_startup.connect([&] { ++child_startup_count; });
+
+    EXPECT_EQ(parent_startup_count, 0);
+    EXPECT_EQ(child_startup_count, 0);
+
+    parent->startup();
+
+    EXPECT_EQ(parent_startup_count, 1);
+    EXPECT_EQ(child_startup_count, 1);
+}
+
+TEST(Object, StartupAfterAddingChild)
+{
+    auto parent = std::make_unique<awn::Object>();
+    auto child = std::make_unique<awn::Object>();
+
+    auto child_startup_count = int{};
+    child->on_startup.connect([&] { ++child_startup_count; });
+
+    parent->startup();
+    EXPECT_EQ(child_startup_count, 0);
+
+    parent->add_child(std::move(child));
+    EXPECT_EQ(child_startup_count, 1);
+}
