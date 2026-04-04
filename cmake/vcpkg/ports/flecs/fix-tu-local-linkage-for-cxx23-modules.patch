@@ -1,0 +1,471 @@
+--- a/include/flecs/addons/cpp/c_types.hpp
++++ b/include/flecs/addons/cpp/c_types.hpp
+@@ -65,9 +65,9 @@
+ };
+ 
+ /** ID bit flags. */
+-static const flecs::entity_t PAIR = ECS_PAIR;                   /**< Pair flag. */
+-static const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE; /**< Auto override flag. */
+-static const flecs::entity_t TOGGLE = ECS_TOGGLE;               /**< Toggle flag. */
++inline const flecs::entity_t PAIR = ECS_PAIR;                   /**< Pair flag. */
++inline const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE; /**< Auto override flag. */
++inline const flecs::entity_t TOGGLE = ECS_TOGGLE;               /**< Toggle flag. */
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ //// Built-in components and tags
+@@ -85,161 +85,161 @@
+ using Parent = EcsParent;
+ 
+ /** Built-in Query tag. */
+-static const flecs::entity_t Query = EcsQuery;
++inline const flecs::entity_t Query = EcsQuery;
+ /** Built-in Observer tag. */
+-static const flecs::entity_t Observer = EcsObserver;
++inline const flecs::entity_t Observer = EcsObserver;
+ /** Built-in Module tag. */
+-static const flecs::entity_t Module = EcsModule;
++inline const flecs::entity_t Module = EcsModule;
+ /** Built-in Prefab tag. */
+-static const flecs::entity_t Prefab = EcsPrefab;
++inline const flecs::entity_t Prefab = EcsPrefab;
+ /** Built-in Disabled tag. */
+-static const flecs::entity_t Disabled = EcsDisabled;
++inline const flecs::entity_t Disabled = EcsDisabled;
+ /** Built-in Empty tag. */
+-static const flecs::entity_t Empty = EcsEmpty;
++inline const flecs::entity_t Empty = EcsEmpty;
+ /** Built-in Monitor tag. */
+-static const flecs::entity_t Monitor = EcsMonitor;
++inline const flecs::entity_t Monitor = EcsMonitor;
+ /** Built-in System tag. */
+-static const flecs::entity_t System = EcsSystem;
++inline const flecs::entity_t System = EcsSystem;
+ /** Built-in Pipeline tag. */
+-static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
++inline const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
+ /** Built-in Phase tag. */
+-static const flecs::entity_t Phase = EcsPhase;
++inline const flecs::entity_t Phase = EcsPhase;
+ /** Built-in Constant tag. */
+-static const flecs::entity_t Constant = EcsConstant;
++inline const flecs::entity_t Constant = EcsConstant;
+ /** Built-in ParentDepth tag. */
+-static const flecs::entity_t ParentDepth = EcsParentDepth;
++inline const flecs::entity_t ParentDepth = EcsParentDepth;
+ 
+ /** Built-in OnAdd event. */
+-static const flecs::entity_t OnAdd = EcsOnAdd;
++inline const flecs::entity_t OnAdd = EcsOnAdd;
+ /** Built-in OnRemove event. */
+-static const flecs::entity_t OnRemove = EcsOnRemove;
++inline const flecs::entity_t OnRemove = EcsOnRemove;
+ /** Built-in OnSet event. */
+-static const flecs::entity_t OnSet = EcsOnSet;
++inline const flecs::entity_t OnSet = EcsOnSet;
+ /** Built-in OnTableCreate event. */
+-static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
++inline const flecs::entity_t OnTableCreate = EcsOnTableCreate;
+ /** Built-in OnTableDelete event. */
+-static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
++inline const flecs::entity_t OnTableDelete = EcsOnTableDelete;
+ 
+ /** Self term flag. */
+-static const uint64_t Self = EcsSelf;
++inline const uint64_t Self = EcsSelf;
+ /** Up term flag. */
+-static const uint64_t Up = EcsUp;
++inline const uint64_t Up = EcsUp;
+ /** Trav term flag. */
+-static const uint64_t Trav = EcsTrav;
++inline const uint64_t Trav = EcsTrav;
+ /** Cascade term flag. */
+-static const uint64_t Cascade = EcsCascade;
++inline const uint64_t Cascade = EcsCascade;
+ /** Desc term flag. */
+-static const uint64_t Desc = EcsDesc;
++inline const uint64_t Desc = EcsDesc;
+ /** IsVariable term flag. */
+-static const uint64_t IsVariable = EcsIsVariable;
++inline const uint64_t IsVariable = EcsIsVariable;
+ /** IsEntity term flag. */
+-static const uint64_t IsEntity = EcsIsEntity;
++inline const uint64_t IsEntity = EcsIsEntity;
+ /** IsName term flag. */
+-static const uint64_t IsName = EcsIsName;
++inline const uint64_t IsName = EcsIsName;
+ /** TraverseFlags term flag mask. */
+-static const uint64_t TraverseFlags = EcsTraverseFlags;
++inline const uint64_t TraverseFlags = EcsTraverseFlags;
+ /** TermRefFlags term flag mask. */
+-static const uint64_t TermRefFlags = EcsTermRefFlags;
++inline const uint64_t TermRefFlags = EcsTermRefFlags;
+ 
+ /** Built-in Flecs entity. */
+-static const flecs::entity_t Flecs = EcsFlecs;
++inline const flecs::entity_t Flecs = EcsFlecs;
+ /** Built-in FlecsCore entity. */
+-static const flecs::entity_t FlecsCore = EcsFlecsCore;
++inline const flecs::entity_t FlecsCore = EcsFlecsCore;
+ /** Built-in World entity. */
+-static const flecs::entity_t World = EcsWorld;
++inline const flecs::entity_t World = EcsWorld;
+ 
+ /** Wildcard entity. */
+-static const flecs::entity_t Wildcard = EcsWildcard;
++inline const flecs::entity_t Wildcard = EcsWildcard;
+ /** Any entity. */
+-static const flecs::entity_t Any = EcsAny;
++inline const flecs::entity_t Any = EcsAny;
+ /** This variable entity. */
+-static const flecs::entity_t This = EcsThis;
++inline const flecs::entity_t This = EcsThis;
+ /** Transitive trait. */
+-static const flecs::entity_t Transitive = EcsTransitive;
++inline const flecs::entity_t Transitive = EcsTransitive;
+ /** Reflexive trait. */
+-static const flecs::entity_t Reflexive = EcsReflexive;
++inline const flecs::entity_t Reflexive = EcsReflexive;
+ /** Final trait. */
+-static const flecs::entity_t Final = EcsFinal;
++inline const flecs::entity_t Final = EcsFinal;
+ /** Inheritable trait. */
+-static const flecs::entity_t Inheritable = EcsInheritable;
++inline const flecs::entity_t Inheritable = EcsInheritable;
+ /** PairIsTag trait. */
+-static const flecs::entity_t PairIsTag = EcsPairIsTag;
++inline const flecs::entity_t PairIsTag = EcsPairIsTag;
+ /** Exclusive trait. */
+-static const flecs::entity_t Exclusive = EcsExclusive;
++inline const flecs::entity_t Exclusive = EcsExclusive;
+ /** Acyclic trait. */
+-static const flecs::entity_t Acyclic = EcsAcyclic;
++inline const flecs::entity_t Acyclic = EcsAcyclic;
+ /** Traversable trait. */
+-static const flecs::entity_t Traversable = EcsTraversable;
++inline const flecs::entity_t Traversable = EcsTraversable;
+ /** Symmetric trait. */
+-static const flecs::entity_t Symmetric = EcsSymmetric;
++inline const flecs::entity_t Symmetric = EcsSymmetric;
+ /** With trait. */
+-static const flecs::entity_t With = EcsWith;
++inline const flecs::entity_t With = EcsWith;
+ /** OneOf trait. */
+-static const flecs::entity_t OneOf = EcsOneOf;
++inline const flecs::entity_t OneOf = EcsOneOf;
+ /** Trait tag. */
+-static const flecs::entity_t Trait = EcsTrait;
++inline const flecs::entity_t Trait = EcsTrait;
+ /** Relationship tag. */
+-static const flecs::entity_t Relationship = EcsRelationship;
++inline const flecs::entity_t Relationship = EcsRelationship;
+ /** Target tag. */
+-static const flecs::entity_t Target = EcsTarget;
++inline const flecs::entity_t Target = EcsTarget;
+ /** CanToggle trait. */
+-static const flecs::entity_t CanToggle = EcsCanToggle;
++inline const flecs::entity_t CanToggle = EcsCanToggle;
+ 
+ /** OnInstantiate trait. */
+-static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
++inline const flecs::entity_t OnInstantiate = EcsOnInstantiate;
+ /** Override trait. */
+-static const flecs::entity_t Override = EcsOverride;
++inline const flecs::entity_t Override = EcsOverride;
+ /** Inherit trait. */
+-static const flecs::entity_t Inherit = EcsInherit;
++inline const flecs::entity_t Inherit = EcsInherit;
+ /** DontInherit trait. */
+-static const flecs::entity_t DontInherit = EcsDontInherit;
++inline const flecs::entity_t DontInherit = EcsDontInherit;
+ 
+ /** OnDelete cleanup trait. */
+-static const flecs::entity_t OnDelete = EcsOnDelete;
++inline const flecs::entity_t OnDelete = EcsOnDelete;
+ /** OnDeleteTarget cleanup trait. */
+-static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
++inline const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
+ /** Remove cleanup action. */
+-static const flecs::entity_t Remove = EcsRemove;
++inline const flecs::entity_t Remove = EcsRemove;
+ /** Delete cleanup action. */
+-static const flecs::entity_t Delete = EcsDelete;
++inline const flecs::entity_t Delete = EcsDelete;
+ /** Panic cleanup action. */
+-static const flecs::entity_t Panic = EcsPanic;
++inline const flecs::entity_t Panic = EcsPanic;
+ 
+ /** IsA relationship. */
+-static const flecs::entity_t IsA = EcsIsA;
++inline const flecs::entity_t IsA = EcsIsA;
+ /** ChildOf relationship. */
+-static const flecs::entity_t ChildOf = EcsChildOf;
++inline const flecs::entity_t ChildOf = EcsChildOf;
+ /** DependsOn relationship. */
+-static const flecs::entity_t DependsOn = EcsDependsOn;
++inline const flecs::entity_t DependsOn = EcsDependsOn;
+ /** SlotOf relationship. */
+-static const flecs::entity_t SlotOf = EcsSlotOf;
++inline const flecs::entity_t SlotOf = EcsSlotOf;
+ 
+ /** OrderedChildren tag. */
+-static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
++inline const flecs::entity_t OrderedChildren = EcsOrderedChildren;
+ /** Singleton tag. */
+-static const flecs::entity_t Singleton = EcsSingleton;
++inline const flecs::entity_t Singleton = EcsSingleton;
+ 
+ /** Name identifier. */
+-static const flecs::entity_t Name = EcsName;
++inline const flecs::entity_t Name = EcsName;
+ /** Symbol identifier. */
+-static const flecs::entity_t Symbol = EcsSymbol;
++inline const flecs::entity_t Symbol = EcsSymbol;
+ 
+ /** Sparse storage tag. */
+-static const flecs::entity_t Sparse = EcsSparse;
++inline const flecs::entity_t Sparse = EcsSparse;
+ /** DontFragment storage tag. */
+-static const flecs::entity_t DontFragment = EcsDontFragment;
++inline const flecs::entity_t DontFragment = EcsDontFragment;
+ 
+ /** PredEq query predicate. */
+-static const flecs::entity_t PredEq = EcsPredEq;
++inline const flecs::entity_t PredEq = EcsPredEq;
+ /** PredMatch query predicate. */
+-static const flecs::entity_t PredMatch = EcsPredMatch;
++inline const flecs::entity_t PredMatch = EcsPredMatch;
+ /** PredLookup query predicate. */
+-static const flecs::entity_t PredLookup = EcsPredLookup;
++inline const flecs::entity_t PredLookup = EcsPredLookup;
+ 
+ /** ScopeOpen query scope marker. */
+-static const flecs::entity_t ScopeOpen = EcsScopeOpen;
++inline const flecs::entity_t ScopeOpen = EcsScopeOpen;
+ /** ScopeClose query scope marker. */
+-static const flecs::entity_t ScopeClose = EcsScopeClose;
++inline const flecs::entity_t ScopeClose = EcsScopeClose;
+ 
+ /** @} */
+ 
+--- a/include/flecs/addons/cpp/mixins/meta/decl.hpp
++++ b/include/flecs/addons/cpp/mixins/meta/decl.hpp
+@@ -55,58 +55,58 @@
+ };
+ 
+ /** Handles to built-in reflection types. */
+-static const flecs::entity_t Bool = ecs_id(ecs_bool_t);
+-static const flecs::entity_t Char = ecs_id(ecs_char_t);
+-static const flecs::entity_t Byte = ecs_id(ecs_byte_t);
+-static const flecs::entity_t U8 = ecs_id(ecs_u8_t);
+-static const flecs::entity_t U16 = ecs_id(ecs_u16_t);
+-static const flecs::entity_t U32 = ecs_id(ecs_u32_t);
+-static const flecs::entity_t U64 = ecs_id(ecs_u64_t);
+-static const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
+-static const flecs::entity_t I8 = ecs_id(ecs_i8_t);
+-static const flecs::entity_t I16 = ecs_id(ecs_i16_t);
+-static const flecs::entity_t I32 = ecs_id(ecs_i32_t);
+-static const flecs::entity_t I64 = ecs_id(ecs_i64_t);
+-static const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
+-static const flecs::entity_t F32 = ecs_id(ecs_f32_t);
+-static const flecs::entity_t F64 = ecs_id(ecs_f64_t);
+-static const flecs::entity_t String = ecs_id(ecs_string_t);
+-static const flecs::entity_t Entity = ecs_id(ecs_entity_t);
+-static const flecs::entity_t Quantity = EcsQuantity;
++inline const flecs::entity_t Bool = ecs_id(ecs_bool_t);
++inline const flecs::entity_t Char = ecs_id(ecs_char_t);
++inline const flecs::entity_t Byte = ecs_id(ecs_byte_t);
++inline const flecs::entity_t U8 = ecs_id(ecs_u8_t);
++inline const flecs::entity_t U16 = ecs_id(ecs_u16_t);
++inline const flecs::entity_t U32 = ecs_id(ecs_u32_t);
++inline const flecs::entity_t U64 = ecs_id(ecs_u64_t);
++inline const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
++inline const flecs::entity_t I8 = ecs_id(ecs_i8_t);
++inline const flecs::entity_t I16 = ecs_id(ecs_i16_t);
++inline const flecs::entity_t I32 = ecs_id(ecs_i32_t);
++inline const flecs::entity_t I64 = ecs_id(ecs_i64_t);
++inline const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
++inline const flecs::entity_t F32 = ecs_id(ecs_f32_t);
++inline const flecs::entity_t F64 = ecs_id(ecs_f64_t);
++inline const flecs::entity_t String = ecs_id(ecs_string_t);
++inline const flecs::entity_t Entity = ecs_id(ecs_entity_t);
++inline const flecs::entity_t Quantity = EcsQuantity;
+ 
+ namespace meta {
+ 
+ /** Type kinds supported by the reflection system. */
+ using type_kind_t = ecs_type_kind_t;
+-static const type_kind_t PrimitiveType = EcsPrimitiveType;
+-static const type_kind_t BitmaskType = EcsBitmaskType;
+-static const type_kind_t EnumType = EcsEnumType;
+-static const type_kind_t StructType = EcsStructType;
+-static const type_kind_t ArrayType = EcsArrayType;
+-static const type_kind_t VectorType = EcsVectorType;
+-static const type_kind_t CustomType = EcsOpaqueType;
+-static const type_kind_t TypeKindLast = EcsTypeKindLast;
++inline const type_kind_t PrimitiveType = EcsPrimitiveType;
++inline const type_kind_t BitmaskType = EcsBitmaskType;
++inline const type_kind_t EnumType = EcsEnumType;
++inline const type_kind_t StructType = EcsStructType;
++inline const type_kind_t ArrayType = EcsArrayType;
++inline const type_kind_t VectorType = EcsVectorType;
++inline const type_kind_t CustomType = EcsOpaqueType;
++inline const type_kind_t TypeKindLast = EcsTypeKindLast;
+ 
+ /** Primitive type kinds supported by the reflection system. */
+ using primitive_kind_t = ecs_primitive_kind_t;
+-static const primitive_kind_t Bool = EcsBool;
+-static const primitive_kind_t Char = EcsChar;
+-static const primitive_kind_t Byte = EcsByte;
+-static const primitive_kind_t U8 = EcsU8;
+-static const primitive_kind_t U16 = EcsU16;
+-static const primitive_kind_t U32 = EcsU32;
+-static const primitive_kind_t U64 = EcsU64;
+-static const primitive_kind_t I8 = EcsI8;
+-static const primitive_kind_t I16 = EcsI16;
+-static const primitive_kind_t I32 = EcsI32;
+-static const primitive_kind_t I64 = EcsI64;
+-static const primitive_kind_t F32 = EcsF32;
+-static const primitive_kind_t F64 = EcsF64;
+-static const primitive_kind_t UPtr = EcsUPtr;
+-static const primitive_kind_t IPtr = EcsIPtr;
+-static const primitive_kind_t String = EcsString;
+-static const primitive_kind_t Entity = EcsEntity;
+-static const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
++inline const primitive_kind_t Bool = EcsBool;
++inline const primitive_kind_t Char = EcsChar;
++inline const primitive_kind_t Byte = EcsByte;
++inline const primitive_kind_t U8 = EcsU8;
++inline const primitive_kind_t U16 = EcsU16;
++inline const primitive_kind_t U32 = EcsU32;
++inline const primitive_kind_t U64 = EcsU64;
++inline const primitive_kind_t I8 = EcsI8;
++inline const primitive_kind_t I16 = EcsI16;
++inline const primitive_kind_t I32 = EcsI32;
++inline const primitive_kind_t I64 = EcsI64;
++inline const primitive_kind_t F32 = EcsF32;
++inline const primitive_kind_t F64 = EcsF64;
++inline const primitive_kind_t UPtr = EcsUPtr;
++inline const primitive_kind_t IPtr = EcsIPtr;
++inline const primitive_kind_t String = EcsString;
++inline const primitive_kind_t Entity = EcsEntity;
++inline const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
+ 
+ using op_t = ecs_meta_op_t;
+ 
+--- a/include/flecs/addons/cpp/mixins/pipeline/decl.hpp
++++ b/include/flecs/addons/cpp/mixins/pipeline/decl.hpp
+@@ -24,27 +24,27 @@
+ struct pipeline_builder;
+ 
+ /** Built-in pipeline phase run at startup. */
+-static const flecs::entity_t OnStart = EcsOnStart;
++inline const flecs::entity_t OnStart = EcsOnStart;
+ /** Built-in pipeline phase run before each frame. */
+-static const flecs::entity_t PreFrame = EcsPreFrame;
++inline const flecs::entity_t PreFrame = EcsPreFrame;
+ /** Built-in pipeline phase for loading data. */
+-static const flecs::entity_t OnLoad = EcsOnLoad;
++inline const flecs::entity_t OnLoad = EcsOnLoad;
+ /** Built-in pipeline phase run after loading data. */
+-static const flecs::entity_t PostLoad = EcsPostLoad;
++inline const flecs::entity_t PostLoad = EcsPostLoad;
+ /** Built-in pipeline phase run before the update. */
+-static const flecs::entity_t PreUpdate = EcsPreUpdate;
++inline const flecs::entity_t PreUpdate = EcsPreUpdate;
+ /** Built-in pipeline phase for the main update. */
+-static const flecs::entity_t OnUpdate = EcsOnUpdate;
++inline const flecs::entity_t OnUpdate = EcsOnUpdate;
+ /** Built-in pipeline phase for validation after the update. */
+-static const flecs::entity_t OnValidate = EcsOnValidate;
++inline const flecs::entity_t OnValidate = EcsOnValidate;
+ /** Built-in pipeline phase run after the update. */
+-static const flecs::entity_t PostUpdate = EcsPostUpdate;
++inline const flecs::entity_t PostUpdate = EcsPostUpdate;
+ /** Built-in pipeline phase run before storing data. */
+-static const flecs::entity_t PreStore = EcsPreStore;
++inline const flecs::entity_t PreStore = EcsPreStore;
+ /** Built-in pipeline phase for storing data. */
+-static const flecs::entity_t OnStore = EcsOnStore;
++inline const flecs::entity_t OnStore = EcsOnStore;
+ /** Built-in pipeline phase run after each frame. */
+-static const flecs::entity_t PostFrame = EcsPostFrame;
++inline const flecs::entity_t PostFrame = EcsPostFrame;
+ 
+ /** @} */
+ 
+--- a/include/flecs/addons/cpp/mixins/doc/decl.hpp
++++ b/include/flecs/addons/cpp/mixins/doc/decl.hpp
+@@ -20,19 +20,19 @@
+ using Description = EcsDocDescription;
+ 
+ /** flecs.doc.Uuid component. */
+-static const flecs::entity_t Uuid = EcsDocUuid;
++inline const flecs::entity_t Uuid = EcsDocUuid;
+ 
+ /** flecs.doc.Brief component. */
+-static const flecs::entity_t Brief = EcsDocBrief;
++inline const flecs::entity_t Brief = EcsDocBrief;
+ 
+ /** flecs.doc.Detail component. */
+-static const flecs::entity_t Detail = EcsDocDetail;
++inline const flecs::entity_t Detail = EcsDocDetail;
+ 
+ /** flecs.doc.Link component. */
+-static const flecs::entity_t Link = EcsDocLink;
++inline const flecs::entity_t Link = EcsDocLink;
+ 
+ /** flecs.doc.Color component. */
+-static const flecs::entity_t Color = EcsDocColor;
++inline const flecs::entity_t Color = EcsDocColor;
+ 
+ /** @private */
+ namespace _ {
+--- a/include/flecs/addons/cpp/utils/enum.hpp
++++ b/include/flecs/addons/cpp/utils/enum.hpp
+@@ -51,7 +51,7 @@
+ };
+ 
+ template <typename E, underlying_type_t<E> Value>
+-constexpr E to_constant<E, Value>::value;
++inline constexpr E to_constant<E, Value>::value;
+ }
+ 
+ /** Convenience type with enum reflection data. */
+@@ -64,7 +64,7 @@
+  * @return Enum data wrapper.
+  */
+ template <typename E>
+-static enum_data<E> enum_type(flecs::world_t *world);
++inline enum_data<E> enum_type(flecs::world_t *world);
+ 
+ /** Trait to define the last valid enum value for reflection.
+  * @tparam E The enum type.
+@@ -209,7 +209,7 @@
+ 
+ /** @private Extract the name of a constant from the compiler string. */
+ template <typename E, E C>
+-static const char* enum_constant_to_name() {
++inline const char* enum_constant_to_name() {
+     static const size_t len = ECS_FUNC_TYPE_LEN(
+         const char*, enum_constant_to_name, ECS_FUNC_NAME);
+     static char result[len + 1] = {};
+@@ -481,7 +481,7 @@
+ 
+ /** @private Initialize enum reflection for a world. */
+ template <typename E>
+-inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
++inline void init_enum(flecs::world_t *world, flecs::entity_t id) {
+     (void)world; (void)id;
+     if constexpr (is_enum_v<E>) {
+         _::enum_type<E>::get().register_for_world(world, id);
+--- a/include/flecs/addons/cpp/utils/utils.hpp
++++ b/include/flecs/addons/cpp/utils/utils.hpp
+@@ -44,7 +44,7 @@
+ /** @private Placement new tag to disambiguate from other operator new overrides. */
+ struct placement_new_tag_t{};
+ /** @private Placement new tag instance. */
+-constexpr placement_new_tag_t placement_new_tag{};
++inline constexpr placement_new_tag_t placement_new_tag{};
+ /** @private Destruct an object without freeing memory. */
+ template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
+ /** @private Destruct and free an object. */

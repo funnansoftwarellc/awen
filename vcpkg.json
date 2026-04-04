@@ -8,6 +8,7 @@
         "gtest",
         "magic-enum",
         "raylib",
+        "flecs",
         {
             "name": "glfw3",
             "platform": "!android"
