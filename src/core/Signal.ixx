@@ -7,7 +7,7 @@ module;
 #include <utility>
 #include <vector>
 
-export module awen.signal;
+export module awen.core.signal;
 
 // Internal implementation — not exported to module consumers.
 namespace awn::detail
@@ -96,7 +96,7 @@ namespace awn::detail
 
 } // namespace awn::detail
 
-export namespace awn
+export namespace awn::core
 {
 
     /// @brief Non-owning handle to a signal-slot connection.

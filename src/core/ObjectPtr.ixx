@@ -3,8 +3,8 @@ module;
 #include <compare>
 #include <memory>
 
-export module awen.objectptr;
-import awen.object;
+export module awen.core.objectptr;
+import awen.core.object;
 
 export namespace awn::core
 {
