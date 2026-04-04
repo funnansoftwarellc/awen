@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-import awen.signal;
+import awen.core.signal;
 
 TEST(Signal, emit_with_no_connections)
 {
-    awn::Signal<void(int)> sig;
+    awn::core::Signal<void(int)> sig;
 
     // Should not crash with no connected slots.
     sig.emit(42);
@@ -13,7 +13,7 @@ TEST(Signal, emit_with_no_connections)
 
 TEST(Signal, connect_and_emit)
 {
-    awn::Signal<void(int)> sig;
+    awn::core::Signal<void(int)> sig;
     auto received = int{};
 
     sig.connect([&](int v) { received = v; });
@@ -24,7 +24,7 @@ TEST(Signal, connect_and_emit)
 
 TEST(Signal, zero_arg_signal)
 {
-    awn::Signal<void()> sig;
+    awn::core::Signal<void()> sig;
     auto count = int{};
 
     sig.connect([&] { ++count; });
@@ -36,7 +36,7 @@ TEST(Signal, zero_arg_signal)
 
 TEST(Signal, multiple_slots_invoked_in_order)
 {
-    awn::Signal<void()> sig;
+    awn::core::Signal<void()> sig;
     auto order = std::vector<int>{};
 
     sig.connect([&] { order.push_back(1); });
@@ -49,7 +49,7 @@ TEST(Signal, multiple_slots_invoked_in_order)
 
 TEST(Signal, manual_disconnect)
 {
-    awn::Signal<void(int)> sig;
+    awn::core::Signal<void(int)> sig;
     auto count = int{};
 
     auto conn = sig.connect([&](int) { ++count; });
@@ -63,7 +63,7 @@ TEST(Signal, manual_disconnect)
 
 TEST(Signal, disconnect_is_idempotent)
 {
-    awn::Signal<void()> sig;
+    awn::core::Signal<void()> sig;
     auto count = int{};
 
     auto conn = sig.connect([&] { ++count; });
@@ -76,7 +76,7 @@ TEST(Signal, disconnect_is_idempotent)
 
 TEST(Signal, connection_connected_reflects_state)
 {
-    awn::Signal<void()> sig;
+    awn::core::Signal<void()> sig;
     auto conn = sig.connect([] {});
 
     EXPECT_TRUE(conn.connected());
@@ -86,11 +86,11 @@ TEST(Signal, connection_connected_reflects_state)
 
 TEST(Signal, scoped_connection_disconnects_on_scope_exit)
 {
-    awn::Signal<void(int)> sig;
+    awn::core::Signal<void(int)> sig;
     auto count = int{};
 
     {
-        auto sc = awn::scoped_connection{sig.connect([&](int) { ++count; })};
+        auto sc = awn::core::scoped_connection{sig.connect([&](int) { ++count; })};
         sig.emit(0);
         EXPECT_EQ(count, 1);
     }
@@ -101,8 +101,8 @@ TEST(Signal, scoped_connection_disconnects_on_scope_exit)
 
 TEST(Signal, scoped_connection_connected_reflects_state)
 {
-    awn::Signal<void()> sig;
-    auto sc = awn::scoped_connection{sig.connect([] {})};
+    awn::core::Signal<void()> sig;
+    auto sc = awn::core::scoped_connection{sig.connect([] {})};
 
     EXPECT_TRUE(sc.connected());
     sc.disconnect();
@@ -111,10 +111,10 @@ TEST(Signal, scoped_connection_connected_reflects_state)
 
 TEST(Signal, signal_destroyed_while_connection_alive)
 {
-    auto conn = awn::Connection{};
+    auto conn = awn::core::Connection{};
 
     {
-        awn::Signal<void(int)> sig;
+        awn::core::Signal<void(int)> sig;
         conn = sig.connect([](int) {});
         EXPECT_TRUE(conn.connected());
     }
@@ -126,16 +126,16 @@ TEST(Signal, signal_destroyed_while_connection_alive)
 
 TEST(Signal, scoped_connection_move_assignment_disconnects_old_slot)
 {
-    awn::Signal<void()> sig;
+    awn::core::Signal<void()> sig;
     auto count_a = int{};
     auto count_b = int{};
 
-    auto sc = awn::scoped_connection{sig.connect([&] { ++count_a; })};
+    auto sc = awn::core::scoped_connection{sig.connect([&] { ++count_a; })};
     sig.emit();
     EXPECT_EQ(count_a, 1);
 
     // Move-assign a new connection — the old slot must be disconnected.
-    sc = awn::scoped_connection{sig.connect([&] { ++count_b; })};
+    sc = awn::core::scoped_connection{sig.connect([&] { ++count_b; })};
     sig.emit();
 
     EXPECT_EQ(count_a, 1);
@@ -144,12 +144,12 @@ TEST(Signal, scoped_connection_move_assignment_disconnects_old_slot)
 
 TEST(Signal, scoped_connection_release_keeps_slot_alive)
 {
-    awn::Signal<void()> sig;
+    awn::core::Signal<void()> sig;
     auto count = int{};
-    auto conn = awn::Connection{};
+    auto conn = awn::core::Connection{};
 
     {
-        auto sc = awn::scoped_connection{sig.connect([&] { ++count; })};
+        auto sc = awn::core::scoped_connection{sig.connect([&] { ++count; })};
 
         // Release transfers ownership — sc's destructor must NOT disconnect.
         conn = sc.release();
@@ -165,9 +165,9 @@ TEST(Signal, scoped_connection_release_keeps_slot_alive)
 
 TEST(Signal, slot_disconnects_self_during_emit)
 {
-    awn::Signal<void()> sig;
+    awn::core::Signal<void()> sig;
     auto count = int{};
-    auto conn = awn::Connection{};
+    auto conn = awn::core::Connection{};
 
     conn = sig.connect(
         [&]
@@ -185,10 +185,10 @@ TEST(Signal, slot_disconnects_self_during_emit)
 
 TEST(Signal, remaining_slots_fire_after_peer_disconnects_during_emit)
 {
-    awn::Signal<void()> sig;
+    awn::core::Signal<void()> sig;
     auto count_a = int{};
     auto count_b = int{};
-    auto conn_a = awn::Connection{};
+    auto conn_a = awn::core::Connection{};
 
     conn_a = sig.connect(
         [&]
