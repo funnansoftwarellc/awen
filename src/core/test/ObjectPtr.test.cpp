@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 import awen.object;
-import awen.objectpr;
+import awen.objectptr;
 
 TEST(ObjectPtr, BasicUsage)
 {

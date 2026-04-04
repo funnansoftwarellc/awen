@@ -3,7 +3,7 @@ module;
 #include <compare>
 #include <memory>
 
-export module awen.objectpr;
+export module awen.objectptr;
 import awen.object;
 
 export namespace awn::core
