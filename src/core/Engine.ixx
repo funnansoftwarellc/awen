@@ -1,5 +1,6 @@
 module;
 
+#include <Flecs.hpp>
 #include <chrono>
 
 export module awen.core.engine;
@@ -84,6 +85,7 @@ namespace awn::core
         Signal<void()> on_post_render;
 
     private:
+        flecs::world world_;
         std::chrono::steady_clock::time_point start_;
         std::chrono::steady_clock::duration accumulated_{};
         const std::chrono::milliseconds fixed_update_interval_{10};
