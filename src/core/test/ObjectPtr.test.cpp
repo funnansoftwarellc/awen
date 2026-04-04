@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 
-import awen.object;
-import awen.objectptr;
+import awen.core.object;
+import awen.core.objectptr;
 
 TEST(ObjectPtr, BasicUsage)
 {
-    auto object = std::make_unique<awn::Object>();
-    awn::core::ObjectPtr<awn::Object> ptr(object.get());
+    auto object = std::make_unique<awn::core::Object>();
+    awn::core::ObjectPtr<awn::core::Object> ptr(object.get());
 
     EXPECT_EQ(ptr->get_name(), "");
     ptr->set_name("Test Object");
@@ -19,12 +19,12 @@ TEST(ObjectPtr, BasicUsage)
 
 TEST(ObjectPtr, Comparison)
 {
-    auto object1 = std::make_unique<awn::Object>();
-    auto object2 = std::make_unique<awn::Object>();
+    auto object1 = std::make_unique<awn::core::Object>();
+    auto object2 = std::make_unique<awn::core::Object>();
 
-    awn::core::ObjectPtr<awn::Object> ptr1(object1);
-    awn::core::ObjectPtr<awn::Object> ptr2(object2);
-    awn::core::ObjectPtr<awn::Object> ptr3(object1);
+    awn::core::ObjectPtr<awn::core::Object> ptr1(object1.get());
+    awn::core::ObjectPtr<awn::core::Object> ptr2(object2);
+    awn::core::ObjectPtr<awn::core::Object> ptr3(object1);
 
     EXPECT_EQ(ptr1, ptr3);
     EXPECT_NE(ptr1, ptr2);

@@ -1,6 +1,6 @@
-export module awen.overloaded;
+export module awen.core.overloaded;
 
-export namespace awn
+export namespace awn::core
 {
     /// @brief Combines multiple callable objects into a single overload set.
     ///

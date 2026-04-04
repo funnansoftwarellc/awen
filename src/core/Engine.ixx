@@ -4,7 +4,7 @@ module;
 #include <chrono>
 
 export module awen.core.engine;
-import awen.object;
+import awen.core.object;
 
 namespace awn::core
 {
@@ -83,6 +83,11 @@ namespace awn::core
         Signal<void()> on_pre_render;
         Signal<void()> on_render;
         Signal<void()> on_post_render;
+
+        [[nodiscard]] auto world() -> flecs::world&
+        {
+            return world_;
+        }
 
     private:
         flecs::world world_;

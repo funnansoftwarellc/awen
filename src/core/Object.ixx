@@ -6,10 +6,10 @@ module;
 #include <string_view>
 #include <vector>
 
-export module awen.object;
-export import awen.signal;
+export module awen.core.object;
+export import awen.core.signal;
 
-export namespace awn
+export namespace awn::core
 {
     /// @brief Base class for all objects in the engine.
     class Object

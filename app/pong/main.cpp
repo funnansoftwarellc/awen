@@ -14,13 +14,13 @@ try
 
     //
 
-    auto window = std::make_unique<awn::Object>();
+    auto window = std::make_unique<awn::core::Object>();
     window->set_name("Main Window");
 
-    auto paddle_left = std::make_unique<awn::Object>();
+    auto paddle_left = std::make_unique<awn::core::Object>();
     paddle_left->set_name("Left Paddle");
 
-    auto paddle_body = std::make_unique<awn::Object>();
+    auto paddle_body = std::make_unique<awn::core::Object>();
     paddle_body->set_name("Paddle Body");
     paddle_left->add_child(std::move(paddle_body));
 
