@@ -1,3 +1,4 @@
+#include <memory>
 #include <print>
 
 import awen.core;
@@ -7,9 +8,10 @@ try
 {
     awn::core::Engine engine;
 
-    // awn::widget::Engine engine;
-    // awn::widget::WidgetWindow window{"Awen - Pong", 1280, 720, {awn::graphics::ConfigFlag::resizable, awn::graphics::ConfigFlag::high_dpi}};
-    // engine.run(window);
+    auto window = std::make_unique<awn::Object>();
+    window->set_name("Main Window");
+    engine.add_child(std::move(window));
+
     return engine.run();
 }
 catch (...)
