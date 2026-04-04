@@ -12,16 +12,6 @@ export namespace awn::widget
     class Node : public awn::core::Object
     {
     public:
-        flecs::entity synchronize(flecs::entity entity)
-        {
-            if (!entity.is_valid())
-            {
-                entity = awn::core::Engine::instance()->world().entity();
-            }
-
-            return entity;
-        }
-
-    private:
+        virtual auto synchronize(flecs::entity entity) -> flecs::entity = 0;
     };
 }
