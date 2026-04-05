@@ -26,7 +26,7 @@ export namespace awen::widget
             return vertices_;
         }
 
-        auto synchronize(flecs::entity entity) -> flecs::entity override
+        auto synchronize(flecs::entity entity) const -> flecs::entity override
         {
             if (!entity.is_valid())
             {

@@ -12,6 +12,6 @@ export namespace awen::widget
     class Node : public awen::core::Object
     {
     public:
-        virtual auto synchronize(flecs::entity entity) -> flecs::entity = 0;
+        virtual auto synchronize(flecs::entity entity) const -> flecs::entity = 0;
     };
 }

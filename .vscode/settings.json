@@ -1,6 +1,10 @@
 {
     "editor.formatOnSave": true,
     "cmake.configureOnOpen": false,
+    "files.associations": {
+        "*.ixx": "cpp",
+        "*.cppm": "cpp"
+    },
     "clangd.path": "clangd",
     "clangd.arguments": [
         "--compile-commands-dir=${command:cmake.buildDirectory}"
