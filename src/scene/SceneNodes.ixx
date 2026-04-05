@@ -7,10 +7,10 @@ export module awen.scene.scene_nodes;
 export import awen.graphics.color;
 export import awen.scene.texture_id;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     // Bring Color into scope so node definitions can reference it without qualification.
-    using awn::graphics::Color;
+    using awen::graphics::Color;
 
     /// @brief Visual data for a filled axis-aligned rectangle node.
     struct RectNode

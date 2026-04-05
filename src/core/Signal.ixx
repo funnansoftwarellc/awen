@@ -10,7 +10,7 @@ module;
 export module awen.core.signal;
 
 // Internal implementation — not exported to module consumers.
-namespace awn::detail
+namespace awen::detail
 {
 
     /// @brief Shared control block for a Signal. Owned by the Signal via shared_ptr;
@@ -94,9 +94,9 @@ namespace awn::detail
         int emit_depth_{};
     };
 
-} // namespace awn::detail
+} // namespace awen::detail
 
-export namespace awn::core
+export namespace awen::core
 {
 
     /// @brief Non-owning handle to a signal-slot connection.
@@ -265,4 +265,4 @@ export namespace awn::core
         std::shared_ptr<detail::SignalCore<Args...>> core_;
     };
 
-} // namespace awn
+} // namespace awen

@@ -17,7 +17,7 @@ export import awen.scene.traversal_pass;
 
 import awen.graphics.draw_list;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     /// @brief Forward declaration — full definition follows below.
     class Scene;
@@ -106,13 +106,13 @@ export namespace awn::scene
     ///
     /// Usage:
     /// @code
-    ///   auto scene = awn::scene::Scene{};
+    ///   auto scene = awen::scene::Scene{};
     ///   auto root  = scene.root();
-    ///   auto rect  = root.add_child<awn::scene::RectNode>()
+    ///   auto rect  = root.add_child<awen::scene::RectNode>()
     ///                    .set_transform({.x = 10.0F, .y = 20.0F})
     ///                    .set_size(100.0F, 50.0F)
-    ///                    .set_color(awn::graphics::Color{255, 0, 0, 255});
-    ///   auto dl = awn::graphics::DrawList{};
+    ///                    .set_color(awen::graphics::Color{255, 0, 0, 255});
+    ///   auto dl = awen::graphics::DrawList{};
     ///   scene.build_draw_list(dl);
     /// @endcode
     class Scene
@@ -141,7 +141,7 @@ export namespace awn::scene
         /// The list is not cleared before appending; call DrawList::clear() at
         /// the start of each frame before calling this method.
         /// @param out DrawList that receives the emitted commands.
-        auto build_draw_list(awn::graphics::DrawList& out) const -> void;
+        auto build_draw_list(awen::graphics::DrawList& out) const -> void;
 
         /// @brief Loads a texture from @p path or returns the cached TextureId if already loaded.
         /// @param path File path of the image to load.
@@ -320,9 +320,9 @@ export namespace awn::scene
         return NodeHandle<void>{hierarchy_.root(), this};
     }
 
-    auto Scene::build_draw_list(awn::graphics::DrawList& out) const -> void
+    auto Scene::build_draw_list(awen::graphics::DrawList& out) const -> void
     {
-        awn::scene::build_draw_list(hierarchy_, transforms_, rects_, circles_, sprites_, texts_, textures_, out);
+        awen::scene::build_draw_list(hierarchy_, transforms_, rects_, circles_, sprites_, texts_, textures_, out);
     }
 
     auto Scene::load_texture(const std::string& path) -> TextureId

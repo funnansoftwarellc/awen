@@ -5,7 +5,7 @@ module;
 
 export module awen.scene.texture_id;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     /// @brief Opaque handle to a texture managed by TextureCache.
     ///

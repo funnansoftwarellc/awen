@@ -1,12 +1,12 @@
 module;
 
-#include <Flecs.hpp>
+#include <awen/flecs/Flecs.hpp>
 #include <chrono>
 
 export module awen.core.engine;
 import awen.core.object;
 
-namespace awn::core
+namespace awen::core
 {
     export class Engine : public Object
     {

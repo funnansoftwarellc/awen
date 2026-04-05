@@ -1,6 +1,6 @@
 export module awen.scene.transform;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     /// @brief Local (parent-relative) 2D position of a scene node.
     struct Transform

@@ -14,5 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(CTest)
 include(GoogleTest)
 
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 add_subdirectory(app)
 add_subdirectory(src)

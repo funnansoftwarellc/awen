@@ -19,6 +19,7 @@
 - Comments must be complete sentences (start with a capital letter, end with a period)
 - Use a paragraph comment above a block of related statements rather than commenting each line individually
 - Document all classes, structs, and public functions with Doxygen `///` comments using `@brief`, `@param`, `@return`, `@note`, etc.
+- Do not add trailing namespace-closing comments (e.g., `} // namespace awen::widget`); close namespaces with `}` only
 
 ### Formatting (from `.clang-format`)
 - Brace style: Allman — opening braces on their own line
@@ -46,7 +47,7 @@
 
 ### Standard Library Usage
 - Prefer non-member free functions over container member functions where equivalents exist: `std::size()`, `std::empty()`, `std::begin()`, `std::end()`, `std::data()`, etc.
-- Always use `std::visit` with `awn::Overloaded` (from `awen.overloaded`) when dispatching `std::variant` alternatives — never use a single generic lambda with `if constexpr` chains.
+- Always use `std::visit` with `awen::Overloaded` (from `awen.overloaded`) when dispatching `std::variant` alternatives — never use a single generic lambda with `if constexpr` chains.
 
 ### Functions
 - Keep functions small and focused on a single responsibility

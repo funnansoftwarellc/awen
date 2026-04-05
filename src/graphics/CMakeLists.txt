@@ -4,12 +4,12 @@ add_library(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES FILES
-        Event.ixx
         Color.ixx
         DrawList.ixx
-        Window.ixx
-        Renderer.ixx
+        Event.ixx
         Graphics.ixx
+        Renderer.ixx
+        Window.ixx
 )
 
 find_package(Threads REQUIRED)

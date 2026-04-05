@@ -6,22 +6,22 @@ import awen.core;
 TEST(Engine, Singleton)
 {
     // Ensure that only one instance of Engine can be created.
-    auto* instance1 = awn::core::Engine::instance();
+    auto* instance1 = awen::core::Engine::instance();
     EXPECT_EQ(instance1, nullptr);
 
     {
-        awn::core::Engine engine;
-        auto* instance2 = awn::core::Engine::instance();
+        awen::core::Engine engine;
+        auto* instance2 = awen::core::Engine::instance();
         EXPECT_EQ(instance2, &engine);
     }
 
-    auto* instance3 = awn::core::Engine::instance();
+    auto* instance3 = awen::core::Engine::instance();
     EXPECT_EQ(instance3, nullptr);
 }
 
 TEST(Engine, RunLoop)
 {
-    awn::core::Engine engine;
+    awen::core::Engine engine;
 
     int update_count = 0;
     int fixed_update_count = 0;
@@ -50,7 +50,7 @@ TEST(Engine, RunLoop)
 
 TEST(Engine, FixedUpdateLimit)
 {
-    awn::core::Engine engine;
+    awen::core::Engine engine;
 
     auto per_frame_count = 0;
     auto max_per_frame = 0;
@@ -87,7 +87,7 @@ TEST(Engine, FixedUpdateLimit)
 TEST(Engine, MultipleInstances)
 {
     // Ensure that creating multiple instances of Engine throws an exception.
-    awn::core::Engine engine1;
+    awen::core::Engine engine1;
 
-    EXPECT_THROW({ awn::core::Engine engine2; }, std::runtime_error);
+    EXPECT_THROW({ awen::core::Engine engine2; }, std::runtime_error);
 }

@@ -4,7 +4,7 @@ module;
 
 export module awen.scene.node_id;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     /// @brief Stable handle to a slot in a NodePool.
     ///

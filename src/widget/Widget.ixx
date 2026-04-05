@@ -1,1 +1,0 @@
-export module awen.widget.widget;

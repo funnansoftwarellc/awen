@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "ms-vscode.cpp-devtools",
+        "xaver.clang-format"
     ]
 }

@@ -4,7 +4,7 @@
 
 import awen.scene;
 
-using namespace awn::scene;
+using namespace awen::scene;
 
 namespace
 {

@@ -4,31 +4,20 @@
 #include <chrono>
 
 import awen.core;
+import awen.widget;
 
 auto main() -> int
 try
 {
-    awn::core::Engine engine;
+    awen::core::Engine engine;
 
-    // auto window = std::make_unique<awn::scene::Window>();
-
-    //
-
-    auto window = std::make_unique<awn::core::Object>();
-    window->set_name("Main Window");
-
-    auto paddle_left = std::make_unique<awn::core::Object>();
-    paddle_left->set_name("Left Paddle");
-
-    auto paddle_body = std::make_unique<awn::core::Object>();
-    paddle_body->set_name("Paddle Body");
-    paddle_left->add_child(std::move(paddle_body));
-
-    window->add_child(std::move(paddle_left));
+    auto window = std::make_unique<awen::widget::Window>();
+    window->set_title("Pong");
+    window->set_size({1280.0F, 720.0F});
+    window->set_position({80.0F, 80.0F});
 
     engine.add_child(std::move(window));
 
-    // window.run();
     return engine.run();
 }
 catch (...)

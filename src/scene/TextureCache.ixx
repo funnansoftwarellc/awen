@@ -11,7 +11,7 @@ export module awen.scene.texture_cache;
 
 export import awen.scene.texture_id;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     /// @brief Owns Texture2D lifetimes, keyed by file path.
     ///

@@ -9,7 +9,7 @@ export module awen.scene.hierarchy_pool;
 export import awen.scene.node_id;
 export import awen.scene.node_pool;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     /// @brief Parent/child/sibling links for one node in the scene tree.
     ///
