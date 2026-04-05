@@ -1,6 +1,6 @@
 module;
 
-#include <Flecs.hpp>
+#include <awen/flecs/Flecs.hpp>
 #include <chrono>
 
 export module awen.core.engine;

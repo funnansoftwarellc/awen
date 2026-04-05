@@ -1,6 +1,6 @@
 module;
 
-#include <Flecs.hpp>
+#include <awen/flecs/Flecs.hpp>
 #include <optional>
 
 export module awen.widget.node;
