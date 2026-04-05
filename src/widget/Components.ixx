@@ -1,6 +1,7 @@
 module;
 
 #include <glm/vec2.hpp>
+#include <vector>
 
 export module awen.widget.components;
 
@@ -19,4 +20,8 @@ export namespace awen::widget::components
         glm::vec2 max{};
     };
 
+    struct Polygon
+    {
+        std::vector<glm::vec2> vertices;
+    };
 }
