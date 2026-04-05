@@ -6,7 +6,7 @@ add_library(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES FILES
         Node.ixx
-        Node2D.ixx
+        NodeTransform.ixx
         Components.ixx
         Control.ixx
         Window.ixx

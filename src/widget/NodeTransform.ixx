@@ -3,7 +3,7 @@ module;
 #include <awen/flecs/Flecs.hpp>
 #include <glm/vec2.hpp>
 
-export module awen.widget.node2d;
+export module awen.widget.nodetransform;
 import awen.core.engine;
 import awen.widget.node;
 import awen.widget.components;
@@ -12,7 +12,7 @@ using awen::core::Engine;
 
 export namespace awen::widget
 {
-    class Node2D : public awen::widget::Node
+    class NodeTransform : public awen::widget::Node
     {
     public:
         auto set_position(glm::vec2 x) -> void
@@ -25,6 +25,26 @@ export namespace awen::widget
             return position_;
         }
 
+        auto set_scale(glm::vec2 x) -> void
+        {
+            scale_ = x;
+        }
+
+        auto get_scale() const -> glm::vec2
+        {
+            return scale_;
+        }
+
+        auto set_rotation(float x) -> void
+        {
+            rotation_ = x;
+        }
+
+        auto get_rotation() const -> float
+        {
+            return rotation_;
+        }
+
         auto synchronize(flecs::entity entity) -> flecs::entity override
         {
             if (!entity.is_valid())
@@ -32,13 +52,19 @@ export namespace awen::widget
                 entity = Engine::instance()->world().entity();
             }
 
-            entity.set<components::Transform>({.position = position_});
+            entity.set<components::Transform>({
+                .position = position_,
+                .scale = scale_,
+                .rotation = rotation_,
+            });
 
             return entity;
         }
 
     private:
         glm::vec2 position_{};
+        glm::vec2 scale_{1.0F, 1.0F};
+        float rotation_{0.0F};
     };
 
 }
