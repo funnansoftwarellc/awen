@@ -6,7 +6,7 @@ module;
 export module awen.core.objectptr;
 import awen.core.object;
 
-export namespace awn::core
+export namespace awen::core
 {
     template <typename T>
     class ObjectPtr

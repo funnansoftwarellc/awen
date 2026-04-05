@@ -6,7 +6,7 @@ module;
 export module awen.core.engine;
 import awen.core.object;
 
-namespace awn::core
+namespace awen::core
 {
     export class Engine : public Object
     {

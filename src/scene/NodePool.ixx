@@ -7,7 +7,7 @@ export module awen.scene.node_pool;
 
 export import awen.scene.node_id;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     /// @brief Contiguous generational arena storing values of type T, indexed by NodeId.
     ///

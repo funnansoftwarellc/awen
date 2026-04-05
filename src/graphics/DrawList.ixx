@@ -9,7 +9,7 @@ export module awen.graphics.draw_list;
 
 export import awen.graphics.color;
 
-export namespace awn::graphics
+export namespace awen::graphics
 {
     /// @brief Draw command that clears the background to a solid colour.
     struct DrawClear

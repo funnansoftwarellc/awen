@@ -8,19 +8,19 @@ import awen.core;
 auto main() -> int
 try
 {
-    awn::core::Engine engine;
+    awen::core::Engine engine;
 
-    // auto window = std::make_unique<awn::scene::Window>();
+    // auto window = std::make_unique<awen::scene::Window>();
 
     //
 
-    auto window = std::make_unique<awn::core::Object>();
+    auto window = std::make_unique<awen::core::Object>();
     window->set_name("Main Window");
 
-    auto paddle_left = std::make_unique<awn::core::Object>();
+    auto paddle_left = std::make_unique<awen::core::Object>();
     paddle_left->set_name("Left Paddle");
 
-    auto paddle_body = std::make_unique<awn::core::Object>();
+    auto paddle_body = std::make_unique<awen::core::Object>();
     paddle_body->set_name("Paddle Body");
     paddle_left->add_child(std::move(paddle_body));
 

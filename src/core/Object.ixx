@@ -9,7 +9,7 @@ module;
 export module awen.core.object;
 export import awen.core.signal;
 
-export namespace awn::core
+export namespace awen::core
 {
     /// @brief Base class for all objects in the engine.
     class Object

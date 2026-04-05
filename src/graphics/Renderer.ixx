@@ -15,13 +15,13 @@ export import awen.graphics.draw_list;
 
 namespace
 {
-    auto to_raylib(const awn::graphics::Color& c) -> ::Color
+    auto to_raylib(const awen::graphics::Color& c) -> ::Color
     {
         return {c.r, c.g, c.b, c.a};
     }
 }
 
-export namespace awn::graphics
+export namespace awen::graphics
 {
     class Renderer
     {
@@ -76,7 +76,7 @@ export namespace awn::graphics
             for (const auto& cmd : list.commands())
             {
                 std::visit(
-                    awn::core::Overloaded{
+                    awen::core::Overloaded{
                         [](const DrawClear& c) { ClearBackground(to_raylib(c.color)); },
                         [](const DrawRect& c)
                         { DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, to_raylib(c.color)); },

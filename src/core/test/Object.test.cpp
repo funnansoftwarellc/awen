@@ -4,15 +4,15 @@ import awen.core.object;
 
 TEST(Object, Name)
 {
-    awn::core::Object object;
+    awen::core::Object object;
     object.set_name("Test Object");
     EXPECT_EQ(object.get_name(), "Test Object");
 }
 
 TEST(Object, ParentChild)
 {
-    auto parent = std::make_unique<awn::core::Object>();
-    auto child = std::make_unique<awn::core::Object>();
+    auto parent = std::make_unique<awen::core::Object>();
+    auto child = std::make_unique<awen::core::Object>();
 
     parent->add_child(std::move(child));
     ASSERT_EQ(std::size(parent->get_children()), 1);
@@ -25,15 +25,15 @@ TEST(Object, ParentChild)
 
 TEST(Object, RemoveWithoutParent)
 {
-    auto object = std::make_unique<awn::core::Object>();
+    auto object = std::make_unique<awen::core::Object>();
     auto removed_object = object->remove();
     EXPECT_EQ(removed_object, nullptr);
 }
 
 TEST(Object, RemoveNonExistentChild)
 {
-    auto parent = std::make_unique<awn::core::Object>();
-    auto child = std::make_unique<awn::core::Object>();
+    auto parent = std::make_unique<awen::core::Object>();
+    auto child = std::make_unique<awen::core::Object>();
 
     parent->add_child(std::move(child));
     ASSERT_EQ(std::size(parent->get_children()), 1);
@@ -49,9 +49,9 @@ TEST(Object, RemoveNonExistentChild)
 
 TEST(Object, MultipleChildren)
 {
-    auto parent = std::make_unique<awn::core::Object>();
-    auto child1 = std::make_unique<awn::core::Object>();
-    auto child2 = std::make_unique<awn::core::Object>();
+    auto parent = std::make_unique<awen::core::Object>();
+    auto child1 = std::make_unique<awen::core::Object>();
+    auto child2 = std::make_unique<awen::core::Object>();
 
     parent->add_child(std::move(child1));
     parent->add_child(std::move(child2));
@@ -71,7 +71,7 @@ TEST(Object, MultipleChildren)
 
 TEST(Object, OnDestroyedSignal)
 {
-    auto object = std::make_unique<awn::core::Object>();
+    auto object = std::make_unique<awen::core::Object>();
     auto destroyed_count = int{};
 
     object->on_destroyed.connect([&] { ++destroyed_count; });
@@ -83,8 +83,8 @@ TEST(Object, OnDestroyedSignal)
 
 TEST(Object, OnDestroyedSignalWithChildren)
 {
-    auto parent = std::make_unique<awn::core::Object>();
-    auto child = std::make_unique<awn::core::Object>();
+    auto parent = std::make_unique<awen::core::Object>();
+    auto child = std::make_unique<awen::core::Object>();
     parent->add_child(std::move(child));
 
     auto parent_destroyed_count = int{};
@@ -104,7 +104,7 @@ TEST(Object, OnDestroyedSignalWithChildren)
 
 TEST(Object, OnStartupSignal)
 {
-    auto object = std::make_unique<awn::core::Object>();
+    auto object = std::make_unique<awen::core::Object>();
     auto startup_count = int{};
 
     object->on_startup.connect([&] { ++startup_count; });
@@ -116,8 +116,8 @@ TEST(Object, OnStartupSignal)
 
 TEST(Object, OnStartupSignalWithChildren)
 {
-    auto parent = std::make_unique<awn::core::Object>();
-    auto child = std::make_unique<awn::core::Object>();
+    auto parent = std::make_unique<awen::core::Object>();
+    auto child = std::make_unique<awen::core::Object>();
     parent->add_child(std::move(child));
 
     auto parent_startup_count = int{};
@@ -137,8 +137,8 @@ TEST(Object, OnStartupSignalWithChildren)
 
 TEST(Object, StartupAfterAddingChild)
 {
-    auto parent = std::make_unique<awn::core::Object>();
-    auto child = std::make_unique<awn::core::Object>();
+    auto parent = std::make_unique<awen::core::Object>();
+    auto child = std::make_unique<awen::core::Object>();
 
     auto child_startup_count = int{};
     child->on_startup.connect([&] { ++child_startup_count; });

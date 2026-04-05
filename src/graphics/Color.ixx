@@ -6,7 +6,7 @@ module;
 
 export module awen.graphics.color;
 
-export namespace awn::graphics
+export namespace awen::graphics
 {
     struct Color
     {

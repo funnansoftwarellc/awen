@@ -7,9 +7,9 @@ export module awen.widget.node;
 
 import awen.core;
 
-export namespace awn::widget
+export namespace awen::widget
 {
-    class Node : public awn::core::Object
+    class Node : public awen::core::Object
     {
     public:
         virtual auto synchronize(flecs::entity entity) -> flecs::entity = 0;

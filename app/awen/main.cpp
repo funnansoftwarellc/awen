@@ -175,11 +175,11 @@ auto main() -> int
 {
     try
     {
-        using namespace awn::graphics;
-        using namespace awn::scene;
+        using namespace awen::graphics;
+        using namespace awen::scene;
 
-        auto engine = awn::Engine{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable, ConfigFlag::high_dpi}};
-        awn::Engine::set_target_fps(target_fps);
+        auto engine = awen::Engine{"Awen - Pong", init_width, init_height, {ConfigFlag::resizable, ConfigFlag::high_dpi}};
+        awen::Engine::set_target_fps(target_fps);
         engine.set_clear_color(Color{.r = 0, .g = 0, .b = 0, .a = 120});
 
         const auto sw0 = static_cast<float>(init_width);

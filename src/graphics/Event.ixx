@@ -7,7 +7,7 @@ module;
 
 export module awen.graphics.event;
 
-export namespace awn::graphics
+export namespace awen::graphics
 {
     struct EventKeyboard
     {

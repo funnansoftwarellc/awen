@@ -13,7 +13,7 @@ export module awen.graphics.window;
 
 export import awen.graphics.event;
 
-export namespace awn::graphics
+export namespace awen::graphics
 {
     enum class ConfigFlag : unsigned int
     {

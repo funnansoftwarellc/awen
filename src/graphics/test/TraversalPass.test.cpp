@@ -6,8 +6,8 @@
 import awen.graphics;
 import awen.scene;
 
-using namespace awn::graphics;
-using namespace awn::scene;
+using namespace awen::graphics;
+using namespace awen::scene;
 
 namespace
 {

@@ -8,7 +8,7 @@ export module awen.engine;
 export import awen.graphics;
 export import awen.scene;
 
-export namespace awn
+export namespace awen
 {
     /// @brief Owns the application window and drives the main game loop.
     ///

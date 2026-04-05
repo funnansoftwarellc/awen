@@ -7,8 +7,8 @@
 import awen.scene;
 import awen.graphics.draw_list;
 
-using namespace awn::scene;
-using namespace awn::graphics;
+using namespace awen::scene;
+using namespace awen::graphics;
 
 // ── NodePool::allocate_at ─────────────────────────────────────────────────────
 

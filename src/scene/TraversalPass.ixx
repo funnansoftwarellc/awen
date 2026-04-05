@@ -14,7 +14,7 @@ import awen.scene.hierarchy_pool;
 import awen.scene.node_pool;
 import awen.scene.transform;
 
-export namespace awn::scene
+export namespace awen::scene
 {
     /// @brief Performs a depth-first scene traversal, propagating world transforms and emitting draw commands.
     ///
@@ -37,7 +37,7 @@ export namespace awn::scene
     ///       calling DrawList::clear() when starting a new frame.
     auto build_draw_list(const HierarchyPool& hierarchy, const NodePool<Transform>& transforms, const NodePool<RectNode>& rect_nodes,
                          const NodePool<CircleNode>& circle_nodes, const NodePool<SpriteNode>& sprite_nodes, const NodePool<TextNode>& text_nodes,
-                         const TextureCache& textures, awn::graphics::DrawList& out) -> void
+                         const TextureCache& textures, awen::graphics::DrawList& out) -> void
     {
         // Maps NodeId.index -> WorldTransform for in-flight parent-to-child propagation.
         auto world_cache = std::unordered_map<uint32_t, WorldTransform>{};
@@ -84,7 +84,7 @@ export namespace awn::scene
                 // Emit a DrawRect command if this node carries a RectNode.
                 if (const auto* rect = rect_nodes.get(id); rect != nullptr)
                 {
-                    out.push(awn::graphics::DrawRect{
+                    out.push(awen::graphics::DrawRect{
                         .x = wt.x,
                         .y = wt.y,
                         .width = rect->width,
@@ -96,7 +96,7 @@ export namespace awn::scene
                 // Emit a DrawCircle command if this node carries a CircleNode.
                 if (const auto* circle = circle_nodes.get(id); circle != nullptr)
                 {
-                    out.push(awn::graphics::DrawCircle{
+                    out.push(awen::graphics::DrawCircle{
                         .center_x = wt.x,
                         .center_y = wt.y,
                         .radius = circle->radius,
@@ -109,7 +109,7 @@ export namespace awn::scene
                 {
                     if (const auto* tex = textures.get(sprite->texture_id); tex != nullptr)
                     {
-                        out.push(awn::graphics::DrawSprite{
+                        out.push(awen::graphics::DrawSprite{
                             .texture =
                                 {
                                     .id = tex->id,
@@ -130,7 +130,7 @@ export namespace awn::scene
                 // Emit a DrawText command if this node carries a TextNode.
                 if (const auto* text = text_nodes.get(id); text != nullptr)
                 {
-                    out.push(awn::graphics::DrawText{
+                    out.push(awen::graphics::DrawText{
                         .text = text->text,
                         .x = static_cast<int>(wt.x),
                         .y = static_cast<int>(wt.y),
