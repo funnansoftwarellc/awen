@@ -8,9 +8,9 @@ TEST(ObjectPtr, BasicUsage)
     auto object = std::make_unique<awen::core::Object>();
     awen::core::ObjectPtr<awen::core::Object> ptr(object.get());
 
-    EXPECT_EQ(ptr->get_name(), "");
-    ptr->set_name("Test Object");
-    EXPECT_EQ(ptr->get_name(), "Test Object");
+    EXPECT_EQ(ptr->getName(), "");
+    ptr->setName("Test Object");
+    EXPECT_EQ(ptr->getName(), "Test Object");
 
     // Destroy the object and check that the pointer becomes null.
     object.reset();

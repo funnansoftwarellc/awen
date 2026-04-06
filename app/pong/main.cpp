@@ -6,17 +6,25 @@
 import awen.core;
 import awen.widget;
 
+namespace
+{
+    constexpr auto WindowWidth = 1280.0F;
+    constexpr auto WindowHeight = 720.0F;
+    constexpr auto WindowPositionX = 80.0F;
+    constexpr auto WindowPositionY = 80.0F;
+}
+
 auto main() -> int
 try
 {
     awen::core::Engine engine;
 
     auto window = std::make_unique<awen::widget::Window>();
-    window->set_title("Pong");
-    window->set_size({1280.0F, 720.0F});
-    window->set_position({80.0F, 80.0F});
+    window->setTitle("Pong");
+    window->setSize({WindowWidth, WindowHeight});
+    window->setPosition({WindowPositionX, WindowPositionY});
 
-    engine.add_child(std::move(window));
+    engine.addChild(std::move(window));
 
     return engine.run();
 }

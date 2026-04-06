@@ -2,6 +2,7 @@ module;
 
 #include <concepts>
 #include <cstdint>
+#include <exception>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -25,18 +26,18 @@ namespace awen::detail
         auto connect(SlotFn fn) -> std::pair<std::weak_ptr<bool>, std::function<void()>>
         {
             auto alive = std::make_shared<bool>(true);
-            const auto id = next_id_++;
+            const auto id = nextId_++;
             slots_.push_back(SlotEntry{.id = id, .fn = std::move(fn), .alive = alive});
 
-            auto weak_core = this->weak_from_this();
+            auto weakCore = this->weak_from_this();
 
             return {
                 std::weak_ptr<bool>(alive),
-                [weak_core, id]()
+                [weakCore, id]()
                 {
-                    if (auto core = weak_core.lock())
+                    if (auto core = weakCore.lock())
                     {
-                        core->do_disconnect(id);
+                        core->doDisconnect(id);
                     }
                 },
             };
@@ -45,7 +46,7 @@ namespace awen::detail
         /// @brief Invokes all live slots. Defers slot erasure until after the outermost emit returns.
         auto emit(Args... args) -> void
         {
-            ++emit_depth_;
+            ++emitDepth_;
 
             for (auto& entry : slots_)
             {
@@ -55,9 +56,9 @@ namespace awen::detail
                 }
             }
 
-            --emit_depth_;
+            --emitDepth_;
 
-            if (emit_depth_ == 0)
+            if (emitDepth_ == 0)
             {
                 std::erase_if(slots_, [](const SlotEntry& e) { return !*e.alive; });
             }
@@ -72,7 +73,7 @@ namespace awen::detail
         };
 
         /// @brief Marks a slot dead by ID and prunes the list when not emitting.
-        auto do_disconnect(const uint64_t id) -> void
+        auto doDisconnect(const uint64_t id) -> void
         {
             for (auto& entry : slots_)
             {
@@ -83,15 +84,15 @@ namespace awen::detail
                 }
             }
 
-            if (emit_depth_ == 0)
+            if (emitDepth_ == 0)
             {
                 std::erase_if(slots_, [](const SlotEntry& e) { return !*e.alive; });
             }
         }
 
         std::vector<SlotEntry> slots_;
-        uint64_t next_id_{};
-        int emit_depth_{};
+        uint64_t nextId_{};
+        int emitDepth_{};
     };
 
 } // namespace awen::detail
@@ -110,12 +111,21 @@ export namespace awen::core
         Connection() = default;
 
         /// @brief Disconnects the slot from its signal. Idempotent.
-        auto disconnect() -> void
+        auto disconnect() noexcept -> void
         {
-            if (disconnect_fn_)
+            if (disconnectFn_)
             {
-                disconnect_fn_();
-                disconnect_fn_ = nullptr;
+                try
+                {
+                    disconnectFn_();
+                }
+                catch (...)
+                {
+                    const auto exception = std::current_exception();
+                    static_cast<void>(exception);
+                }
+
+                disconnectFn_ = nullptr;
             }
         }
 
@@ -130,41 +140,41 @@ export namespace awen::core
         template <typename>
         friend class Signal;
 
-        Connection(std::weak_ptr<bool> alive, std::function<void()> fn) : alive_(std::move(alive)), disconnect_fn_(std::move(fn))
+        Connection(std::weak_ptr<bool> alive, std::function<void()> fn) : alive_(std::move(alive)), disconnectFn_(std::move(fn))
         {
         }
 
         std::weak_ptr<bool> alive_;
-        std::function<void()> disconnect_fn_;
+        std::function<void()> disconnectFn_;
     };
 
     /// @brief RAII handle that automatically disconnects its slot when destroyed.
     ///
-    /// Move-only. Move-assigning a new scoped_connection first disconnects any
+    /// Move-only. Move-assigning a new ScopedConnection first disconnects any
     /// previously held slot. Use release() to surrender ownership without disconnecting.
-    class scoped_connection
+    class ScopedConnection
     {
     public:
-        /// @brief Constructs an empty, disconnected scoped_connection.
-        scoped_connection() = default;
+        /// @brief Constructs an empty, disconnected ScopedConnection.
+        ScopedConnection() = default;
 
         /// @brief Takes ownership of @p conn, disconnecting it on destruction.
-        explicit scoped_connection(Connection conn) : connection_(std::move(conn))
+        explicit ScopedConnection(Connection conn) : connection_(std::move(conn))
         {
         }
 
-        ~scoped_connection()
+        ~ScopedConnection() noexcept
         {
             connection_.disconnect();
         }
 
-        scoped_connection(const scoped_connection&) = delete;
-        auto operator=(const scoped_connection&) -> scoped_connection& = delete;
+        ScopedConnection(const ScopedConnection&) = delete;
+        auto operator=(const ScopedConnection&) -> ScopedConnection& = delete;
 
-        scoped_connection(scoped_connection&&) = default;
+        ScopedConnection(ScopedConnection&&) = default;
 
         /// @brief Disconnects the currently held slot and takes ownership of @p other's slot.
-        auto operator=(scoped_connection&& other) noexcept -> scoped_connection&
+        auto operator=(ScopedConnection&& other) noexcept -> ScopedConnection&
         {
             if (this != &other)
             {
@@ -189,7 +199,7 @@ export namespace awen::core
 
         /// @brief Transfers ownership of the connection without disconnecting it.
         ///
-        /// This scoped_connection becomes empty after the call.
+        /// This ScopedConnection becomes empty after the call.
         /// @return The underlying Connection.
         [[nodiscard]] auto release() -> Connection
         {
@@ -232,6 +242,8 @@ export namespace awen::core
         Signal() : core_(std::make_shared<detail::SignalCore<Args...>>())
         {
         }
+
+        ~Signal() = default;
 
         Signal(const Signal&) = delete;
         auto operator=(const Signal&) -> Signal& = delete;

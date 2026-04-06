@@ -13,22 +13,27 @@ namespace awen::core
     public:
         Engine()
         {
-            if (singleton_ != nullptr)
+            if (singleton != nullptr)
             {
                 throw std::runtime_error("Engine instance already exists");
             }
 
-            singleton_ = this;
+            singleton = this;
         }
 
-        ~Engine()
+        ~Engine() override
         {
-            singleton_ = nullptr;
+            singleton = nullptr;
         }
 
-        static Engine* instance()
+        Engine(const Engine&) = delete;
+        auto operator=(const Engine&) -> Engine& = delete;
+        Engine(Engine&&) = delete;
+        auto operator=(Engine&&) -> Engine& = delete;
+
+        static auto instance() -> Engine*
         {
-            return singleton_;
+            return singleton;
         }
 
         auto run() -> int
@@ -45,23 +50,23 @@ namespace awen::core
                 accumulated_ += delta;
                 start_ = now;
 
-                on_event.emit();
-                on_update.emit(delta);
+                onEvent_.emit();
+                onUpdate_.emit(delta);
 
                 // Process fixed updates if enough time has accumulated.
                 // To prevent spiral of death, we limit the number of fixed updates per frame.
-                auto fixed_update_count = 0;
+                auto fixedUpdateCount = 0;
 
-                while (accumulated_ >= fixed_update_interval_ && fixed_update_count < fixed_update_limit_)
+                while (accumulated_ >= fixedUpdateInterval_ && fixedUpdateCount < fixedUpdateLimit_)
                 {
-                    accumulated_ -= fixed_update_interval_;
-                    ++fixed_update_count;
-                    on_fixed_update.emit(fixed_update_interval_);
+                    accumulated_ -= fixedUpdateInterval_;
+                    ++fixedUpdateCount;
+                    onFixedUpdate_.emit(fixedUpdateInterval_);
                 }
 
-                on_pre_render.emit();
-                on_render.emit();
-                on_post_render.emit();
+                onPreRender_.emit();
+                onRender_.emit();
+                onPostRender_.emit();
             }
 
             return EXIT_SUCCESS;
@@ -72,17 +77,40 @@ namespace awen::core
             running_ = false;
         }
 
-        [[nodiscard]] auto fixed_update_limit() const -> int
+        [[nodiscard]] auto fixedUpdateLimit() const -> int
         {
-            return fixed_update_limit_;
+            return fixedUpdateLimit_;
         }
 
-        Signal<void()> on_event;
-        Signal<void(std::chrono::duration<float> dt)> on_update;
-        Signal<void(std::chrono::duration<float> dt)> on_fixed_update;
-        Signal<void()> on_pre_render;
-        Signal<void()> on_render;
-        Signal<void()> on_post_render;
+        [[nodiscard]] auto onEvent() -> Signal<void()>&
+        {
+            return onEvent_;
+        }
+
+        [[nodiscard]] auto onUpdate() -> Signal<void(std::chrono::duration<float>)>&
+        {
+            return onUpdate_;
+        }
+
+        [[nodiscard]] auto onFixedUpdate() -> Signal<void(std::chrono::duration<float>)>&
+        {
+            return onFixedUpdate_;
+        }
+
+        [[nodiscard]] auto onPreRender() -> Signal<void()>&
+        {
+            return onPreRender_;
+        }
+
+        [[nodiscard]] auto onRender() -> Signal<void()>&
+        {
+            return onRender_;
+        }
+
+        [[nodiscard]] auto onPostRender() -> Signal<void()>&
+        {
+            return onPostRender_;
+        }
 
         [[nodiscard]] auto world() -> flecs::world&
         {
@@ -93,10 +121,18 @@ namespace awen::core
         flecs::world world_;
         std::chrono::steady_clock::time_point start_;
         std::chrono::steady_clock::duration accumulated_{};
-        const std::chrono::milliseconds fixed_update_interval_{10};
-        const int fixed_update_limit_{5};
+        static constexpr auto FixedUpdateMilliseconds = 10;
+        static constexpr auto FixedUpdateStepLimit = 5;
+        const std::chrono::milliseconds fixedUpdateInterval_{FixedUpdateMilliseconds};
+        const int fixedUpdateLimit_{FixedUpdateStepLimit};
         bool running_ = false;
+        Signal<void()> onEvent_;
+        Signal<void(std::chrono::duration<float> dt)> onUpdate_;
+        Signal<void(std::chrono::duration<float> dt)> onFixedUpdate_;
+        Signal<void()> onPreRender_;
+        Signal<void()> onRender_;
+        Signal<void()> onPostRender_;
 
-        static inline Engine* singleton_ = nullptr;
+        static inline Engine* singleton = nullptr;
     };
 }

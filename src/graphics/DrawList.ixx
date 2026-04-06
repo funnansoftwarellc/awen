@@ -30,8 +30,8 @@ export namespace awen::graphics
     /// @brief Draw command that renders a filled circle.
     struct DrawCircle
     {
-        float center_x{};
-        float center_y{};
+        float centerX{};
+        float centerY{};
         float radius{};
         Color color{};
     };
@@ -39,10 +39,10 @@ export namespace awen::graphics
     /// @brief Draw command that renders a line segment between two points.
     struct DrawLine
     {
-        float start_x{};
-        float start_y{};
-        float end_x{};
-        float end_y{};
+        float startX{};
+        float startY{};
+        float endX{};
+        float endY{};
         Color color{};
     };
 
@@ -52,7 +52,7 @@ export namespace awen::graphics
         std::string text;
         int x{};
         int y{};
-        int font_size{};
+        int fontSize{};
         Color color{};
     };
 

@@ -15,7 +15,7 @@ export import awen.graphics.draw_list;
 
 namespace
 {
-    auto to_raylib(const awen::graphics::Color& c) -> ::Color
+    auto toRaylib(const awen::graphics::Color& c) -> ::Color
     {
         return {c.r, c.g, c.b, c.a};
     }
@@ -38,32 +38,32 @@ export namespace awen::graphics
 
         static auto clear(const Color& color) -> void
         {
-            ClearBackground(to_raylib(color));
+            ClearBackground(toRaylib(color));
         }
 
-        static auto draw_rect(float x, float y, float width, float height, const Color& color) -> void
+        static auto drawRect(float x, float y, float width, float height, const Color& color) -> void
         {
-            DrawRectangleV(::Vector2{.x = x, .y = y}, ::Vector2{.x = width, .y = height}, to_raylib(color));
+            DrawRectangleV(::Vector2{.x = x, .y = y}, ::Vector2{.x = width, .y = height}, toRaylib(color));
         }
 
-        static auto draw_circle(float center_x, float center_y, float radius, const Color& color) -> void
+        static auto drawCircle(float centerX, float centerY, float radius, const Color& color) -> void
         {
-            DrawCircleV(::Vector2{.x = center_x, .y = center_y}, radius, to_raylib(color));
+            DrawCircleV(::Vector2{.x = centerX, .y = centerY}, radius, toRaylib(color));
         }
 
-        static auto draw_text(const char* text, int x, int y, int font_size, const Color& color) -> void
+        static auto drawText(const char* text, int x, int y, int fontSize, const Color& color) -> void
         {
-            ::DrawText(text, x, y, font_size, to_raylib(color));
+            ::DrawText(text, x, y, fontSize, toRaylib(color));
         }
 
-        [[nodiscard]] static auto measure_text(const char* text, int font_size) -> int
+        [[nodiscard]] static auto measureText(const char* text, int fontSize) -> int
         {
-            return MeasureText(text, font_size);
+            return MeasureText(text, fontSize);
         }
 
-        static auto draw_line(float start_x, float start_y, float end_x, float end_y, const Color& color) -> void
+        static auto drawLine(float startX, float startY, float endX, float endY, const Color& color) -> void
         {
-            DrawLineV(::Vector2{.x = start_x, .y = start_y}, ::Vector2{.x = end_x, .y = end_y}, to_raylib(color));
+            DrawLineV(::Vector2{.x = startX, .y = startY}, ::Vector2{.x = endX, .y = endY}, toRaylib(color));
         }
 
         /// @brief Submits an ordered list of draw commands to the underlying renderer.
@@ -77,13 +77,13 @@ export namespace awen::graphics
             {
                 std::visit(
                     awen::core::Overloaded{
-                        [](const DrawClear& c) { ClearBackground(to_raylib(c.color)); },
+                        [](const DrawClear& c) { ClearBackground(toRaylib(c.color)); },
                         [](const DrawRect& c)
-                        { DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, to_raylib(c.color)); },
-                        [](const DrawCircle& c) { DrawCircleV(::Vector2{.x = c.center_x, .y = c.center_y}, c.radius, to_raylib(c.color)); },
+                        { DrawRectangleV(::Vector2{.x = c.x, .y = c.y}, ::Vector2{.x = c.width, .y = c.height}, toRaylib(c.color)); },
+                        [](const DrawCircle& c) { DrawCircleV(::Vector2{.x = c.centerX, .y = c.centerY}, c.radius, toRaylib(c.color)); },
                         [](const DrawLine& c)
-                        { DrawLineV(::Vector2{.x = c.start_x, .y = c.start_y}, ::Vector2{.x = c.end_x, .y = c.end_y}, to_raylib(c.color)); },
-                        [](const DrawText& c) { ::DrawText(c.text.c_str(), c.x, c.y, c.font_size, to_raylib(c.color)); },
+                        { DrawLineV(::Vector2{.x = c.startX, .y = c.startY}, ::Vector2{.x = c.endX, .y = c.endY}, toRaylib(c.color)); },
+                        [](const DrawText& c) { ::DrawText(c.text.c_str(), c.x, c.y, c.fontSize, toRaylib(c.color)); },
                         [](const DrawBeginScissor& c) { BeginScissorMode(c.x, c.y, c.width, c.height); },
                         [](const DrawEndScissor&) { EndScissorMode(); },
                         [](const DrawSprite& c)
@@ -99,7 +99,7 @@ export namespace awen::graphics
                                 tex,
                                 Rectangle{.x = 0.0F, .y = 0.0F, .width = static_cast<float>(tex.width), .height = static_cast<float>(tex.height)},
                                 Rectangle{.x = c.x, .y = c.y, .width = c.width, .height = c.height}, Vector2{.x = 0.0F, .y = 0.0F}, 0.0F,
-                                to_raylib(c.tint));
+                                toRaylib(c.tint));
                         },
                     },
                     cmd);

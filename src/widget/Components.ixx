@@ -10,8 +10,8 @@ export namespace awen::widget::components
     struct Transform
     {
         glm::vec2 position{};
-        glm::vec2 scale{1.0f, 1.0f};
-        float rotation{0.0f};
+        glm::vec2 scale{1.0F, 1.0F};
+        float rotation{0.0F};
     };
 
     struct BoundingBox

@@ -15,37 +15,37 @@ export namespace awen::widget
     class NodeTransform : public awen::widget::Node
     {
     public:
-        auto set_position(glm::vec2 x) -> void
+        auto setPosition(glm::vec2 x) -> void
         {
             position_ = x;
         }
 
-        auto get_position() const -> glm::vec2
+        [[nodiscard]] auto getPosition() const -> glm::vec2
         {
             return position_;
         }
 
-        auto set_scale(glm::vec2 x) -> void
+        auto setScale(glm::vec2 x) -> void
         {
             scale_ = x;
         }
 
-        auto get_scale() const -> glm::vec2
+        [[nodiscard]] auto getScale() const -> glm::vec2
         {
             return scale_;
         }
 
-        auto set_rotation(float x) -> void
+        auto setRotation(float x) -> void
         {
             rotation_ = x;
         }
 
-        auto get_rotation() const -> float
+        [[nodiscard]] auto getRotation() const -> float
         {
             return rotation_;
         }
 
-        auto synchronize(flecs::entity entity) const -> flecs::entity override
+        [[nodiscard]] auto synchronize(flecs::entity entity) const -> flecs::entity override
         {
             if (!entity.is_valid())
             {

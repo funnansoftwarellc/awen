@@ -18,7 +18,7 @@ export namespace awen::core
         {
             if (ptr_)
             {
-                ptr_->on_destroyed.connect([this] { ptr_ = nullptr; });
+                ptr_->onDestroyed().connect([this] { ptr_ = nullptr; });
             }
         }
 

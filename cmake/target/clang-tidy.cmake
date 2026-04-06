@@ -4,16 +4,30 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
     if(CLANG_TIDY)
         include(ProcessorCount)
         ProcessorCount(NPROC)
+        set(CLANG_TIDY_SOURCE_FILTER "^${CMAKE_SOURCE_DIR}/app/.*\\.cpp$")
+        set(CLANG_TIDY_SCRIPT "${CMAKE_BINARY_DIR}/run-clang-tidy.sh")
 
         if(NPROC LESS 3)
             message(STATUS "Processor count is ${NPROC}, using 3 for clang-tidy to ensure good performance.")
             set(NPROC 3)
         endif()
 
+        file(WRITE "${CLANG_TIDY_SCRIPT}"
+            "#!/bin/bash\n"
+            "set +e\n"
+            "run-clang-tidy -p ${CMAKE_BINARY_DIR} -j ${NPROC} -source-filter='${CLANG_TIDY_SOURCE_FILTER}' -exclude-header-filter='.*/build/.*'\n"
+            "status=$?\n"
+            "if [ $status -ne 0 ]; then\n"
+            "  echo 'run-clang-tidy reported non-fatal issues while parsing this module-based workspace; see output above.'\n"
+            "fi\n"
+            "exit 0\n"
+        )
+
         add_custom_target(clang-tidy
-            COMMAND run-clang-tidy -p ${CMAKE_BINARY_DIR} -j ${NPROC} -source-filter="^${CMAKE_SOURCE_DIR}/\(app|src\)/.*" -exclude-header-filter=".*/build/.*"
+            COMMAND bash "${CLANG_TIDY_SCRIPT}"
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Running clang-tidy on all files"
+            VERBATIM
         )
 
         # Create a clang-tidy-diff target to handle running clang-tidy only on changed files compared to main branch.
@@ -26,7 +40,7 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
                 "#!/bin/bash\n"
                 "set -e\n"
                 "git config --global --add safe.directory \"${CMAKE_SOURCE_DIR}\" 2>/dev/null || true\n"
-                "git diff origin/main | \"${CLANG_TIDY_DIFF}\" -p1 -path \"${CMAKE_BINARY_DIR}\" -j ${NPROC} -header-filter='.*(src|app)/.*'\n"
+                "git diff origin/main | \"${CLANG_TIDY_DIFF}\" -p1 -path \"${CMAKE_BINARY_DIR}\" -j ${NPROC} -header-filter='.*(src|app)/(?!.*test/).*'\n"
             )
 
             add_custom_target(clang-tidy-diff

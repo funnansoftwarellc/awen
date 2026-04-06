@@ -4,9 +4,10 @@
 
 ### Naming (from `.clang-tidy` `readability-identifier-naming`)
 - Types, structs, enums, concepts: `CamelCase`
-- Functions, methods, variables, constants, parameters, namespaces: `lower_case` (snake_case)
-- Private and protected member variables: `lower_case_` (trailing `_` suffix)
-- Public member variables: `lower_case` (no suffix)
+- Global functions, global constants, and global variables: `CamelCase`
+- Non-global functions, methods, variables, local constants, parameters, and namespaces: `camelBack`
+- Private and protected member variables: `camelBack_` (trailing `_` suffix)
+- Public member variables: `camelBack` (no suffix)
 
 ### Types & Declarations
 - Prefer `auto` everywhere a type can be deduced — local variables, `constexpr` constants, loop variables, etc. (e.g., `constexpr auto init_width = 1280;`, `const auto dt = GetFrameTime();`)
@@ -48,6 +49,7 @@
 ### Standard Library Usage
 - Prefer non-member free functions over container member functions where equivalents exist: `std::size()`, `std::empty()`, `std::begin()`, `std::end()`, `std::data()`, etc.
 - Always use `std::visit` with `awen::Overloaded` (from `awen.overloaded`) when dispatching `std::variant` alternatives — never use a single generic lambda with `if constexpr` chains.
+- When intentionally ignoring a `[[nodiscard]]` return value, prefer `std::ignore = expression;` over `static_cast<void>(expression);`.
 
 ### Functions
 - Keep functions small and focused on a single responsibility
@@ -60,6 +62,7 @@
 - Build system: CMake with Ninja, presets defined in `CMakePresets.json`
 - Package manager: vcpkg (manifest mode, `vcpkg.json`)
 - Primary graphics library: raylib
+- Use the normal CMake build to validate C++20 modules. The `clang-tidy` target is currently scoped to `app/*.cpp` translation units because `run-clang-tidy` is not reliably handling this repo's module interface units.
 
 ## CMake Style
 - Place `find_package()` calls immediately before the `target_link_libraries()` / `target_include_directories()` / `target_compile_definitions()` calls that consume them — not at the top of the file

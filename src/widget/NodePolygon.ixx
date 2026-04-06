@@ -16,17 +16,17 @@ export namespace awen::widget
     class NodePolygon : public awen::widget::Node
     {
     public:
-        auto set_vertices(const std::vector<glm::vec2>& vertices) -> void
+        auto setVertices(const std::vector<glm::vec2>& vertices) -> void
         {
             vertices_ = vertices;
         }
 
-        auto get_vertices() const -> const std::vector<glm::vec2>&
+        [[nodiscard]] auto getVertices() const -> const std::vector<glm::vec2>&
         {
             return vertices_;
         }
 
-        auto synchronize(flecs::entity entity) const -> flecs::entity override
+        [[nodiscard]] auto synchronize(flecs::entity entity) const -> flecs::entity override
         {
             if (!entity.is_valid())
             {

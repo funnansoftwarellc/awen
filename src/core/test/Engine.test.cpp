@@ -27,9 +27,9 @@ TEST(Engine, RunLoop)
     int fixed_update_count = 0;
     int render_count = 0;
 
-    engine.on_update.connect([&](auto) { ++update_count; });
-    engine.on_fixed_update.connect([&](auto) { ++fixed_update_count; });
-    engine.on_render.connect([&] { ++render_count; });
+    engine.onUpdate().connect([&](auto) { ++update_count; });
+    engine.onFixedUpdate().connect([&](auto) { ++fixed_update_count; });
+    engine.onRender().connect([&] { ++render_count; });
 
     // Run the engine for a short time and then stop it.
     std::thread engine_thread(
@@ -55,11 +55,11 @@ TEST(Engine, FixedUpdateLimit)
     auto per_frame_count = 0;
     auto max_per_frame = 0;
 
-    engine.on_fixed_update.connect([&](auto) { ++per_frame_count; });
+    engine.onFixedUpdate().connect([&](auto) { ++per_frame_count; });
 
     // Record the per-frame fixed update count before each render, then reset.
     // This verifies the spiral-of-death cap holds within any single frame.
-    engine.on_pre_render.connect(
+    engine.onPreRender().connect(
         [&]
         {
             if (per_frame_count > max_per_frame)
@@ -79,7 +79,7 @@ TEST(Engine, FixedUpdateLimit)
 
     const auto result = engine.run();
     EXPECT_EQ(result, 0);
-    EXPECT_LE(max_per_frame, engine.fixed_update_limit());
+    EXPECT_LE(max_per_frame, engine.fixedUpdateLimit());
 
     engine_thread.join();
 }
