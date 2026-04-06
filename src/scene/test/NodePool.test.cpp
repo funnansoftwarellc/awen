@@ -18,7 +18,7 @@ TEST(NodePool, AllocateReturnsValidId)
 {
     auto pool = NodePool<SimpleData>{};
     const auto id = pool.allocate();
-    EXPECT_TRUE(id.is_valid());
+    EXPECT_TRUE(id.isValid());
 }
 
 TEST(NodePool, GetReturnsDataAfterAllocate)
@@ -65,7 +65,7 @@ TEST(NodePool, StaleHandleAfterRealloc)
 TEST(NodePool, NullNodeIsInvalid)
 {
     auto pool = NodePool<SimpleData>{};
-    EXPECT_EQ(pool.get(null_node), nullptr);
+    EXPECT_EQ(pool.get(NullNode), nullptr);
 }
 
 TEST(NodePool, FreeTwiceIsNoop)
@@ -112,7 +112,7 @@ TEST(NodePool, ForEachVisitsOnlyLiveNodes)
 
     auto sum = 0;
     auto count = 0;
-    pool.for_each(
+    pool.forEach(
         [&](NodeId, SimpleData& d)
         {
             sum += d.value;

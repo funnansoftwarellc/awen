@@ -59,57 +59,57 @@ export namespace awen::graphics
         Window(Window&&) = delete;
         auto operator=(Window&&) -> Window& = delete;
 
-        [[nodiscard]] static auto is_open() -> bool
+        [[nodiscard]] static auto isOpen() -> bool
         {
             return !WindowShouldClose();
         }
 
-        static auto set_target_fps(int fps) -> void
+        static auto setTargetFps(int fps) -> void
         {
             SetTargetFPS(fps);
         }
 
-        [[nodiscard]] static auto get_frame_time() -> float
+        [[nodiscard]] static auto getFrameTime() -> float
         {
             return GetFrameTime();
         }
 
-        [[nodiscard]] static auto get_screen_width() -> int
+        [[nodiscard]] static auto getScreenWidth() -> int
         {
             return GetScreenWidth();
         }
 
-        [[nodiscard]] static auto get_screen_height() -> int
+        [[nodiscard]] static auto getScreenHeight() -> int
         {
             return GetScreenHeight();
         }
 
-        [[nodiscard]] static auto is_key_down(EventKeyboard::Key key) -> bool
+        [[nodiscard]] static auto isKeyDown(EventKeyboard::Key key) -> bool
         {
             return IsKeyDown(static_cast<int>(key));
         }
 
-        [[nodiscard]] static auto is_key_pressed(EventKeyboard::Key key) -> bool
+        [[nodiscard]] static auto isKeyPressed(EventKeyboard::Key key) -> bool
         {
             return IsKeyPressed(static_cast<int>(key));
         }
 
-        [[nodiscard]] static auto is_key_released(EventKeyboard::Key key) -> bool
+        [[nodiscard]] static auto isKeyReleased(EventKeyboard::Key key) -> bool
         {
             return IsKeyReleased(static_cast<int>(key));
         }
 
-        auto poll_events() -> void
+        auto pollEvents() -> void
         {
-            poll_keyboard_events();
-            poll_mouse_events();
-            poll_touch_events();
-            poll_joystick_events();
-            poll_resize_events();
+            pollKeyboardEvents();
+            pollMouseEvents();
+            pollTouchEvents();
+            pollJoystickEvents();
+            pollResizeEvents();
         }
 
         template <typename F>
-        auto on_event(F&& handler) -> void
+        auto onEvent(F&& handler) -> void
         {
             using EventType = callable_arg_t<F>;
 
@@ -207,7 +207,7 @@ export namespace awen::graphics
             }
         }
 
-        auto poll_keyboard_events() -> void
+        auto pollKeyboardEvents() -> void
         {
             for (const auto key : magic_enum::enum_values<EventKeyboard::Key>())
             {
@@ -224,7 +224,7 @@ export namespace awen::graphics
             }
         }
 
-        auto poll_mouse_events() -> void
+        auto pollMouseEvents() -> void
         {
             const auto pos = GetMousePosition();
 
@@ -271,13 +271,13 @@ export namespace awen::graphics
                     .type = EventMouse::Type::scrolled,
                     .x = pos.x,
                     .y = pos.y,
-                    .scroll_x = wheel.x,
-                    .scroll_y = wheel.y,
+                    .scrollX = wheel.x,
+                    .scrollY = wheel.y,
                 });
             }
         }
 
-        auto poll_touch_events() -> void
+        auto pollTouchEvents() -> void
         {
             const auto count = GetTouchPointCount();
             auto current = std::set<int>{};
@@ -309,11 +309,11 @@ export namespace awen::graphics
             prev_touches_ = current;
         }
 
-        auto poll_joystick_events() -> void
+        auto pollJoystickEvents() -> void
         {
-            constexpr auto max_gamepads = 4;
+            constexpr auto maxGamepads = 4;
 
-            for (auto gp = 0; gp < max_gamepads; ++gp)
+            for (auto gp = 0; gp < maxGamepads; ++gp)
             {
                 if (!IsGamepadAvailable(gp))
                 {
@@ -328,8 +328,8 @@ export namespace awen::graphics
                             .id = gp,
                             .button = btn,
                             .type = EventJoystick::Type::pressed,
-                            .axis_x = GetGamepadAxisMovement(gp, 0),
-                            .axis_y = GetGamepadAxisMovement(gp, 1),
+                            .axisX = GetGamepadAxisMovement(gp, 0),
+                            .axisY = GetGamepadAxisMovement(gp, 1),
                         });
                     }
                     if (IsGamepadButtonReleased(gp, static_cast<int>(btn)))
@@ -338,15 +338,15 @@ export namespace awen::graphics
                             .id = gp,
                             .button = btn,
                             .type = EventJoystick::Type::released,
-                            .axis_x = GetGamepadAxisMovement(gp, 0),
-                            .axis_y = GetGamepadAxisMovement(gp, 1),
+                            .axisX = GetGamepadAxisMovement(gp, 0),
+                            .axisY = GetGamepadAxisMovement(gp, 1),
                         });
                     }
                 }
             }
         }
 
-        auto poll_resize_events() -> void
+        auto pollResizeEvents() -> void
         {
             const auto w = GetScreenWidth();
             const auto h = GetScreenHeight();

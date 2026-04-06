@@ -26,10 +26,10 @@ export namespace awen::scene
         /// @return A NodeId identifying the newly allocated slot.
         [[nodiscard]] auto allocate() -> NodeId
         {
-            if (!free_list_.empty())
+            if (!freeList_.empty())
             {
-                const auto index = free_list_.back();
-                free_list_.pop_back();
+                const auto index = freeList_.back();
+                freeList_.pop_back();
 
                 // Incrementing an even (dead) generation produces an odd (alive) generation.
                 ++generations_[index];
@@ -56,7 +56,7 @@ export namespace awen::scene
         /// @return A NodeId for the newly activated slot.
         /// @note Only call with indices that have never been allocated. Activating a slot whose
         ///       index is already alive produces undefined behaviour.
-        auto allocate_at(uint32_t index) -> NodeId
+        auto allocateAt(uint32_t index) -> NodeId
         {
             // Grow backing storage; padding slots use generation 0 (null sentinel, never alive).
             while (static_cast<uint32_t>(data_.size()) <= index)
@@ -76,14 +76,14 @@ export namespace awen::scene
         /// @param id The NodeId of the slot to free. Stale or null ids are silently ignored.
         auto free(NodeId id) -> void
         {
-            if (!is_alive(id))
+            if (!isAlive(id))
             {
                 return;
             }
 
             // Incrementing an odd (alive) generation produces an even (dead) generation.
             ++generations_[id.index];
-            free_list_.push_back(id.index);
+            freeList_.push_back(id.index);
         }
 
         /// @brief Returns a pointer to the value stored in the given slot.
@@ -91,7 +91,7 @@ export namespace awen::scene
         /// @return Pointer to the stored value, or nullptr if id is stale or null.
         [[nodiscard]] auto get(NodeId id) -> T*
         {
-            if (!is_alive(id))
+            if (!isAlive(id))
             {
                 return nullptr;
             }
@@ -103,7 +103,7 @@ export namespace awen::scene
         /// @return Const pointer to the stored value, or nullptr if id is stale or null.
         [[nodiscard]] auto get(NodeId id) const -> const T*
         {
-            if (!is_alive(id))
+            if (!isAlive(id))
             {
                 return nullptr;
             }
@@ -120,7 +120,7 @@ export namespace awen::scene
         /// @brief Calls fn(NodeId, T&) for every live slot in allocation order.
         /// @param fn Callable invoked with the NodeId and a mutable reference to each live value.
         template <typename F>
-        auto for_each(const F& fn) -> void
+        auto forEach(const F& fn) -> void
         {
             const auto count = static_cast<uint32_t>(data_.size());
             for (auto i = uint32_t{0}; i < count; ++i)
@@ -136,7 +136,7 @@ export namespace awen::scene
         /// @brief Calls fn(NodeId, const T&) for every live slot in allocation order.
         /// @param fn Callable invoked with the NodeId and a const reference to each live value.
         template <typename F>
-        auto for_each(const F& fn) const -> void
+        auto forEach(const F& fn) const -> void
         {
             const auto count = static_cast<uint32_t>(data_.size());
             for (auto i = uint32_t{0}; i < count; ++i)
@@ -150,13 +150,13 @@ export namespace awen::scene
         }
 
     private:
-        [[nodiscard]] auto is_alive(NodeId id) const noexcept -> bool
+        [[nodiscard]] auto isAlive(NodeId id) const noexcept -> bool
         {
-            return id.is_valid() && id.index < static_cast<uint32_t>(generations_.size()) && generations_[id.index] == id.generation;
+            return id.isValid() && id.index < static_cast<uint32_t>(generations_.size()) && generations_[id.index] == id.generation;
         }
 
         std::vector<T> data_;
         std::vector<uint32_t> generations_;
-        std::vector<uint32_t> free_list_;
+        std::vector<uint32_t> freeList_;
     };
 }

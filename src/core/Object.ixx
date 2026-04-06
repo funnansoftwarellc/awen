@@ -1,6 +1,7 @@
 module;
 
 #include <compare>
+#include <exception>
 #include <memory>
 #include <ranges>
 #include <string_view>
@@ -17,9 +18,17 @@ export namespace awen::core
     public:
         Object() = default;
 
-        virtual ~Object()
+        virtual ~Object() noexcept
         {
-            on_destroyed.emit();
+            try
+            {
+                onDestroyed_.emit();
+            }
+            catch (...)
+            {
+                const auto exception = std::current_exception();
+                static_cast<void>(exception);
+            }
         }
 
         Object(const Object&) = delete;
@@ -29,21 +38,21 @@ export namespace awen::core
 
         /// @brief Adds a child object to this object.
         /// @param child The child object to add.
-        auto set_name(std::string_view x) -> void
+        auto setName(std::string_view x) -> void
         {
             name_ = x;
         }
 
         /// @brief Gets the name of this object.
         /// @return The name of this object.
-        [[nodiscard]] auto get_name() const -> std::string_view
+        [[nodiscard]] auto getName() const -> std::string_view
         {
             return name_;
         }
 
         /// @brief Adds a child object to this object.
         /// @param child The child object to add.
-        auto add_child(std::unique_ptr<Object> x) -> void
+        auto addChild(std::unique_ptr<Object> x) -> void
         {
             if (x == nullptr)
             {
@@ -68,7 +77,16 @@ export namespace awen::core
                 return nullptr;
             }
 
-            const auto it = std::ranges::find_if(parent_->children_, [this](const auto& x) { return x.get() == this; });
+            auto it = std::end(parent_->children_);
+
+            for (auto childIt = std::begin(parent_->children_); childIt != std::end(parent_->children_); ++childIt)
+            {
+                if (childIt->get() == this)
+                {
+                    it = childIt;
+                    break;
+                }
+            }
 
             if (it == std::end(parent_->children_))
             {
@@ -83,14 +101,14 @@ export namespace awen::core
 
         /// @brief Get the children of this object.
         /// @return The children of this object.
-        [[nodiscard]] auto get_children() const -> const std::vector<std::unique_ptr<Object>>&
+        [[nodiscard]] auto getChildren() const -> const std::vector<std::unique_ptr<Object>>&
         {
             return children_;
         }
 
         /// @brief Gets the parent object of this object.
         /// @return The parent object of this object, or nullptr if this object has no parent.
-        [[nodiscard]] auto get_parent() const -> Object*
+        [[nodiscard]] auto getParent() const -> Object*
         {
             return parent_;
         }
@@ -102,23 +120,44 @@ export namespace awen::core
                 return;
             }
 
-            started_ = true;
+            auto stack = std::vector<Object*>{this};
 
-            on_startup.emit();
-
-            for (const auto& child : children_)
+            while (!std::empty(stack))
             {
-                child->startup();
+                auto* object = stack.back();
+                stack.pop_back();
+
+                if (object->started_)
+                {
+                    continue;
+                }
+
+                object->started_ = true;
+                object->onStartup_.emit();
+
+                for (auto& child : object->children_ | std::views::reverse)
+                {
+                    stack.push_back(child.get());
+                }
             }
         }
 
-        Signal<void()> on_destroyed;
-        Signal<void()> on_startup;
+        [[nodiscard]] auto onDestroyed() -> Signal<void()>&
+        {
+            return onDestroyed_;
+        }
+
+        [[nodiscard]] auto onStartup() -> Signal<void()>&
+        {
+            return onStartup_;
+        }
 
     private:
         std::vector<std::unique_ptr<Object>> children_;
         std::string_view name_;
         Object* parent_ = nullptr;
         bool started_ = false;
+        Signal<void()> onDestroyed_;
+        Signal<void()> onStartup_;
     };
 }

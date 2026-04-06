@@ -160,8 +160,8 @@ export namespace awen::graphics
         Type type{};
         float x{};
         float y{};
-        float scroll_x{};
-        float scroll_y{};
+        float scrollX{};
+        float scrollY{};
     };
 
     struct EventTouch
@@ -212,8 +212,8 @@ export namespace awen::graphics
         int id{};
         Button button{};
         Type type{};
-        float axis_x{};
-        float axis_y{};
+        float axisX{};
+        float axisY{};
     };
 
     struct EventWindowResize

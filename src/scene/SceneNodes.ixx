@@ -23,7 +23,7 @@ export namespace awen::scene
     /// @brief Visual data for a textured sprite node.
     struct SpriteNode
     {
-        TextureId texture_id{};
+        TextureId textureId{};
         float width{};
         float height{};
         Color tint{};
@@ -40,7 +40,7 @@ export namespace awen::scene
     struct TextNode
     {
         std::string text;
-        int font_size{};
+        int fontSize{};
         Color color{};
     };
 }

@@ -10,14 +10,14 @@ using namespace awen::scene;
 TEST(HierarchyPool, RootIsValidOnConstruction)
 {
     const auto pool = HierarchyPool{};
-    EXPECT_TRUE(pool.root().is_valid());
+    EXPECT_TRUE(pool.root().isValid());
 }
 
 TEST(HierarchyPool, AllocateChildReturnsValidId)
 {
     auto pool = HierarchyPool{};
     const auto child = pool.allocate(pool.root());
-    EXPECT_TRUE(child.is_valid());
+    EXPECT_TRUE(child.isValid());
 }
 
 TEST(HierarchyPool, AllocatedNodeHasCorrectParent)
@@ -35,7 +35,7 @@ TEST(HierarchyPool, AllocatedNodeHasCorrectLocalZ)
     const auto child = pool.allocate(pool.root(), 5);
     const auto* node = pool.get(child);
     ASSERT_NE(node, nullptr);
-    EXPECT_EQ(node->local_z, 5);
+    EXPECT_EQ(node->localZ, 5);
 }
 
 TEST(HierarchyPool, GetReturnsNullAfterFree)
@@ -62,7 +62,7 @@ TEST(HierarchyPool, DepthFirstVisitsNodesInOrder)
     const auto a2 = pool.allocate(a, 1);
 
     auto visited = std::vector<NodeId>{};
-    pool.depth_first([&](NodeId id) { visited.push_back(id); });
+    pool.depthFirst([&](NodeId id) { visited.push_back(id); });
 
     ASSERT_EQ(visited.size(), 4U);
     EXPECT_EQ(visited[0], a);
@@ -80,7 +80,7 @@ TEST(HierarchyPool, SiblingsOrderedByLocalZ)
     const auto mid = pool.allocate(pool.root(), 1);
 
     auto visited = std::vector<NodeId>{};
-    pool.depth_first([&](NodeId id) { visited.push_back(id); });
+    pool.depthFirst([&](NodeId id) { visited.push_back(id); });
 
     ASSERT_EQ(visited.size(), 3U);
     EXPECT_EQ(visited[0], low);
@@ -96,7 +96,7 @@ TEST(HierarchyPool, FreedNodeNotVisited)
     pool.free(a);
 
     auto visited = std::vector<NodeId>{};
-    pool.depth_first([&](NodeId id) { visited.push_back(id); });
+    pool.depthFirst([&](NodeId id) { visited.push_back(id); });
 
     ASSERT_EQ(visited.size(), 1U);
     EXPECT_EQ(visited[0], b);
@@ -112,7 +112,7 @@ TEST(HierarchyPool, FreedNodeDetachedFromSiblingList)
     pool.free(b);
 
     auto visited = std::vector<NodeId>{};
-    pool.depth_first([&](NodeId id) { visited.push_back(id); });
+    pool.depthFirst([&](NodeId id) { visited.push_back(id); });
 
     ASSERT_EQ(visited.size(), 2U);
     EXPECT_EQ(visited[0], a);
@@ -121,16 +121,16 @@ TEST(HierarchyPool, FreedNodeDetachedFromSiblingList)
 
 TEST(HierarchyPool, DepthFirstFromSubtree)
 {
-    // depth_first_from must visit only the subtree rooted at the given node.
+    // depthFirstFrom must visit only the subtree rooted at the given node.
     auto pool = HierarchyPool{};
     const auto a = pool.allocate(pool.root());
     const auto a1 = pool.allocate(a);
 
-    // Allocate a sibling of a to confirm it is not visited by depth_first_from(a, …).
+    // Allocate a sibling of a to confirm it is not visited by depthFirstFrom(a, …).
     std::ignore = pool.allocate(pool.root());
 
     auto visited = std::vector<NodeId>{};
-    pool.depth_first_from(a, [&](NodeId id) { visited.push_back(id); });
+    pool.depthFirstFrom(a, [&](NodeId id) { visited.push_back(id); });
 
     ASSERT_EQ(visited.size(), 1U);
     EXPECT_EQ(visited[0], a1);

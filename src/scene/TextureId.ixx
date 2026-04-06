@@ -15,7 +15,7 @@ export namespace awen::scene
         uint32_t index{};
 
         /// @brief Returns true when the handle refers to a potentially live texture.
-        [[nodiscard]] auto is_valid() const noexcept -> bool
+        [[nodiscard]] auto isValid() const noexcept -> bool
         {
             return index != 0;
         }
@@ -24,5 +24,5 @@ export namespace awen::scene
     };
 
     /// @brief Sentinel value representing an absent or unset texture reference.
-    inline constexpr auto null_texture = TextureId{};
+    inline constexpr auto NullTexture = TextureId{};
 }

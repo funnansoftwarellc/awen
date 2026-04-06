@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <tuple>
 #include <variant>
 #include <vector>
 
@@ -10,21 +11,21 @@ import awen.graphics.draw_list;
 using namespace awen::scene;
 using namespace awen::graphics;
 
-// ── NodePool::allocate_at ─────────────────────────────────────────────────────
+// ── NodePool::allocateAt ─────────────────────────────────────────────────────
 
 TEST(NodePoolAllocateAt, ActivatesSlotAtRequestedIndex)
 {
     auto pool = NodePool<int>{};
-    const auto id = pool.allocate_at(3);
+    const auto id = pool.allocateAt(3);
     EXPECT_EQ(id.index, 3U);
-    EXPECT_TRUE(id.is_valid());
+    EXPECT_TRUE(id.isValid());
     ASSERT_NE(pool.get(id), nullptr);
 }
 
 TEST(NodePoolAllocateAt, GapSlotsReturnNullptr)
 {
     auto pool = NodePool<int>{};
-    pool.allocate_at(2);
+    pool.allocateAt(2);
 
     // Indices 0 and 1 are gap slots (generation 0, never alive).
     EXPECT_EQ(pool.get(NodeId{.index = 0, .generation = 1}), nullptr);
@@ -34,7 +35,7 @@ TEST(NodePoolAllocateAt, GapSlotsReturnNullptr)
 TEST(NodePoolAllocateAt, SequentialAllocateAfterAllocateAtYieldsNextIndex)
 {
     auto pool = NodePool<int>{};
-    pool.allocate_at(2);
+    pool.allocateAt(2);
 
     // Normal allocate() must grow from size 3, yielding index 3.
     const auto id = pool.allocate();
@@ -46,38 +47,38 @@ TEST(NodePoolAllocateAt, SequentialAllocateAfterAllocateAtYieldsNextIndex)
 TEST(Scene, RootHandleIsValid)
 {
     auto scene = Scene{};
-    EXPECT_TRUE(scene.root().node_id().is_valid());
+    EXPECT_TRUE(scene.root().nodeId().isValid());
 }
 
-// ── NodeHandle::add_child ─────────────────────────────────────────────────────
+// ── NodeHandle::addChild ─────────────────────────────────────────────────────
 
 TEST(Scene, AddRectChildReturnsValidHandle)
 {
     auto scene = Scene{};
-    const auto rect = scene.root().add_child<RectNode>();
-    EXPECT_TRUE(rect.node_id().is_valid());
+    const auto rect = scene.root().addChild<RectNode>();
+    EXPECT_TRUE(rect.nodeId().isValid());
 }
 
 TEST(Scene, AddTextChildReturnsValidHandle)
 {
     auto scene = Scene{};
-    const auto text = scene.root().add_child<TextNode>();
-    EXPECT_TRUE(text.node_id().is_valid());
+    const auto text = scene.root().addChild<TextNode>();
+    EXPECT_TRUE(text.nodeId().isValid());
 }
 
 TEST(Scene, AddVoidChildReturnsValidHandle)
 {
     auto scene = Scene{};
-    const auto group = scene.root().add_child<void>();
-    EXPECT_TRUE(group.node_id().is_valid());
+    const auto group = scene.root().addChild<void>();
+    EXPECT_TRUE(group.nodeId().isValid());
 }
 
 TEST(Scene, AddGrandchildReturnsValidHandle)
 {
     auto scene = Scene{};
-    const auto group = scene.root().add_child<void>();
-    const auto rect = group.add_child<RectNode>();
-    EXPECT_TRUE(rect.node_id().is_valid());
+    const auto group = scene.root().addChild<void>();
+    const auto rect = group.addChild<RectNode>();
+    EXPECT_TRUE(rect.nodeId().isValid());
 }
 
 // ── DrawList output for RectNode ──────────────────────────────────────────────
@@ -85,10 +86,10 @@ TEST(Scene, AddGrandchildReturnsValidHandle)
 TEST(Scene, RectNodeEmitsDrawRect)
 {
     auto scene = Scene{};
-    scene.root().add_child<RectNode>().set_size(100.0F, 50.0F).set_color(Color{255, 0, 0, 255});
+    std::ignore = scene.root().addChild<RectNode>().setSize(100.0F, 50.0F).setColor(Color{255, 0, 0, 255});
 
     auto dl = DrawList{};
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
 
     ASSERT_EQ(dl.size(), 1U);
     ASSERT_TRUE(std::holds_alternative<DrawRect>(dl.commands()[0]));
@@ -104,10 +105,10 @@ TEST(Scene, RectNodeEmitsDrawRect)
 TEST(Scene, RectNodePositionFromTransform)
 {
     auto scene = Scene{};
-    scene.root().add_child<RectNode>().set_transform(Transform{.x = 30.0F, .y = 15.0F}).set_size(10.0F, 10.0F);
+    std::ignore = scene.root().addChild<RectNode>().setTransform(Transform{.x = 30.0F, .y = 15.0F}).setSize(10.0F, 10.0F);
 
     auto dl = DrawList{};
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
 
     ASSERT_EQ(dl.size(), 1U);
     const auto& cmd = std::get<DrawRect>(dl.commands()[0]);
@@ -120,17 +121,17 @@ TEST(Scene, RectNodePositionFromTransform)
 TEST(Scene, TextNodeEmitsDrawText)
 {
     auto scene = Scene{};
-    scene.root().add_child<TextNode>().set_text("hello").set_font_size(24).set_color(Color{255, 255, 255, 255});
+    std::ignore = scene.root().addChild<TextNode>().setText("hello").setFontSize(24).setColor(Color{255, 255, 255, 255});
 
     auto dl = DrawList{};
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
 
     ASSERT_EQ(dl.size(), 1U);
     ASSERT_TRUE(std::holds_alternative<DrawText>(dl.commands()[0]));
 
     const auto& cmd = std::get<DrawText>(dl.commands()[0]);
     EXPECT_EQ(cmd.text, "hello");
-    EXPECT_EQ(cmd.font_size, 24);
+    EXPECT_EQ(cmd.fontSize, 24);
 }
 
 // ── Void nodes produce no draw commands ───────────────────────────────────────
@@ -138,10 +139,10 @@ TEST(Scene, TextNodeEmitsDrawText)
 TEST(Scene, VoidNodeProducesNoDrawCommand)
 {
     auto scene = Scene{};
-    scene.root().add_child<void>().set_transform(Transform{.x = 100.0F, .y = 50.0F});
+    std::ignore = scene.root().addChild<void>().setTransform(Transform{.x = 100.0F, .y = 50.0F});
 
     auto dl = DrawList{};
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
 
     EXPECT_TRUE(dl.empty());
 }
@@ -151,12 +152,12 @@ TEST(Scene, VoidNodeProducesNoDrawCommand)
 TEST(Scene, ChildWorldTransformIsParentPlusLocal)
 {
     auto scene = Scene{};
-    auto parent = scene.root().add_child<RectNode>().set_transform(Transform{.x = 100.0F, .y = 200.0F}).set_size(1.0F, 1.0F);
+    auto parent = scene.root().addChild<RectNode>().setTransform(Transform{.x = 100.0F, .y = 200.0F}).setSize(1.0F, 1.0F);
 
-    parent.add_child<RectNode>().set_transform(Transform{.x = 10.0F, .y = 20.0F}).set_size(1.0F, 1.0F);
+    std::ignore = parent.addChild<RectNode>().setTransform(Transform{.x = 10.0F, .y = 20.0F}).setSize(1.0F, 1.0F);
 
     auto dl = DrawList{};
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
 
     ASSERT_EQ(dl.size(), 2U);
 
@@ -174,15 +175,15 @@ TEST(Scene, VoidGroupOffsetsPropagateToChildren)
     // A void group node at (50, 50) with a rect child at (10, 10).
     // Expected world position of rect: (60, 60).
     auto scene = Scene{};
-    scene.root()
-        .add_child<void>()
-        .set_transform(Transform{.x = 50.0F, .y = 50.0F})
-        .add_child<RectNode>()
-        .set_transform(Transform{.x = 10.0F, .y = 10.0F})
-        .set_size(1.0F, 1.0F);
+    std::ignore = scene.root()
+                      .addChild<void>()
+                      .setTransform(Transform{.x = 50.0F, .y = 50.0F})
+                      .addChild<RectNode>()
+                      .setTransform(Transform{.x = 10.0F, .y = 10.0F})
+                      .setSize(1.0F, 1.0F);
 
     auto dl = DrawList{};
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
 
     ASSERT_EQ(dl.size(), 1U);
     const auto& cmd = std::get<DrawRect>(dl.commands()[0]);
@@ -198,12 +199,12 @@ TEST(Scene, SiblingsEmittedInAscendingZOrder)
     auto root = scene.root();
 
     // Add in reverse z order; draw list must reflect ascending z.
-    root.add_child<RectNode>(2).set_size(1.0F, 1.0F).set_color(Color{2, 0, 0, 255});
-    root.add_child<RectNode>(0).set_size(1.0F, 1.0F).set_color(Color{0, 0, 0, 255});
-    root.add_child<RectNode>(1).set_size(1.0F, 1.0F).set_color(Color{1, 0, 0, 255});
+    std::ignore = root.addChild<RectNode>(2).setSize(1.0F, 1.0F).setColor(Color{2, 0, 0, 255});
+    std::ignore = root.addChild<RectNode>(0).setSize(1.0F, 1.0F).setColor(Color{0, 0, 0, 255});
+    std::ignore = root.addChild<RectNode>(1).setSize(1.0F, 1.0F).setColor(Color{1, 0, 0, 255});
 
     auto dl = DrawList{};
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
 
     ASSERT_EQ(dl.size(), 3U);
     EXPECT_EQ(std::get<DrawRect>(dl.commands()[0]).color.r, 0);
@@ -211,20 +212,20 @@ TEST(Scene, SiblingsEmittedInAscendingZOrder)
     EXPECT_EQ(std::get<DrawRect>(dl.commands()[2]).color.r, 2);
 }
 
-// ── build_draw_list is additive (does not clear) ─────────────────────────────
+// ── BuildDrawList is additive (does not clear) ─────────────────────────────
 
 TEST(Scene, BuildDrawListAppendsToExistingList)
 {
     auto scene = Scene{};
-    scene.root().add_child<RectNode>().set_size(1.0F, 1.0F);
+    std::ignore = scene.root().addChild<RectNode>().setSize(1.0F, 1.0F);
 
     auto dl = DrawList{};
 
     // First build: 1 command.
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
     EXPECT_EQ(dl.size(), 1U);
 
     // Second build without clearing: 2 commands total.
-    scene.build_draw_list(dl);
+    scene.buildDrawList(dl);
     EXPECT_EQ(dl.size(), 2U);
 }

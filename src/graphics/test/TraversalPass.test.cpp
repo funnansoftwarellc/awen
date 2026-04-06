@@ -66,7 +66,7 @@ TEST(TraversalPass, EmptyHierarchy_EmitsNoCommands)
     auto pools = Pools{};
     auto out = DrawList{};
 
-    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
+    BuildDrawList(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     EXPECT_TRUE(out.empty());
 }
@@ -80,7 +80,7 @@ TEST(TraversalPass, NodeWithNoComponents_EmitsNoCommands)
     auto pools = Pools{};
     auto out = DrawList{};
 
-    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
+    BuildDrawList(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     EXPECT_TRUE(out.empty());
 }
@@ -99,10 +99,10 @@ TEST(TraversalPass, RectNode_EmitsDrawRectAtNodePosition)
     auto* rect = advance_to(pools.rects, node);
     rect->width = 50.0F;
     rect->height = 30.0F;
-    rect->color = colors::red;
+    rect->color = colors::Red;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
+    BuildDrawList(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     ASSERT_EQ(out.size(), 1U);
     const auto* cmd = std::get_if<DrawRect>(&out.commands()[0]);
@@ -135,7 +135,7 @@ TEST(TraversalPass, WorldTransform_PropagatesFromParentToChild)
     rect->height = 1.0F;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
+    BuildDrawList(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     // Parent emits no command (no RectNode). Child emits one DrawRect at world position.
     ASSERT_EQ(out.size(), 1U);
@@ -165,7 +165,7 @@ TEST(TraversalPass, NodeWithNoTransform_InheritsParentWorldTransform)
     rect->height = 1.0F;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
+    BuildDrawList(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     ASSERT_EQ(out.size(), 1U);
     const auto* cmd = std::get_if<DrawRect>(&out.commands()[0]);
@@ -187,11 +187,11 @@ TEST(TraversalPass, TextNode_EmitsDrawTextAtNodePosition)
 
     auto* text = advance_to(pools.texts, node);
     text->text = "Hello";
-    text->font_size = 16;
-    text->color = colors::white;
+    text->fontSize = 16;
+    text->color = colors::White;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
+    BuildDrawList(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     ASSERT_EQ(out.size(), 1U);
     const auto* cmd = std::get_if<DrawText>(&out.commands()[0]);
@@ -199,7 +199,7 @@ TEST(TraversalPass, TextNode_EmitsDrawTextAtNodePosition)
     EXPECT_EQ(cmd->text, "Hello");
     EXPECT_EQ(cmd->x, 5);
     EXPECT_EQ(cmd->y, 15);
-    EXPECT_EQ(cmd->font_size, 16);
+    EXPECT_EQ(cmd->fontSize, 16);
 }
 
 TEST(TraversalPass, SpriteNode_NullTextureId_EmitsNoCommand)
@@ -211,12 +211,12 @@ TEST(TraversalPass, SpriteNode_NullTextureId_EmitsNoCommand)
     auto pools = Pools{};
 
     auto* sprite = advance_to(pools.sprites, node);
-    sprite->texture_id = null_texture;
+    sprite->textureId = NullTexture;
     sprite->width = 32.0F;
     sprite->height = 32.0F;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
+    BuildDrawList(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     EXPECT_TRUE(out.empty());
 }
@@ -238,12 +238,12 @@ TEST(TraversalPass, CommandOrder_MatchesDepthFirstByZ)
     auto pools = Pools{};
 
     // Calls must be in ascending index order (a=1, b=2, a1=3); see advance_to note.
-    advance_to(pools.rects, a)->color = colors::red;
-    advance_to(pools.rects, b)->color = colors::green;
-    advance_to(pools.rects, a1)->color = colors::blue;
+    advance_to(pools.rects, a)->color = colors::Red;
+    advance_to(pools.rects, b)->color = colors::Green;
+    advance_to(pools.rects, a1)->color = colors::Blue;
 
     auto out = DrawList{};
-    build_draw_list(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
+    BuildDrawList(hier, pools.transforms, pools.rects, pools.circles, pools.sprites, pools.texts, pools.textures, out);
 
     ASSERT_EQ(out.size(), 3U);
 
@@ -255,7 +255,7 @@ TEST(TraversalPass, CommandOrder_MatchesDepthFirstByZ)
     ASSERT_NE(second, nullptr);
     ASSERT_NE(third, nullptr);
 
-    EXPECT_EQ(first->color, colors::red);
-    EXPECT_EQ(second->color, colors::blue);
-    EXPECT_EQ(third->color, colors::green);
+    EXPECT_EQ(first->color, colors::Red);
+    EXPECT_EQ(second->color, colors::Blue);
+    EXPECT_EQ(third->color, colors::Green);
 }

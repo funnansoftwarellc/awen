@@ -18,10 +18,10 @@ export namespace awen::scene
     struct HierarchyNode
     {
         NodeId parent{};
-        NodeId first_child{};
-        NodeId next_sibling{};
-        NodeId prev_sibling{};
-        int local_z{};
+        NodeId firstChild{};
+        NodeId nextSibling{};
+        NodeId prevSibling{};
+        int localZ{};
     };
 
     /// @brief Owns the parent/child/sibling relationships for the entire scene tree.
@@ -48,14 +48,14 @@ export namespace awen::scene
         /// @param parent NodeId of the parent node.
         /// @param local_z Draw order relative to siblings; lower values are visited first.
         /// @return NodeId of the newly allocated node.
-        [[nodiscard]] auto allocate(NodeId parent, int local_z = 0) -> NodeId
+        [[nodiscard]] auto allocate(NodeId parent, int localZ = 0) -> NodeId
         {
             const auto id = pool_.allocate();
             auto* node = pool_.get(id);
             node->parent = parent;
-            node->local_z = local_z;
+            node->localZ = localZ;
 
-            insert_child(parent, id);
+            insertChild(parent, id);
 
             return id;
         }
@@ -96,96 +96,96 @@ export namespace awen::scene
         /// @param visitor Callable invoked with the NodeId of each visited node.
         /// @note Siblings are visited in ascending local_z order. The root sentinel is not visited.
         template <typename F>
-        auto depth_first(const F& visitor) const -> void
+        auto depthFirst(const F& visitor) const -> void
         {
-            visit_children(root_, visitor);
+            visitChildren(root_, visitor);
         }
 
         /// @brief Calls visitor(NodeId) for every live node in the subtree rooted at start.
         /// @param start NodeId of the subtree root. Its own id is not passed to visitor.
         /// @param visitor Callable invoked with the NodeId of each visited node.
         template <typename F>
-        auto depth_first_from(NodeId start, const F& visitor) const -> void
+        auto depthFirstFrom(NodeId start, const F& visitor) const -> void
         {
-            visit_children(start, visitor);
+            visitChildren(start, visitor);
         }
 
     private:
         /// @brief Inserts child into parent's child list, maintaining ascending local_z order.
-        auto insert_child(NodeId parent_id, NodeId child_id) -> void // NOLINT(bugprone-easily-swappable-parameters)
+        auto insertChild(NodeId parentId, NodeId childId) -> void // NOLINT(bugprone-easily-swappable-parameters)
         {
-            auto* parent_node = pool_.get(parent_id);
-            auto* child_node = pool_.get(child_id);
-            if (parent_node == nullptr || child_node == nullptr)
+            auto* parentNode = pool_.get(parentId);
+            auto* childNode = pool_.get(childId);
+            if (parentNode == nullptr || childNode == nullptr)
             {
                 return;
             }
 
-            const auto child_z = child_node->local_z;
+            const auto childZ = childNode->localZ;
 
             // Walk the sibling list to find the insertion point.
             auto prev = NodeId{};
-            auto curr = parent_node->first_child;
+            auto curr = parentNode->firstChild;
 
-            while (curr.is_valid())
+            while (curr.isValid())
             {
-                const auto* curr_node = pool_.get(curr);
-                if (curr_node == nullptr || curr_node->local_z > child_z)
+                const auto* currNode = pool_.get(curr);
+                if (currNode == nullptr || currNode->localZ > childZ)
                 {
                     break;
                 }
 
                 prev = curr;
-                curr = curr_node->next_sibling;
+                curr = currNode->nextSibling;
             }
 
             // Link child between prev and curr.
-            child_node->prev_sibling = prev;
-            child_node->next_sibling = curr;
+            childNode->prevSibling = prev;
+            childNode->nextSibling = curr;
 
-            if (prev.is_valid())
+            if (prev.isValid())
             {
-                pool_.get(prev)->next_sibling = child_id;
+                pool_.get(prev)->nextSibling = childId;
             }
             else
             {
-                parent_node->first_child = child_id;
+                parentNode->firstChild = childId;
             }
 
-            if (curr.is_valid())
+            if (curr.isValid())
             {
-                pool_.get(curr)->prev_sibling = child_id;
+                pool_.get(curr)->prevSibling = childId;
             }
         }
 
         /// @brief Removes a node from its parent's sibling list without freeing the slot.
         auto detach(HierarchyNode& node) -> void
         {
-            if (node.prev_sibling.is_valid())
+            if (node.prevSibling.isValid())
             {
-                pool_.get(node.prev_sibling)->next_sibling = node.next_sibling;
+                pool_.get(node.prevSibling)->nextSibling = node.nextSibling;
             }
-            else if (node.parent.is_valid())
+            else if (node.parent.isValid())
             {
-                auto* parent_node = pool_.get(node.parent);
-                if (parent_node != nullptr)
+                auto* parentNode = pool_.get(node.parent);
+                if (parentNode != nullptr)
                 {
-                    parent_node->first_child = node.next_sibling;
+                    parentNode->firstChild = node.nextSibling;
                 }
             }
 
-            if (node.next_sibling.is_valid())
+            if (node.nextSibling.isValid())
             {
-                pool_.get(node.next_sibling)->prev_sibling = node.prev_sibling;
+                pool_.get(node.nextSibling)->prevSibling = node.prevSibling;
             }
 
-            node.prev_sibling = {};
-            node.next_sibling = {};
+            node.prevSibling = {};
+            node.nextSibling = {};
             node.parent = {};
         }
 
         template <typename F>
-        auto visit_children(NodeId parent_id, const F& visitor) const -> void
+        auto visitChildren(NodeId parentId, const F& visitor) const -> void
         {
             // Iterative depth-first traversal. The stack holds nodes yet to be visited.
             // Children are appended in sibling order then the newly added slice is reversed
@@ -193,7 +193,7 @@ export namespace awen::scene
 
             // Pushes all siblings reachable from node->first_child onto the stack,
             // then reverses the newly added slice so the lowest-z sibling is on top.
-            const auto push_children = [this](std::vector<NodeId>& stack, NodeId id)
+            const auto pushChildren = [this](std::vector<NodeId>& stack, NodeId id)
             {
                 const auto* node = pool_.get(id);
 
@@ -204,7 +204,7 @@ export namespace awen::scene
 
                 const auto base = static_cast<std::ptrdiff_t>(std::size(stack));
 
-                for (auto curr = node->first_child; curr.is_valid();)
+                for (auto curr = node->firstChild; curr.isValid();)
                 {
                     const auto* child = pool_.get(curr);
                     if (child == nullptr)
@@ -212,14 +212,14 @@ export namespace awen::scene
                         break;
                     }
                     stack.push_back(curr);
-                    curr = child->next_sibling;
+                    curr = child->nextSibling;
                 }
 
                 std::ranges::reverse(std::next(std::begin(stack), base), std::end(stack));
             };
 
             auto stack = std::vector<NodeId>{};
-            push_children(stack, parent_id);
+            pushChildren(stack, parentId);
 
             while (!std::empty(stack))
             {
@@ -228,7 +228,7 @@ export namespace awen::scene
 
                 visitor(id);
 
-                push_children(stack, id);
+                pushChildren(stack, id);
             }
         }
 

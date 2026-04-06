@@ -13,7 +13,7 @@ export namespace awen
     /// @brief Owns the application window and drives the main game loop.
     ///
     /// Encapsulates window creation, event polling, rendering, and scene-graph
-    /// traversal.  The caller registers event handlers with on_event() and then
+    /// traversal.  The caller registers event handlers with onEvent() and then
     /// enters the loop via run(), which invokes the user-supplied update callback
     /// and submits the scene's draw list each frame.
     class Engine
@@ -38,14 +38,14 @@ export namespace awen
 
         /// @brief Sets the target frame rate.
         /// @param fps Desired frames per second.
-        static auto set_target_fps(int fps) -> void
+        static auto setTargetFps(int fps) -> void
         {
-            graphics::Window::set_target_fps(fps);
+            graphics::Window::setTargetFps(fps);
         }
 
         /// @brief Sets the background colour used to clear each frame.
         /// @param color Colour written as a DrawClear command before scene commands.
-        auto set_clear_color(graphics::Color color) -> void
+        auto setClearColor(graphics::Color color) -> void
         {
             clear_color_ = color;
         }
@@ -53,30 +53,30 @@ export namespace awen
         /// @brief Registers an event handler forwarded to the underlying Window.
         /// @param handler Callable accepting a single event struct parameter.
         template <typename F>
-        auto on_event(F&& handler) -> void
+        auto onEvent(F&& handler) -> void
         {
-            window_.on_event(std::forward<F>(handler));
+            window_.onEvent(std::forward<F>(handler));
         }
 
         /// @brief Runs the main loop until the window is closed.
         ///
-        /// Each iteration polls events, calls @p on_update with the frame delta
+        /// Each iteration polls events, calls @p onUpdate with the frame delta
         /// time, then builds the scene draw list and submits it to the renderer.
         /// @param scene     Scene whose draw list is built and submitted each frame.
-        /// @param on_update Callback invoked once per frame with the delta time in seconds.
+        /// @param onUpdate Callback invoked once per frame with the delta time in seconds.
         template <typename F>
-        auto run(scene::Scene& scene, const F& on_update) -> void
+        auto run(scene::Scene& scene, const F& onUpdate) -> void
         {
-            while (graphics::Window::is_open())
+            while (graphics::Window::isOpen())
             {
-                window_.poll_events();
-                const auto dt = graphics::Window::get_frame_time();
+                window_.pollEvents();
+                const auto dt = graphics::Window::getFrameTime();
 
-                on_update(dt);
+                onUpdate(dt);
 
                 draw_list_.clear();
                 draw_list_.push(graphics::DrawClear{.color = clear_color_});
-                scene.build_draw_list(draw_list_);
+                scene.buildDrawList(draw_list_);
 
                 graphics::Renderer::begin();
                 graphics::Renderer::submit(draw_list_);

@@ -90,7 +90,7 @@ TEST(Signal, scoped_connection_disconnects_on_scope_exit)
     auto count = int{};
 
     {
-        auto sc = awen::core::scoped_connection{sig.connect([&](int) { ++count; })};
+        auto sc = awen::core::ScopedConnection{sig.connect([&](int) { ++count; })};
         sig.emit(0);
         EXPECT_EQ(count, 1);
     }
@@ -102,7 +102,7 @@ TEST(Signal, scoped_connection_disconnects_on_scope_exit)
 TEST(Signal, scoped_connection_connected_reflects_state)
 {
     awen::core::Signal<void()> sig;
-    auto sc = awen::core::scoped_connection{sig.connect([] {})};
+    auto sc = awen::core::ScopedConnection{sig.connect([] {})};
 
     EXPECT_TRUE(sc.connected());
     sc.disconnect();
@@ -130,12 +130,12 @@ TEST(Signal, scoped_connection_move_assignment_disconnects_old_slot)
     auto count_a = int{};
     auto count_b = int{};
 
-    auto sc = awen::core::scoped_connection{sig.connect([&] { ++count_a; })};
+    auto sc = awen::core::ScopedConnection{sig.connect([&] { ++count_a; })};
     sig.emit();
     EXPECT_EQ(count_a, 1);
 
     // Move-assign a new connection — the old slot must be disconnected.
-    sc = awen::core::scoped_connection{sig.connect([&] { ++count_b; })};
+    sc = awen::core::ScopedConnection{sig.connect([&] { ++count_b; })};
     sig.emit();
 
     EXPECT_EQ(count_a, 1);
@@ -149,7 +149,7 @@ TEST(Signal, scoped_connection_release_keeps_slot_alive)
     auto conn = awen::core::Connection{};
 
     {
-        auto sc = awen::core::scoped_connection{sig.connect([&] { ++count; })};
+        auto sc = awen::core::ScopedConnection{sig.connect([&] { ++count; })};
 
         // Release transfers ownership — sc's destructor must NOT disconnect.
         conn = sc.release();

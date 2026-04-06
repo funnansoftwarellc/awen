@@ -29,39 +29,39 @@ export namespace awen::widget
             using awen::graphics::ConfigFlag;
             using awen::graphics::Window;
 
-            on_startup.connect(
+            onStartup().connect(
                 [this]
                 {
-                    const auto width = static_cast<int>(get_size().x);
-                    const auto height = static_cast<int>(get_size().y);
+                    const auto width = static_cast<int>(getSize()[0]);
+                    const auto height = static_cast<int>(getSize()[1]);
                     window_ = std::make_unique<awen::graphics::Window>(title_.c_str(), width, height,
                                                                        std::initializer_list<ConfigFlag>{ConfigFlag::resizable});
                 });
 
-            Engine::instance()->on_event.connect([this] { window_->poll_events(); });
+            Engine::instance()->onEvent().connect([this] { window_->pollEvents(); });
 
-            Engine::instance()->on_render.connect(
+            Engine::instance()->onRender().connect(
                 []
                 {
                     using awen::graphics::Renderer;
 
                     Renderer::begin();
-                    Renderer::clear(awen::graphics::colors::orange);
+                    Renderer::clear(awen::graphics::colors::Orange);
                     Renderer::end();
                 });
         }
 
-        auto set_title(std::string_view title) -> void
+        auto setTitle(std::string_view title) -> void
         {
             title_ = title;
         }
 
-        [[nodiscard]] auto get_title() const -> std::string_view
+        [[nodiscard]] auto getTitle() const -> std::string_view
         {
             return title_;
         }
 
-        auto synchronize(flecs::entity entity) const -> flecs::entity
+        [[nodiscard]] auto synchronize(flecs::entity entity) const -> flecs::entity override
         {
             using awen::widget::components::Transform;
 

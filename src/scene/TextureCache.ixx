@@ -72,7 +72,7 @@ export namespace awen::scene
         /// @return Const pointer to the Texture2D, or nullptr if id is null or out of range.
         [[nodiscard]] auto get(TextureId id) const -> const Texture2D*
         {
-            if (!id.is_valid() || id.index >= static_cast<uint32_t>(std::size(textures_)))
+            if (!id.isValid() || id.index >= static_cast<uint32_t>(std::size(textures_)))
             {
                 return nullptr;
             }
