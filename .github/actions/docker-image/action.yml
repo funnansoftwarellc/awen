@@ -2,9 +2,10 @@ name: Docker Image
 description: Build and push a devcontainer image, resolving the correct tag for PRs vs main.
 
 inputs:
-  platform:
-    description: Platform name used as the image tag suffix and devcontainer directory (e.g. linux, android, wasm).
-    required: true
+  image-tag:
+    description: Tag suffix for the shared devcontainer image.
+    required: false
+    default: devcontainer
   token:
     description: GitHub token for GHCR authentication.
     required: true
@@ -28,7 +29,8 @@ runs:
         token: ""
         filters: |
           changed:
-            - '.devcontainer/${{ inputs.platform }}/Dockerfile'
+            - '.devcontainer/Dockerfile'
+            - '.devcontainer/devcontainer.json'
 
     - uses: docker/login-action@v3
       with:
@@ -40,7 +42,7 @@ runs:
       id: image
       shell: bash
       run: |
-        if docker manifest inspect ghcr.io/${{ github.repository }}:${{ inputs.platform }} > /dev/null 2>&1; then
+        if docker manifest inspect ghcr.io/${{ github.repository }}:${{ inputs.image-tag }} > /dev/null 2>&1; then
           echo "exists=true" >> $GITHUB_OUTPUT
         else
           echo "exists=false" >> $GITHUB_OUTPUT
@@ -51,29 +53,29 @@ runs:
       shell: bash
       env:
         REPO: ghcr.io/${{ github.repository }}
-        PLATFORM: ${{ inputs.platform }}
+        IMAGE_TAG: ${{ inputs.image-tag }}
       run: |
         if [[ "${{ steps.filter.outputs.changed }}" != "true" && "${{ steps.image.outputs.exists }}" != "false" ]]; then
-          echo "image=${REPO}:${PLATFORM}" >> $GITHUB_OUTPUT
+          echo "image=${REPO}:${IMAGE_TAG}" >> $GITHUB_OUTPUT
           echo "need-build=false" >> $GITHUB_OUTPUT
         elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-          echo "image=${REPO}:${PLATFORM}" >> $GITHUB_OUTPUT
+          echo "image=${REPO}:${IMAGE_TAG}" >> $GITHUB_OUTPUT
           echo "need-build=true" >> $GITHUB_OUTPUT
           {
             echo "tags<<EOF"
-            echo "${REPO}:${PLATFORM}"
-            echo "${REPO}:${PLATFORM}-${{ github.sha }}"
+            echo "${REPO}:${IMAGE_TAG}"
+            echo "${REPO}:${IMAGE_TAG}-${{ github.sha }}"
             echo "EOF"
           } >> $GITHUB_OUTPUT
         else
-          echo "image=${REPO}:${PLATFORM}-${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "image=${REPO}:${IMAGE_TAG}-${{ github.sha }}" >> $GITHUB_OUTPUT
           echo "need-build=true" >> $GITHUB_OUTPUT
-          echo "tags=${REPO}:${PLATFORM}-${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "tags=${REPO}:${IMAGE_TAG}-${{ github.sha }}" >> $GITHUB_OUTPUT
         fi
 
     - uses: docker/build-push-action@v6
       if: steps.resolve.outputs.need-build == 'true'
       with:
-        context: .devcontainer/${{ inputs.platform }}
+        context: .devcontainer
         push: true
         tags: ${{ steps.resolve.outputs.tags }}

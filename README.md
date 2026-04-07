@@ -44,7 +44,7 @@
 
 - Ubuntu 25.10 (or compatible) — x86-64
 - GCC (latest available) **or** Clang (latest via [apt.llvm.org](https://apt.llvm.org/))
-- The provided [Dev Container](.devcontainer/Dockerfile) sets up a fully configured environment with both compilers, CMake, and Ninja. Using it is the recommended approach on Linux.
+- The provided [Dev Container](.devcontainer/Dockerfile) sets up a fully configured environment with native Linux, Android, and WebAssembly toolchains. Using it is the recommended approach on Linux.
 
   To build without the Dev Container, install the required tools manually:
   ```sh
@@ -166,7 +166,7 @@ The installed binary is written to `build/<preset>/installed/bin/`.
 
 ### Android
 
-Android builds target **arm64-v8a** and cross-compile from Linux using the [Android NDK](https://developer.android.com/ndk). The provided [Dev Container](.devcontainer/android/Dockerfile) sets up the required environment (Ubuntu 25.10 with Clang and NDK r29) and is the recommended approach.
+Android builds target **arm64-v8a** and cross-compile from Linux using the [Android NDK](https://developer.android.com/ndk). The provided [Dev Container](.devcontainer/Dockerfile) sets up the required environment (Ubuntu 25.10 with Clang, NDK r29, and Android SDK) and is the recommended approach.
 
 Available presets:
 
@@ -190,7 +190,7 @@ cmake --build --preset x64-linux-clang-arm64-android-debug --target install
 
 ### WebAssembly
 
-WebAssembly builds use [Emscripten](https://emscripten.org/) and cross-compile from Linux. The provided [Dev Container](.devcontainer/wasm/Dockerfile) (based on `emscripten/emsdk`) includes all required tooling and is the recommended approach.
+WebAssembly builds use [Emscripten](https://emscripten.org/) and cross-compile from Linux. The provided [Dev Container](.devcontainer/Dockerfile) includes all required tooling and is the recommended approach.
 
 Available presets:
 

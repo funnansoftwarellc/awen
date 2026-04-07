@@ -1,8 +1,9 @@
 {
-    "name": "awen - linux",
+    "name": "awen",
     "build": {
         "dockerfile": "Dockerfile"
     },
+    "postCreateCommand": "${containerWorkspaceFolder}/vcpkg/bootstrap-vcpkg.sh -disableMetrics",
     "customizations": {
         "vscode": {
             "extensions": [
@@ -11,6 +12,7 @@
                 "GitHub.vscode-pull-request-github",
                 "github.vscode-github-actions",
                 "mhutchie.git-graph",
+                "ms-vscode.live-server",
                 "tonybaloney.vscode-pets"
             ]
         }
