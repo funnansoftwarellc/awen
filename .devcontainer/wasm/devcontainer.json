@@ -10,7 +10,9 @@
                 "ms-vscode.cmake-tools",
                 "GitHub.vscode-pull-request-github",
                 "github.vscode-github-actions",
-                "mhutchie.git-graph"
+                "mhutchie.git-graph",
+                "tonybaloney.vscode-pets",
+                "ms-vscode.live-server"
             ]
         }
     }
