@@ -83,12 +83,8 @@ export namespace awen::sdl
                 return std::unexpected(MakeSdlWindowError("Failed to create SDL window"));
             }
 
-            if (!SDL_SetWindowPosition(nativeWindow, createInfo.positionX, createInfo.positionY))
-            {
-                SDL_DestroyWindow(nativeWindow);
-                shutdownSdl();
-                return std::unexpected(MakeSdlWindowError("Failed to position SDL window"));
-            }
+            // Best-effort: Emscripten and Android do not support window positioning.
+            std::ignore = SDL_SetWindowPosition(nativeWindow, createInfo.positionX, createInfo.positionY);
 
             auto* nativeRenderer = SDL_CreateRenderer(nativeWindow, nullptr);
 
@@ -101,12 +97,15 @@ export namespace awen::sdl
 
             std::ignore = SDL_SetRenderVSync(nativeRenderer, 1);
 
-            auto screenWidth = createInfo.width;
-            auto screenHeight = createInfo.height;
-            std::ignore = SDL_GetRenderOutputSize(nativeRenderer, &screenWidth, &screenHeight);
+            // Use the requested size as a fixed logical coordinate space.  SDL
+            // maps these coordinates to whatever the physical output actually
+            // is (CSS-controlled canvas on WASM, resizable window on desktop)
+            // with aspect-ratio-preserving letterboxing.
+            std::ignore = SDL_SetRenderLogicalPresentation(
+                nativeRenderer, createInfo.width, createInfo.height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-            screenWidth_ = screenWidth;
-            screenHeight_ = screenHeight;
+            screenWidth_ = createInfo.width;
+            screenHeight_ = createInfo.height;
             open_ = true;
 
             return Window{nativeWindow, nativeRenderer};
@@ -179,9 +178,11 @@ export namespace awen::sdl
 
                     case SDL_EVENT_WINDOW_RESIZED:
                     case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-                        screenWidth_ = event.window.data1;
-                        screenHeight_ = event.window.data2;
-                        result.events.emplace_back(EventWindowResize{.width = event.window.data1, .height = event.window.data2});
+                        // The logical coordinate space is fixed at the design
+                        // resolution.  SDL automatically re-maps it to the new
+                        // physical output via its internal event watcher.
+                        result.events.emplace_back(
+                            EventWindowResize{.width = screenWidth_, .height = screenHeight_});
                         break;
 
                     case SDL_EVENT_KEY_DOWN:

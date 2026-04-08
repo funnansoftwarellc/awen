@@ -45,12 +45,20 @@ namespace
     auto FontPaths() -> const std::vector<std::string>&
     {
         static const auto paths = std::vector<std::string>{
+#if defined(__EMSCRIPTEN__)
+            "/fonts/DejaVuSans.ttf",
+#elif defined(__ANDROID__)
+            "/system/fonts/Roboto-Regular.ttf",
+            "/system/fonts/DroidSans.ttf",
+            "/system/fonts/NotoSans-Regular.ttf",
+#else
             "/System/Library/Fonts/Geneva.ttf",
             "/System/Library/Fonts/Monaco.ttf",
             "/System/Library/Fonts/Helvetica.ttc",
             "/Library/Fonts/Arial Unicode.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+#endif
         };
 
         return paths;

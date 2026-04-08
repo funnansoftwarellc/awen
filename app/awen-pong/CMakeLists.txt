@@ -24,6 +24,8 @@ if(EMSCRIPTEN)
             -sASYNCIFY
             --shell-file
             "${awen_shell_file}"
+            "--preload-file"
+            "${CMAKE_SOURCE_DIR}/assets/fonts/DejaVuSans.ttf@/fonts/DejaVuSans.ttf"
     )
 
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
@@ -32,6 +34,7 @@ if(EMSCRIPTEN)
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.html
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.js
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.wasm
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.data
         ${CMAKE_SOURCE_DIR}/banner.png
         DESTINATION web
     )

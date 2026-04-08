@@ -210,7 +210,7 @@ try
     window->setTitle("Awen SDL Pong");
     window->setSize({InitWidth, InitHeight});
     window->setPosition({WindowPositionX, WindowPositionY});
-    window->setClearColor(awen::widget::colors::Black);
+    window->setClearColor(awen::sdl::Color{.r = 0, .g = 0, .b = 0, .a = 120});
 
     const auto sw0 = InitWidth;
     const auto sh0 = InitHeight;
