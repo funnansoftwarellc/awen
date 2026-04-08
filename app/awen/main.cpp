@@ -297,14 +297,16 @@ auto main() -> int
 
                 for (auto y = 0; y < screenHeightInt && dashIndex < MaxDashes; y += DashGap, ++dashIndex)
                 {
-                    std::ignore = dashes[static_cast<std::size_t>(dashIndex)].setTransform(
-                        Transform{.x = halfWidth - DashCenterOffset, .y = static_cast<float>(y)});
+                    std::ignore = dashes[static_cast<std::size_t>(dashIndex)]
+                                      .setTransform( // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+                                          Transform{.x = halfWidth - DashCenterOffset, .y = static_cast<float>(y)});
                 }
 
                 for (; dashIndex < MaxDashes; ++dashIndex)
                 {
-                    std::ignore =
-                        dashes[static_cast<std::size_t>(dashIndex)].setTransform(Transform{.x = -DashWidth, .y = -static_cast<float>(DashHeight)});
+                    std::ignore = dashes[static_cast<std::size_t>(dashIndex)].setTransform(
+                        Transform{.x = -DashWidth,
+                                  .y = -static_cast<float>(DashHeight)}); // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
                 }
 
                 // Paddles.

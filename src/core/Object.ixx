@@ -5,6 +5,7 @@ module;
 #include <memory>
 #include <ranges>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 export module awen.core.object;
@@ -27,7 +28,7 @@ export namespace awen::core
             catch (...)
             {
                 const auto exception = std::current_exception();
-                static_cast<void>(exception);
+                std::ignore = exception;
             }
         }
 

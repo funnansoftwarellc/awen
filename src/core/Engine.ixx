@@ -133,6 +133,6 @@ namespace awen::core
         Signal<void()> onRender_;
         Signal<void()> onPostRender_;
 
-        static inline Engine* singleton = nullptr;
+        static inline Engine* singleton = nullptr; // NOLINT(readability-identifier-naming)
     };
 }

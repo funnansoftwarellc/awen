@@ -10,6 +10,8 @@
         "magic-enum",
         "raylib",
         "flecs",
+        "sdl3",
+        "sdl3-ttf",
         {
             "name": "glfw3",
             "platform": "!android"

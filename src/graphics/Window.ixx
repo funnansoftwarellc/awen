@@ -152,7 +152,7 @@ export namespace awen::graphics
         };
 
         template <typename F>
-        using callable_arg_t = typename callable_arg<decltype(&std::decay_t<F>::operator())>::type;
+        using callable_arg_t = callable_arg<decltype(&std::decay_t<F>::operator())>::type;
 
         std::vector<std::function<void(const EventKeyboard&)>> keyboard_handlers_;
         std::vector<std::function<void(const EventMouse&)>> mouse_handlers_;

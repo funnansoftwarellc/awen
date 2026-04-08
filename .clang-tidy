@@ -10,6 +10,7 @@ Checks: "-*,
   modernize-*,
   readability-*,
   -readability-identifier-length,
+  -readability-redundant-declaration,
   performance-*"
 
 WarningsAsErrors: "*"
@@ -38,8 +39,9 @@ CheckOptions:
   modernize-use-nullptr.NullMacros: "NULL"
   modernize-use-trailing-return-type.TransformLambdas: "none"
   readability-identifier-naming.ClassCase: "CamelCase"
-  readability-identifier-naming.ClassMemberCase: "camelBack"
   readability-identifier-naming.ClassMethodCase: "camelBack"
+  readability-identifier-naming.PrivateStaticMemberCase: "camelBack"
+  readability-identifier-naming.PrivateStaticMemberSuffix: "_"
   readability-identifier-naming.ConceptCase: "CamelCase"
   readability-identifier-naming.EnumCase: "CamelCase"
   readability-identifier-naming.FunctionCase: "camelBack"

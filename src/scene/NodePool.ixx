@@ -18,6 +18,7 @@ export namespace awen::scene
     ///
     /// When a handle's generation differs from the stored generation, the slot
     /// has been freed or recycled — get() returns nullptr for stale handles.
+    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
     template <typename T>
     class NodePool
     {
@@ -159,4 +160,6 @@ export namespace awen::scene
         std::vector<uint32_t> generations_;
         std::vector<uint32_t> freeList_;
     };
+
+    // NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 }

@@ -5,6 +5,7 @@ module;
 #include <exception>
 #include <functional>
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -16,8 +17,9 @@ namespace awen::detail
 
     /// @brief Shared control block for a Signal. Owned by the Signal via shared_ptr;
     ///        Connection handles hold a weak_ptr to detect signal destruction.
+    // NOLINTNEXTLINE(misc-use-internal-linkage)
     template <typename... Args>
-    class SignalCore : public std::enable_shared_from_this<SignalCore<Args...>>
+    class SignalCore : public std::enable_shared_from_this<SignalCore<Args...>> // NOLINT(misc-use-internal-linkage)
     {
     public:
         using SlotFn = std::function<void(Args...)>;
@@ -122,7 +124,7 @@ export namespace awen::core
                 catch (...)
                 {
                     const auto exception = std::current_exception();
-                    static_cast<void>(exception);
+                    std::ignore = exception;
                 }
 
                 disconnectFn_ = nullptr;

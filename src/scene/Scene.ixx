@@ -307,7 +307,7 @@ export namespace awen::scene
 
     // ── Scene method definitions ───────────────────────────────────────────────
 
-    Scene::Scene()
+    Scene::Scene() // NOLINT(readability-redundant-declaration)
     {
         // Synchronise the transforms pool with the root sentinel already allocated
         // inside the HierarchyPool constructor (index 0, generation 1). Every data
@@ -316,17 +316,17 @@ export namespace awen::scene
         transforms_.allocateAt(hierarchy_.root().index);
     }
 
-    auto Scene::root() noexcept -> NodeHandle<void>
+    auto Scene::root() noexcept -> NodeHandle<void> // NOLINT(readability-redundant-declaration)
     {
         return NodeHandle<void>{hierarchy_.root(), this};
     }
 
-    auto Scene::buildDrawList(awen::graphics::DrawList& out) const -> void
+    auto Scene::buildDrawList(awen::graphics::DrawList& out) const -> void // NOLINT(readability-redundant-declaration)
     {
         awen::scene::BuildDrawList(hierarchy_, transforms_, rects_, circles_, sprites_, texts_, textures_, out);
     }
 
-    auto Scene::loadTexture(const std::string& path) -> TextureId
+    auto Scene::loadTexture(const std::string& path) -> TextureId // NOLINT(readability-redundant-declaration)
     {
         return textures_.load(path);
     }
