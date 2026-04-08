@@ -37,16 +37,6 @@ if(EMSCRIPTEN)
     )
 endif()
 
-if(ANDROID)
-    # ANativeActivity_onCreate is in SDL3's static archive but called by the
-    # Android runtime at load time (not via a link reference), so the linker
-    # would otherwise strip it as unreferenced. Force it to be kept.
-    target_link_options(${PROJECT_NAME}
-        PRIVATE
-            "-Wl,-u,ANativeActivity_onCreate"
-    )
-endif()
-
 if(NOT EMSCRIPTEN)
     install(TARGETS ${PROJECT_NAME}
         BUNDLE DESTINATION .
