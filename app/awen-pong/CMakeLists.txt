@@ -1,4 +1,4 @@
-project(awen-widget-pong)
+project(awen-pong)
 
 if(ANDROID)
     add_library(${PROJECT_NAME} SHARED)
@@ -17,7 +17,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if(EMSCRIPTEN)
-    set(awen_shell_file "${CMAKE_SOURCE_DIR}/app/pong/shell.html")
+    set(awen_shell_file "${CMAKE_CURRENT_SOURCE_DIR}/shell.html")
 
     target_link_options(${PROJECT_NAME}
         PRIVATE
@@ -34,6 +34,16 @@ if(EMSCRIPTEN)
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.wasm
         ${CMAKE_SOURCE_DIR}/banner.png
         DESTINATION web
+    )
+endif()
+
+if(ANDROID)
+    # ANativeActivity_onCreate is in SDL3's static archive but called by the
+    # Android runtime at load time (not via a link reference), so the linker
+    # would otherwise strip it as unreferenced. Force it to be kept.
+    target_link_options(${PROJECT_NAME}
+        PRIVATE
+            "-Wl,-u,ANativeActivity_onCreate"
     )
 endif()
 

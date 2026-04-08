@@ -73,7 +73,7 @@ android {
                 }
                 arguments(*cmakeArgs.toTypedArray())
                 // Only build the awen shared library; skip tests and other targets
-                targets("awen")
+                targets("awen-pong")
             }
         }
     }

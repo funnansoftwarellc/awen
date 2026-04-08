@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     git \
+    make \
     cmake \
     ninja-build \
     pkg-config \
@@ -32,10 +33,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Add the official LLVM apt repository so clang-22 packages are available.
 RUN curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key \
-        -o /usr/share/keyrings/llvm-apt-key.asc \
+    -o /usr/share/keyrings/llvm-apt-key.asc \
     && . /etc/os-release \
     && echo "deb [signed-by=/usr/share/keyrings/llvm-apt-key.asc] http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-22 main" \
-       > /etc/apt/sources.list.d/llvm-22.list
+    > /etc/apt/sources.list.d/llvm-22.list
 
 # Clang 22.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -54,18 +55,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && update-alternatives --install /usr/bin/run-clang-tidy run-clang-tidy /usr/bin/run-clang-tidy-22 100 \
     && update-alternatives --install /usr/bin/clang-tidy-diff clang-tidy-diff /usr/bin/clang-tidy-diff-22.py 100
 
-# Linux graphics dependencies used by native raylib builds.
+# Linux graphics dependencies used by SDL3 native builds.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libxinerama-dev \
     libxcursor-dev \
-    xorg-dev \
-    libglu1-mesa-dev \
     libgl1-mesa-dev \
     libx11-dev \
     libxrandr-dev \
     libwayland-dev \
     libxkbcommon-dev \
     libdecor-0-dev \
+    libasound2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# SDL3
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    autoconf autoconf-archive automake libtool libltdl-dev \
+    python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
 # Emulator runtime dependencies.
@@ -96,11 +102,11 @@ RUN mkdir -p /opt/android/sdk/cmdline-tools/latest \
     && mv /opt/android/sdk/cmdline-tools/source.properties /opt/android/sdk/cmdline-tools/latest/ \
     && yes | /opt/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses \
     && /opt/android/sdk/cmdline-tools/latest/bin/sdkmanager \
-       "platforms;android-36" \
-       "build-tools;36.0.0" \
-       "platform-tools" \
-       "emulator" \
-       "system-images;android-36.1;google_apis;x86_64"
+    "platforms;android-36" \
+    "build-tools;36.0.0" \
+    "platform-tools" \
+    "emulator" \
+    "system-images;android-36.1;google_apis;x86_64"
 
 # Create a default AVD for emulator usage inside the container.
 RUN $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd \
@@ -134,12 +140,12 @@ ENV PATH=${EMSDK}:${EMSCRIPTEN_ROOT}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/pl
 # Debug keystore so Android debug builds work without extra setup.
 RUN mkdir -p /root/.android \
     && keytool -genkeypair \
-       -v \
-       -keystore /root/.android/debug.keystore \
-       -storepass android \
-       -alias androiddebugkey \
-       -keypass android \
-       -keyalg RSA \
-       -keysize 2048 \
-       -validity 10000 \
-       -dname "CN=Android Debug, O=Android, C=US"
+    -v \
+    -keystore /root/.android/debug.keystore \
+    -storepass android \
+    -alias androiddebugkey \
+    -keypass android \
+    -keyalg RSA \
+    -keysize 2048 \
+    -validity 10000 \
+    -dname "CN=Android Debug, O=Android, C=US"
