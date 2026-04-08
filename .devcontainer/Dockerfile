@@ -66,6 +66,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxkbcommon-dev \
     libdecor-0-dev \
     libasound2-dev \
+    libxft-dev libxext-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # SDL3
