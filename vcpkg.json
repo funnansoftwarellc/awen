@@ -7,19 +7,8 @@
     "dependencies": [
         "gtest",
         "glm",
-        "magic-enum",
-        "raylib",
         "flecs",
-        {
-            "name": "glfw3",
-            "platform": "!android"
-        },
-        {
-            "name": "glfw3",
-            "features": [
-                "wayland"
-            ],
-            "platform": "linux"
-        }
+        "sdl3",
+        "sdl3-ttf"
     ]
 }

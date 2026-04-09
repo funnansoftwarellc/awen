@@ -3,27 +3,17 @@
     package="com.funnansoftware.awen">
 
     <application
-        android:label="@string/app_name"
-        android:hasCode="false">
+        android:label="@string/app_name">
 
         <!--
-            NativeActivity hosts the entire app natively. No Java/Kotlin Activity
-            subclass is required. android:hasCode="false" tells the runtime there
-            are no Dalvik/ART class files to load.
+            AvenActivity extends SDL3's SDLActivity, which bootstraps the SDL3
+            runtime and loads libawen-pong.so via its overridden getLibraries().
         -->
         <activity
-            android:name="android.app.NativeActivity"
+            android:name=".AvenActivity"
             android:label="@string/app_name"
             android:exported="true"
             android:configChanges="orientation|keyboardHidden|screenLayout|screenSize|smallestScreenSize">
-
-            <!--
-                The value must match the CMake target name (i.e. the library is
-                libawen.so, so the value is "awen").
-            -->
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="awen" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

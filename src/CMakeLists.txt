@@ -1,6 +1,4 @@
 add_subdirectory(flecs)
 add_subdirectory(core)
-add_subdirectory(graphics)
-add_subdirectory(scene)
-add_subdirectory(engine)
+add_subdirectory(sdl)
 add_subdirectory(widget)

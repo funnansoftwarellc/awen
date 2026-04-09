@@ -61,7 +61,7 @@
 ## Build & Project
 - Build system: CMake with Ninja, presets defined in `CMakePresets.json`
 - Package manager: vcpkg (manifest mode, `vcpkg.json`)
-- Primary graphics library: raylib
+- Primary graphics/windowing library: SDL3
 - Use the normal CMake build to validate C++20 modules. The `clang-tidy` target is currently scoped to `app/*.cpp` translation units because `run-clang-tidy` is not reliably handling this repo's module interface units.
 
 ## CMake Style

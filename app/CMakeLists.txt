@@ -1,2 +1,1 @@
-add_subdirectory(awen)
-add_subdirectory(pong)
+add_subdirectory(awen-pong)

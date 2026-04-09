@@ -11,8 +11,9 @@ export namespace awen::core
     ///
     /// @note Relies on C++17 variadic using-declarations and class template argument
     ///       deduction — no explicit template arguments are needed at the call site.
+    // NOLINTNEXTLINE(misc-multiple-inheritance)
     template <typename... Ts>
-    struct Overloaded : Ts...
+    struct Overloaded : Ts... // NOLINT(misc-multiple-inheritance)
     {
         using Ts::operator()...;
     };
