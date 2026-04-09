@@ -101,8 +101,7 @@ export namespace awen::sdl
             // maps these coordinates to whatever the physical output actually
             // is (CSS-controlled canvas on WASM, resizable window on desktop)
             // with aspect-ratio-preserving letterboxing.
-            std::ignore = SDL_SetRenderLogicalPresentation(
-                nativeRenderer, createInfo.width, createInfo.height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+            std::ignore = SDL_SetRenderLogicalPresentation(nativeRenderer, createInfo.width, createInfo.height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
             screenWidth_ = createInfo.width;
             screenHeight_ = createInfo.height;
@@ -181,8 +180,7 @@ export namespace awen::sdl
                         // The logical coordinate space is fixed at the design
                         // resolution.  SDL automatically re-maps it to the new
                         // physical output via its internal event watcher.
-                        result.events.emplace_back(
-                            EventWindowResize{.width = screenWidth_, .height = screenHeight_});
+                        result.events.emplace_back(EventWindowResize{.width = screenWidth_, .height = screenHeight_});
                         break;
 
                     case SDL_EVENT_KEY_DOWN:
