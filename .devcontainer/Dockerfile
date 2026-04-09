@@ -62,6 +62,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxi-dev \
     libgl1-mesa-dev \
     libx11-dev \
+    libxtst-dev \
     libxrandr-dev \
     libwayland-dev \
     libxkbcommon-dev \
