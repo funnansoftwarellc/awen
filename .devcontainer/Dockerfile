@@ -67,6 +67,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libdecor-0-dev \
     libasound2-dev \
     libxft-dev libxext-dev \
+    libegl1-mesa-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # SDL3
