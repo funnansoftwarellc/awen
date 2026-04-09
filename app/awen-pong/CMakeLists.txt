@@ -46,4 +46,9 @@ if(NOT EMSCRIPTEN)
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
+
+    install(FILES
+        ${CMAKE_SOURCE_DIR}/assets/fonts/DejaVuSans.ttf
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/fonts
+    )
 endif()
