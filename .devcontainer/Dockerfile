@@ -59,6 +59,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libxinerama-dev \
     libxcursor-dev \
+    libxi-dev \
     libgl1-mesa-dev \
     libx11-dev \
     libxrandr-dev \
