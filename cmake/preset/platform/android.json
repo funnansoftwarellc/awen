@@ -8,7 +8,8 @@
         "../release.json",
         "../host/x64-linux.json",
         "../host/x64-windows.json",
-        "../target/arm64-android.json"
+        "../target/arm64-android.json",
+        "../target/x64-android.json"
     ],
     "configurePresets": [
         {
@@ -53,6 +54,28 @@
                 "ninja",
                 "host-x64-windows",
                 "target-arm64-android"
+            ]
+        },
+        {
+            "name": "x64-windows-clang-x64-android-debug",
+            "inherits": [
+                "compiler-android-ndk",
+                "binarydir",
+                "debug",
+                "ninja",
+                "host-x64-windows",
+                "target-x64-android"
+            ]
+        },
+        {
+            "name": "x64-windows-clang-x64-android-release",
+            "inherits": [
+                "compiler-android-ndk",
+                "binarydir",
+                "release",
+                "ninja",
+                "host-x64-windows",
+                "target-x64-android"
             ]
         }
     ],
