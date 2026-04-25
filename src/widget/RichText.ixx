@@ -158,7 +158,7 @@ export namespace awen::widget
                 {
                     if (sv[pos] == '\n')
                     {
-                        tokens.push_back(Token{.runIndex = i, .isNewline = true});
+                        tokens.push_back(Token{.text = "", .runIndex = i, .isNewline = true});
                         ++pos;
                         continue;
                     }
