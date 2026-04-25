@@ -3,14 +3,16 @@ module;
 #include <awen/flecs/Flecs.hpp>
 
 #include <memory>
-#include <variant>
-
+#include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <variant>
 
 export module awen.widget.nodetext;
 
 import awen.core.engine;
+import awen.sdl.font;
 import awen.widget.color;
 import awen.widget.components;
 import awen.widget.node;
@@ -65,6 +67,20 @@ export namespace awen::widget
             return color_;
         }
 
+        /// @brief Selects a specific font for this text node.
+        /// @param font The font handle (path + size).  Pass `std::nullopt` to use the default font.
+        auto setFont(std::optional<awen::sdl::FontHandle> font) -> void
+        {
+            font_ = std::move(font);
+        }
+
+        /// @brief Returns the currently selected font handle, if any.
+        /// @return The font handle or empty optional.
+        [[nodiscard]] auto getFont() const -> const std::optional<awen::sdl::FontHandle>&
+        {
+            return font_;
+        }
+
         /// @brief Synchronizes text state into the associated flecs entity.
         /// @param entity The entity to update.
         /// @return The updated entity.
@@ -76,7 +92,7 @@ export namespace awen::widget
             }
 
             entity.set<components::Drawable>(components::Drawable{
-                .value = std::make_shared<components::DrawableVariant>(std::in_place_type<components::Text>, text_, fontSize_, color_),
+                .value = std::make_shared<components::DrawableVariant>(std::in_place_type<components::Text>, text_, fontSize_, color_, font_),
             });
             return entity;
         }
@@ -85,5 +101,6 @@ export namespace awen::widget
         std::string text_;
         int fontSize_{};
         Color color_{colors::White};
+        std::optional<awen::sdl::FontHandle> font_;
     };
 }

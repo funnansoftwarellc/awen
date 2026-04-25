@@ -7,6 +7,7 @@ module;
 #include <cmath>
 #include <expected>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -19,6 +20,7 @@ export module awen.sdl.renderer;
 import awen.core.overloaded;
 import awen.sdl.color;
 import awen.sdl.drawlist;
+import awen.sdl.font;
 
 namespace
 {
@@ -105,6 +107,8 @@ export namespace awen::sdl
         static auto shutdown() -> void
         {
             fonts_.clear();
+            namedFonts_.clear();
+            scissorStack_.clear();
             renderer_ = nullptr;
         }
 
@@ -115,6 +119,8 @@ export namespace awen::sdl
                 return std::unexpected(std::string{"SDL renderer has not been initialized"});
             }
 
+            scissorStack_.clear();
+            std::ignore = SDL_SetRenderClipRect(renderer_, nullptr);
             return {};
         }
 
@@ -179,7 +185,7 @@ export namespace awen::sdl
                         },
                         [](const DrawText& text) -> std::expected<void, std::string>
                         {
-                            auto fontResult = ensureFont(text.fontSize);
+                            auto fontResult = ensureFont(text.font, text.fontSize);
 
                             if (!fontResult)
                             {
@@ -244,6 +250,34 @@ export namespace awen::sdl
 
                             return {};
                         },
+                        [](const DrawScissorPush& scissor) -> std::expected<void, std::string>
+                        {
+                            const auto rect = SDL_Rect{.x = scissor.x, .y = scissor.y, .w = scissor.width, .h = scissor.height};
+                            scissorStack_.push_back(rect);
+
+                            if (!SDL_SetRenderClipRect(renderer_, &rect))
+                            {
+                                return std::unexpected(MakeSdlError("Failed to set SDL renderer clip rect"));
+                            }
+
+                            return {};
+                        },
+                        [](const DrawScissorPop&) -> std::expected<void, std::string>
+                        {
+                            if (!scissorStack_.empty())
+                            {
+                                scissorStack_.pop_back();
+                            }
+
+                            const auto* clip = scissorStack_.empty() ? nullptr : &scissorStack_.back();
+
+                            if (!SDL_SetRenderClipRect(renderer_, clip))
+                            {
+                                return std::unexpected(MakeSdlError("Failed to clear SDL renderer clip rect"));
+                            }
+
+                            return {};
+                        },
                     },
                     command);
 
@@ -268,7 +302,13 @@ export namespace awen::sdl
 
         [[nodiscard]] static auto measureText(const char* text, int fontSize) -> std::expected<int, std::string>
         {
-            auto fontResult = ensureFont(fontSize);
+            return measureText(std::nullopt, text, fontSize);
+        }
+
+        [[nodiscard]] static auto measureText(const std::optional<FontHandle>& font, const char* text, int fontSize)
+            -> std::expected<int, std::string>
+        {
+            auto fontResult = ensureFont(font, fontSize);
 
             if (!fontResult)
             {
@@ -287,6 +327,66 @@ export namespace awen::sdl
         }
 
     private:
+        static auto ensureFont(const std::optional<FontHandle>& handle, int sizeFallback) -> std::expected<TTF_Font*, std::string>
+        {
+            if (!handle.has_value() || handle->path.empty())
+            {
+                const auto size = handle.has_value() && handle->sizePx > 0 ? handle->sizePx : sizeFallback;
+                return ensureFont(size);
+            }
+
+            if (handle->sizePx <= 0)
+            {
+                return std::unexpected(std::string{"Font size must be positive"});
+            }
+
+            if (const auto it = namedFonts_.find(*handle); it != std::end(namedFonts_))
+            {
+                return it->second.get();
+            }
+
+            // Try the literal path first, then a set of common fallback
+            // locations that mirror `FontPaths` but use the requested
+            // basename instead of the default fallback font.
+            auto candidates = std::vector<std::string>{handle->path};
+
+            if (handle->path.find('/') == std::string::npos && handle->path.find('\\') == std::string::npos)
+            {
+                if (auto* basePathRaw = SDL_GetBasePath(); basePathRaw != nullptr)
+                {
+                    candidates.emplace_back(std::string{basePathRaw} + "fonts/" + handle->path);
+                }
+
+                candidates.emplace_back("fonts/" + handle->path);
+                candidates.emplace_back("assets/fonts/" + handle->path);
+                candidates.emplace_back("../assets/fonts/" + handle->path);
+                candidates.emplace_back("../../assets/fonts/" + handle->path);
+            }
+
+            TTF_Font* rawFont = nullptr;
+
+            for (const auto& candidate : candidates)
+            {
+                rawFont = TTF_OpenFont(candidate.c_str(), static_cast<float>(handle->sizePx));
+
+                if (rawFont != nullptr)
+                {
+                    break;
+                }
+            }
+
+            if (rawFont == nullptr)
+            {
+                return std::unexpected(MakeSdlError("Failed to open SDL_ttf font from FontHandle path"));
+            }
+
+            auto deleter = [](TTF_Font* font) { TTF_CloseFont(font); };
+
+            auto [it, inserted] = namedFonts_.emplace(*handle, std::unique_ptr<TTF_Font, decltype(deleter)>{rawFont, deleter});
+            std::ignore = inserted;
+            return it->second.get();
+        }
+
         static auto ensureFont(int fontSize) -> std::expected<TTF_Font*, std::string>
         {
             if (fontSize <= 0)
@@ -316,5 +416,8 @@ export namespace awen::sdl
 
         static inline SDL_Renderer* renderer_ = nullptr;                                                // NOLINT(readability-identifier-naming)
         static inline std::unordered_map<int, std::unique_ptr<TTF_Font, void (*)(TTF_Font*)>> fonts_{}; // NOLINT(readability-identifier-naming)
+        // NOLINTNEXTLINE(readability-identifier-naming)
+        static inline std::unordered_map<FontHandle, std::unique_ptr<TTF_Font, void (*)(TTF_Font*)>, FontHandleHash> namedFonts_{};
+        static inline std::vector<SDL_Rect> scissorStack_{}; // NOLINT(readability-identifier-naming)
     };
 }

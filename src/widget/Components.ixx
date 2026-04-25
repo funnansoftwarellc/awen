@@ -2,6 +2,7 @@ module;
 
 #include <glm/vec2.hpp>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -9,6 +10,7 @@ module;
 
 export module awen.widget.components;
 
+import awen.sdl.font;
 import awen.widget.color;
 
 export namespace awen::widget::components
@@ -67,15 +69,32 @@ export namespace awen::widget::components
         std::string value;
         int fontSize{};
         Color color{};
+        std::optional<awen::sdl::FontHandle> font{};
 
         Text() = default;
 
         Text(std::string valueIn, int fontSizeIn, Color colorIn) : value(std::move(valueIn)), fontSize(fontSizeIn), color(colorIn)
         {
         }
+
+        Text(std::string valueIn, int fontSizeIn, Color colorIn, std::optional<awen::sdl::FontHandle> fontIn)
+            : value(std::move(valueIn)), fontSize(fontSizeIn), color(colorIn), font(std::move(fontIn))
+        {
+        }
     };
 
-    using DrawableVariant = std::variant<Rectangle, Circle, Text, Polygon>;
+    /// @brief Pushes a clipping rectangle onto the renderer's scissor stack.
+    struct ScissorBegin
+    {
+        glm::vec2 size{};
+    };
+
+    /// @brief Pops the most recent clipping rectangle off the scissor stack.
+    struct ScissorEnd
+    {
+    };
+
+    using DrawableVariant = std::variant<Rectangle, Circle, Text, Polygon, ScissorBegin, ScissorEnd>;
 
     struct Drawable
     {

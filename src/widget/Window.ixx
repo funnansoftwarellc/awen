@@ -55,6 +55,7 @@ export namespace awen::widget
                         .positionY = y,
                         .resizable = true,
                         .highDpi = true,
+                        .useLogicalPresentation = useLogicalPresentation_,
                     });
 
                     if (!windowResult)
@@ -69,7 +70,17 @@ export namespace awen::widget
                     {
                         handleError(initializeResult.error());
                         window_.reset();
+                        return;
                     }
+
+                    // Dispatch an initial resize event so listeners (e.g.
+                    // ScrollView) can perform their first layout pass against
+                    // the actual window dimensions, which may differ from the
+                    // requested size on high-DPI displays.
+                    Engine::instance()->dispatchEvent(awen::core::EventWindowResize{
+                        .width = awen::sdl::Window::getScreenWidth(),
+                        .height = awen::sdl::Window::getScreenHeight(),
+                    });
                 })};
 
             eventConnection_ = awen::core::ScopedConnection{Engine::instance()->onEvent().connect(
@@ -102,30 +113,23 @@ export namespace awen::widget
                         return;
                     }
 
-                    synchronizeTree();
-                    buildDrawList();
+                    renderOnce();
+                })};
 
-                    if (auto beginResult = awen::sdl::Renderer::begin(); !beginResult)
+            // Re-render synchronously on resize.  This works during the
+            // Win32 modal resize loop because SDL fires its event watch
+            // synchronously from inside the message pump.
+            inputConnection_ = awen::core::ScopedConnection{Engine::instance()->onInputEvent().connect(
+                [this](const awen::core::Event& event)
+                {
+                    if (!window_.has_value())
                     {
-                        handleError(beginResult.error());
                         return;
                     }
 
-                    if (auto clearResult = awen::sdl::Renderer::clear(clearColor_); !clearResult)
+                    if (std::holds_alternative<awen::core::EventWindowResize>(event))
                     {
-                        handleError(clearResult.error());
-                        return;
-                    }
-
-                    if (auto submitResult = awen::sdl::Renderer::submit(drawList_); !submitResult)
-                    {
-                        handleError(submitResult.error());
-                        return;
-                    }
-
-                    if (auto endResult = awen::sdl::Renderer::end(); !endResult)
-                    {
-                        handleError(endResult.error());
+                        renderOnce();
                     }
                 })};
         }
@@ -183,6 +187,23 @@ export namespace awen::widget
         [[nodiscard]] auto getClearColor() const -> Color
         {
             return clearColor_;
+        }
+
+        /// @brief Selects whether SDL's logical presentation (letterbox)
+        ///        is enabled.  When disabled, the renderer reports actual
+        ///        pixel dimensions and content is rendered at the window's
+        ///        current size without aspect-ratio preservation.  Must be
+        ///        called before the window starts up.
+        /// @param value True to enable logical presentation; false to disable.
+        auto setUseLogicalPresentation(bool value) -> void
+        {
+            useLogicalPresentation_ = value;
+        }
+
+        /// @brief Returns whether logical presentation is currently enabled.
+        [[nodiscard]] auto getUseLogicalPresentation() const -> bool
+        {
+            return useLogicalPresentation_;
         }
 
         /// @brief Returns whether a key is currently held down.
@@ -281,6 +302,40 @@ export namespace awen::widget
         {
             lastError_ = std::move(error);
             Engine::instance()->stop();
+        }
+
+        auto renderOnce() -> void
+        {
+            if (!window_.has_value())
+            {
+                return;
+            }
+
+            synchronizeTree();
+            buildDrawList();
+
+            if (auto beginResult = awen::sdl::Renderer::begin(); !beginResult)
+            {
+                handleError(beginResult.error());
+                return;
+            }
+
+            if (auto clearResult = awen::sdl::Renderer::clear(clearColor_); !clearResult)
+            {
+                handleError(clearResult.error());
+                return;
+            }
+
+            if (auto submitResult = awen::sdl::Renderer::submit(drawList_); !submitResult)
+            {
+                handleError(submitResult.error());
+                return;
+            }
+
+            if (auto endResult = awen::sdl::Renderer::end(); !endResult)
+            {
+                handleError(endResult.error());
+            }
         }
 
         auto ensureEntity(const Node* node) -> flecs::entity
@@ -420,6 +475,7 @@ export namespace awen::widget
                                 .y = static_cast<int>(worldTransform.position.y),
                                 .fontSize = text.fontSize,
                                 .color = text.color,
+                                .font = text.font,
                             });
                         },
                         [this, &worldTransform](const components::Polygon& polygon)
@@ -440,6 +496,16 @@ export namespace awen::widget
                                 .color = polygon.color,
                             });
                         },
+                        [this, &worldTransform](const components::ScissorBegin& scissor)
+                        {
+                            drawList_.emplace_back(awen::sdl::DrawScissorPush{
+                                .x = static_cast<int>(worldTransform.position.x),
+                                .y = static_cast<int>(worldTransform.position.y),
+                                .width = static_cast<int>(scissor.size.x * worldTransform.scale.x),
+                                .height = static_cast<int>(scissor.size.y * worldTransform.scale.y),
+                            });
+                        },
+                        [this](const components::ScissorEnd&) { drawList_.emplace_back(awen::sdl::DrawScissorPop{}); },
                     },
                     *drawable->value);
             }
@@ -454,10 +520,12 @@ export namespace awen::widget
         awen::core::ScopedConnection startupConnection_;
         awen::core::ScopedConnection eventConnection_;
         awen::core::ScopedConnection renderConnection_;
+        awen::core::ScopedConnection inputConnection_;
         std::string title_;
         glm::vec2 position_{0.0F, 0.0F};
         glm::vec2 size_{};
         Color clearColor_{colors::Orange};
+        bool useLogicalPresentation_{true};
         std::optional<std::string> lastError_;
     };
 }

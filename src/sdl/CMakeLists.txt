@@ -8,6 +8,7 @@ target_sources(${PROJECT_NAME} PUBLIC
         Color.ixx
         Event.ixx
         DrawList.ixx
+        Font.ixx
         Renderer.ixx
         Window.ixx
 )

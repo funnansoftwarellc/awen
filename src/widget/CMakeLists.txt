@@ -10,11 +10,18 @@ target_sources(${PROJECT_NAME} PUBLIC
         Module.ixx
         Node.ixx
         NodePolygon.ixx
+        NodeScissor.ixx
         NodeTransform.ixx
         NodeCircle.ixx
         NodeRectangle.ixx
         NodeText.ixx
         Components.ixx
+        Widget.ixx
+        LayoutColumn.ixx
+        Viewport.ixx
+        Scrollbar.ixx
+        ScrollView.ixx
+        RichText.ixx
         Window.ixx
 )
 

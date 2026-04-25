@@ -1,5 +1,6 @@
 module;
 
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -9,6 +10,7 @@ module;
 export module awen.sdl.drawlist;
 
 import awen.sdl.color;
+import awen.sdl.font;
 
 export namespace awen::sdl
 {
@@ -36,6 +38,7 @@ export namespace awen::sdl
         int y{};
         int fontSize{};
         Color color{};
+        std::optional<FontHandle> font{};
     };
 
     struct DrawPolygon
@@ -44,6 +47,20 @@ export namespace awen::sdl
         Color color{};
     };
 
-    using DrawCommand = std::variant<DrawRectangle, DrawCircle, DrawText, DrawPolygon>;
+    /// @brief Pushes a clipping rectangle onto the renderer's scissor stack.
+    struct DrawScissorPush
+    {
+        int x{};
+        int y{};
+        int width{};
+        int height{};
+    };
+
+    /// @brief Pops the most recent clipping rectangle off the scissor stack.
+    struct DrawScissorPop
+    {
+    };
+
+    using DrawCommand = std::variant<DrawRectangle, DrawCircle, DrawText, DrawPolygon, DrawScissorPush, DrawScissorPop>;
     using DrawList = std::vector<DrawCommand>;
 }

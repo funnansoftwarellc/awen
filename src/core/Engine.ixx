@@ -4,6 +4,7 @@ module;
 #include <chrono>
 
 export module awen.core.engine;
+import awen.core.event;
 import awen.core.object;
 
 namespace awen::core
@@ -112,6 +113,23 @@ namespace awen::core
             return onPostRender_;
         }
 
+        /// @brief Signal emitted when an input event arrives from the platform layer.
+        ///
+        /// Handlers may run synchronously from inside platform message pumps
+        /// (e.g. during the Win32 modal resize loop), so they must be cheap
+        /// and avoid recursive event polling.
+        [[nodiscard]] auto onInputEvent() -> Signal<void(const Event&)>&
+        {
+            return onInputEvent_;
+        }
+
+        /// @brief Dispatches an input event by emitting `onInputEvent`.
+        /// @param event The translated input event to broadcast to subscribers.
+        auto dispatchEvent(const Event& event) -> void
+        {
+            onInputEvent_.emit(event);
+        }
+
         [[nodiscard]] auto world() -> flecs::world&
         {
             return world_;
@@ -132,6 +150,7 @@ namespace awen::core
         Signal<void()> onPreRender_;
         Signal<void()> onRender_;
         Signal<void()> onPostRender_;
+        Signal<void(const Event&)> onInputEvent_;
 
         static inline Engine* singleton = nullptr; // NOLINT(readability-identifier-naming)
     };

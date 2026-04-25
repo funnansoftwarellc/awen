@@ -9,10 +9,10 @@ module;
 #include <tuple>
 #include <unordered_set>
 #include <utility>
-#include <vector>
 
 export module awen.sdl.window;
 
+import awen.core.engine;
 import awen.sdl.event;
 
 namespace
@@ -21,10 +21,30 @@ namespace
     {
         return std::string{message} + ": " + SDL_GetError();
     }
+
+    auto ToMouseButton(std::uint8_t button) -> awen::sdl::MouseButton
+    {
+        switch (button)
+        {
+            case SDL_BUTTON_LEFT:
+                return awen::sdl::MouseButton::left;
+            case SDL_BUTTON_RIGHT:
+                return awen::sdl::MouseButton::right;
+            case SDL_BUTTON_MIDDLE:
+                return awen::sdl::MouseButton::middle;
+            case SDL_BUTTON_X1:
+                return awen::sdl::MouseButton::x1;
+            case SDL_BUTTON_X2:
+                return awen::sdl::MouseButton::x2;
+            default:
+                return awen::sdl::MouseButton::left;
+        }
+    }
 }
 
 export namespace awen::sdl
 {
+    /// @brief Creation parameters for an SDL-backed Window.
     struct WindowCreateInfo
     {
         const char* title{};
@@ -34,14 +54,20 @@ export namespace awen::sdl
         int positionY{};
         bool resizable{};
         bool highDpi{};
+        /// @brief When true, configure SDL_SetRenderLogicalPresentation with
+        /// letterboxing so logical coordinates remain stable across resizes.
+        /// When false, logical coordinates equal pixel coordinates and
+        /// `getScreenWidth/Height` reflect the actual window size.
+        bool useLogicalPresentation{true};
     };
 
     struct PollResult
     {
         bool open{true};
-        std::vector<Event> events;
     };
 
+    /// @brief RAII wrapper around an SDL window + renderer with a global event watch
+    ///        that forwards translated input events to `Engine::dispatchEvent`.
     class Window
     {
     public:
@@ -97,21 +123,45 @@ export namespace awen::sdl
 
             std::ignore = SDL_SetRenderVSync(nativeRenderer, 1);
 
-            // Use the requested size as a fixed logical coordinate space.  SDL
-            // maps these coordinates to whatever the physical output actually
-            // is (CSS-controlled canvas on WASM, resizable window on desktop)
-            // with aspect-ratio-preserving letterboxing.
-            std::ignore = SDL_SetRenderLogicalPresentation(nativeRenderer, createInfo.width, createInfo.height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+            useLogicalPresentation_ = createInfo.useLogicalPresentation;
 
-            screenWidth_ = createInfo.width;
-            screenHeight_ = createInfo.height;
+            if (useLogicalPresentation_)
+            {
+                // Use the requested size as a fixed logical coordinate space.
+                std::ignore =
+                    SDL_SetRenderLogicalPresentation(nativeRenderer, createInfo.width, createInfo.height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+                screenWidth_ = createInfo.width;
+                screenHeight_ = createInfo.height;
+            }
+            else
+            {
+                // Track actual window pixel size; updated on resize events.
+                auto pixelW = 0;
+                auto pixelH = 0;
+                std::ignore = SDL_GetWindowSizeInPixels(nativeWindow, &pixelW, &pixelH);
+                screenWidth_ = pixelW;
+                screenHeight_ = pixelH;
+            }
+
             open_ = true;
+            ownedWindowId_ = SDL_GetWindowID(nativeWindow);
+
+            // Register a global event watch.  Watches fire synchronously from
+            // inside SDL's message pump, including during the Win32 modal
+            // resize/move loop, so layout/render can keep up while the main
+            // loop is blocked.
+            SDL_AddEventWatch(&Window::eventWatch, nullptr);
 
             return Window{nativeWindow, nativeRenderer};
         }
 
         ~Window()
         {
+            if (window_ != nullptr || renderer_ != nullptr)
+            {
+                SDL_RemoveEventWatch(&Window::eventWatch, nullptr);
+            }
+
             if (renderer_ != nullptr)
             {
                 SDL_DestroyRenderer(renderer_);
@@ -157,61 +207,27 @@ export namespace awen::sdl
             return open_;
         }
 
+        /// @brief Drives SDL's event pump.  Translation and dispatch happen
+        ///        inside the registered watch callback, so this only flushes
+        ///        the queue and reports the open state.
         auto pollEvents() -> std::expected<PollResult, std::string>
         {
+            // Reset per-frame edge-triggered keyboard sets.  The watch
+            // re-populates them as events flow through SDL_PumpEvents.
             pressedKeys_.clear();
             releasedKeys_.clear();
 
-            auto result = PollResult{.open = open_, .events = {}};
+            SDL_PumpEvents();
+
+            // Drain any queued events; the watch already dispatched them.
             auto event = SDL_Event{};
 
             while (SDL_PollEvent(&event))
             {
-                switch (event.type)
-                {
-                    case SDL_EVENT_QUIT:
-                    case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-                        open_ = false;
-                        result.open = false;
-                        break;
-
-                    case SDL_EVENT_WINDOW_RESIZED:
-                    case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-                        // The logical coordinate space is fixed at the design
-                        // resolution.  SDL automatically re-maps it to the new
-                        // physical output via its internal event watcher.
-                        result.events.emplace_back(EventWindowResize{.width = screenWidth_, .height = screenHeight_});
-                        break;
-
-                    case SDL_EVENT_KEY_DOWN:
-                    {
-                        const auto key = static_cast<EventKeyboard::Key>(event.key.key);
-
-                        if (!event.key.repeat)
-                        {
-                            pressedKeys_.insert(event.key.key);
-                            result.events.emplace_back(EventKeyboard{.key = key, .type = EventKeyboard::Type::pressed});
-                        }
-
-                        downKeys_.insert(event.key.key);
-                        break;
-                    }
-
-                    case SDL_EVENT_KEY_UP:
-                    {
-                        const auto key = static_cast<EventKeyboard::Key>(event.key.key);
-                        releasedKeys_.insert(event.key.key);
-                        downKeys_.erase(event.key.key);
-                        result.events.emplace_back(EventKeyboard{.key = key, .type = EventKeyboard::Type::released});
-                        break;
-                    }
-
-                    default:
-                        break;
-                }
+                // No-op: dispatch happened in the watch callback.
             }
 
-            return result;
+            return PollResult{.open = open_};
         }
 
         [[nodiscard]] static auto isKeyDown(EventKeyboard::Key key) -> bool
@@ -258,6 +274,140 @@ export namespace awen::sdl
                 screenWidth_ = 0;
                 screenHeight_ = 0;
                 open_ = false;
+                ownedWindowId_ = 0;
+                useLogicalPresentation_ = true;
+            }
+        }
+
+        // SDL event watch: fires synchronously from inside SDL_PumpEvents,
+        // including during the Win32 modal resize loop.
+        static auto SDLCALL eventWatch(void* /*userdata*/, SDL_Event* event) -> bool
+        {
+            if (event == nullptr)
+            {
+                return true;
+            }
+
+            // Filter out events for windows we don't own.
+            if (event->type >= SDL_EVENT_WINDOW_FIRST && event->type <= SDL_EVENT_WINDOW_LAST)
+            {
+                if (ownedWindowId_ != 0 && event->window.windowID != ownedWindowId_)
+                {
+                    return true;
+                }
+            }
+
+            translateAndDispatch(*event);
+            return true;
+        }
+
+        static auto translateAndDispatch(const SDL_Event& event) -> void
+        {
+            switch (event.type)
+            {
+                case SDL_EVENT_QUIT:
+                case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                    open_ = false;
+                    break;
+
+                case SDL_EVENT_WINDOW_RESIZED:
+                case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+                {
+                    if (!useLogicalPresentation_)
+                    {
+                        // event.window.data1/data2 are window coords; query pixels for accuracy.
+                        if (auto* win = SDL_GetWindowFromID(event.window.windowID); win != nullptr)
+                        {
+                            auto pixelW = 0;
+                            auto pixelH = 0;
+                            std::ignore = SDL_GetWindowSizeInPixels(win, &pixelW, &pixelH);
+                            screenWidth_ = pixelW;
+                            screenHeight_ = pixelH;
+                        }
+                    }
+
+                    dispatch(EventWindowResize{.width = screenWidth_, .height = screenHeight_});
+                    break;
+                }
+
+                case SDL_EVENT_KEY_DOWN:
+                {
+                    const auto key = static_cast<EventKeyboard::Key>(event.key.key);
+
+                    if (!event.key.repeat)
+                    {
+                        pressedKeys_.insert(event.key.key);
+                        dispatch(EventKeyboard{.key = key, .type = EventKeyboard::Type::pressed});
+                    }
+
+                    downKeys_.insert(event.key.key);
+                    break;
+                }
+
+                case SDL_EVENT_KEY_UP:
+                {
+                    const auto key = static_cast<EventKeyboard::Key>(event.key.key);
+                    releasedKeys_.insert(event.key.key);
+                    downKeys_.erase(event.key.key);
+                    dispatch(EventKeyboard{.key = key, .type = EventKeyboard::Type::released});
+                    break;
+                }
+
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                {
+                    dispatch(EventMouseButton{
+                        .button = ToMouseButton(event.button.button),
+                        .type = EventMouseButton::Type::pressed,
+                        .x = event.button.x,
+                        .y = event.button.y,
+                    });
+                    break;
+                }
+
+                case SDL_EVENT_MOUSE_BUTTON_UP:
+                {
+                    dispatch(EventMouseButton{
+                        .button = ToMouseButton(event.button.button),
+                        .type = EventMouseButton::Type::released,
+                        .x = event.button.x,
+                        .y = event.button.y,
+                    });
+                    break;
+                }
+
+                case SDL_EVENT_MOUSE_MOTION:
+                {
+                    dispatch(EventMouseMotion{
+                        .x = event.motion.x,
+                        .y = event.motion.y,
+                        .dx = event.motion.xrel,
+                        .dy = event.motion.yrel,
+                    });
+                    break;
+                }
+
+                case SDL_EVENT_MOUSE_WHEEL:
+                {
+                    dispatch(EventMouseWheel{
+                        .dx = event.wheel.x,
+                        .dy = event.wheel.y,
+                        .x = event.wheel.mouse_x,
+                        .y = event.wheel.mouse_y,
+                    });
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+
+        template <typename T>
+        static auto dispatch(T&& payload) -> void
+        {
+            if (auto* engine = awen::core::Engine::instance(); engine != nullptr)
+            {
+                engine->dispatchEvent(Event{std::forward<T>(payload)});
             }
         }
 
@@ -268,6 +418,8 @@ export namespace awen::sdl
         static inline bool open_ = false;                              // NOLINT(readability-identifier-naming)
         static inline int screenWidth_ = 0;                            // NOLINT(readability-identifier-naming)
         static inline int screenHeight_ = 0;                           // NOLINT(readability-identifier-naming)
+        static inline SDL_WindowID ownedWindowId_ = 0;                 // NOLINT(readability-identifier-naming)
+        static inline bool useLogicalPresentation_ = true;             // NOLINT(readability-identifier-naming)
         static inline std::unordered_set<SDL_Keycode> downKeys_{};     // NOLINT(readability-identifier-naming)
         static inline std::unordered_set<SDL_Keycode> pressedKeys_{};  // NOLINT(readability-identifier-naming)
         static inline std::unordered_set<SDL_Keycode> releasedKeys_{}; // NOLINT(readability-identifier-naming)
