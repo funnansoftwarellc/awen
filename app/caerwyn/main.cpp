@@ -1,5 +1,7 @@
 #include <chrono>
+#include <cstdint>
 #include <cstdlib>
+#include <exception>
 #include <format>
 #include <memory>
 #include <print>
@@ -24,6 +26,27 @@ namespace
     constexpr auto MessageSpacing = 6.0F;
     constexpr auto MessageLineSpacing = 8.0F;
 
+    constexpr std::uint8_t FullAlpha = 255;
+    constexpr std::uint8_t GrayChannel = 160;
+    constexpr std::uint8_t WhiteChannel = 240;
+    constexpr std::uint8_t BlackChannel = 0;
+
+    constexpr auto AliceColor = awen::widget::Color{.r = 230, .g = 110, .b = 130, .a = FullAlpha};
+    constexpr auto BobColor = awen::widget::Color{.r = 110, .g = 200, .b = 230, .a = FullAlpha};
+    constexpr auto CharlieColor = awen::widget::Color{.r = 180, .g = 230, .b = 130, .a = FullAlpha};
+    constexpr auto GrayColor = awen::widget::Color{.r = GrayChannel, .g = GrayChannel, .b = GrayChannel, .a = FullAlpha};
+    constexpr auto WhiteColor = awen::widget::Color{.r = WhiteChannel, .g = WhiteChannel, .b = WhiteChannel, .a = FullAlpha};
+    constexpr auto BlackColor = awen::widget::Color{.r = BlackChannel, .g = BlackChannel, .b = BlackChannel, .a = FullAlpha};
+
+    constexpr auto MessageOffset1 = 8;
+    constexpr auto MessageOffset2 = 7;
+    constexpr auto MessageOffset3 = 6;
+    constexpr auto MessageOffset4 = 5;
+    constexpr auto MessageOffset5 = 4;
+    constexpr auto MessageOffset6 = 3;
+    constexpr auto MessageOffset7 = 2;
+    constexpr auto MessageOffset8 = 1;
+
     struct ChatMessage
     {
         std::chrono::system_clock::time_point timestamp;
@@ -42,39 +65,39 @@ namespace
     {
         const auto now = std::chrono::system_clock::now();
         return std::vector<ChatMessage>{
-            {.timestamp = now - std::chrono::minutes(8),
+            {.timestamp = now - std::chrono::minutes(MessageOffset1),
              .username = "Alice",
-             .color = awen::widget::Color{.r = 230, .g = 110, .b = 130, .a = 255},
+             .color = AliceColor,
              .text = "Welcome to the Awen port of Caerwyn! This is a long enough message to test that "
                      "word wrapping is working as intended on the rich-text label."},
-            {.timestamp = now - std::chrono::minutes(7),
+            {.timestamp = now - std::chrono::minutes(MessageOffset2),
              .username = "Bob",
-             .color = awen::widget::Color{.r = 110, .g = 200, .b = 230, .a = 255},
+             .color = BobColor,
              .text = "Looks like the scrollbar should appear once we add enough lines."},
-            {.timestamp = now - std::chrono::minutes(6),
+            {.timestamp = now - std::chrono::minutes(MessageOffset3),
              .username = "Charlie",
-             .color = awen::widget::Color{.r = 180, .g = 230, .b = 130, .a = 255},
+             .color = CharlieColor,
              .text = "Try resizing the window. The view should re-flow live during the modal resize loop."},
-            {.timestamp = now - std::chrono::minutes(5),
+            {.timestamp = now - std::chrono::minutes(MessageOffset4),
              .username = "Alice",
-             .color = awen::widget::Color{.r = 230, .g = 110, .b = 130, .a = 255},
+             .color = AliceColor,
              .text = "Each message uses a column layout with three runs: a gray timestamp, a bold-white username, "
                      "and the actual message body in white."},
-            {.timestamp = now - std::chrono::minutes(4),
+            {.timestamp = now - std::chrono::minutes(MessageOffset5),
              .username = "Bob",
-             .color = awen::widget::Color{.r = 110, .g = 200, .b = 230, .a = 255},
+             .color = BobColor,
              .text = "Mouse wheel scrolling should also work over the viewport area."},
-            {.timestamp = now - std::chrono::minutes(3),
+            {.timestamp = now - std::chrono::minutes(MessageOffset6),
              .username = "Charlie",
-             .color = awen::widget::Color{.r = 180, .g = 230, .b = 130, .a = 255},
+             .color = CharlieColor,
              .text = "And dragging the thumb of the scrollbar updates the offset too."},
-            {.timestamp = now - std::chrono::minutes(2),
+            {.timestamp = now - std::chrono::minutes(MessageOffset7),
              .username = "Alice",
-             .color = awen::widget::Color{.r = 230, .g = 110, .b = 130, .a = 255},
+             .color = AliceColor,
              .text = "Hopefully the layout converges quickly enough to feel responsive."},
-            {.timestamp = now - std::chrono::minutes(1),
+            {.timestamp = now - std::chrono::minutes(MessageOffset8),
              .username = "Bob",
-             .color = awen::widget::Color{.r = 110, .g = 200, .b = 230, .a = 255},
+             .color = BobColor,
              .text = "If you can read this last message at the bottom, scrolling works end-to-end."},
         };
     }
@@ -102,7 +125,7 @@ try
     window->setTitle("Caerwyn");
     window->setSize({WindowWidth, WindowHeight});
     window->setPosition({WindowPositionX, WindowPositionY});
-    window->setClearColor(awen::widget::Color{.r = 0, .g = 0, .b = 0, .a = 255});
+    window->setClearColor(BlackColor);
     window->setUseLogicalPresentation(false);
 
     auto scrollView = std::make_unique<ScrollView>();
@@ -113,18 +136,15 @@ try
     column->setSpacing(MessageSpacing);
     column->setPadding(Insets::all(MessagePadding));
 
-    const auto gray = awen::widget::Color{.r = 160, .g = 160, .b = 160, .a = 255};
-    const auto white = awen::widget::Color{.r = 240, .g = 240, .b = 240, .a = 255};
-
     for (const auto& msg : buildMessages())
     {
         auto label = std::make_unique<RichTextLabel>();
         label->setWrapMode(WrapMode::Word);
         label->setLineSpacing(MessageLineSpacing);
         label->setRuns(std::vector<TextRun>{
-            TextRun{.text = formatTimestamp(msg.timestamp) + " ", .font = fontRegular, .fontSize = MessageFontSize, .color = gray},
+            TextRun{.text = formatTimestamp(msg.timestamp) + " ", .font = fontRegular, .fontSize = MessageFontSize, .color = GrayColor},
             TextRun{.text = msg.username + ": ", .font = fontBold, .fontSize = MessageFontSize, .color = msg.color},
-            TextRun{.text = msg.text, .font = fontRegular, .fontSize = MessageFontSize, .color = white},
+            TextRun{.text = msg.text, .font = fontRegular, .fontSize = MessageFontSize, .color = WhiteColor},
         });
         column->addWidget(std::move(label));
     }
@@ -138,7 +158,15 @@ try
 
     if (const auto& error = windowNode->getLastError(); error.has_value())
     {
-        std::println(stderr, "caerwyn: {}", *error);
+        try
+        {
+            std::println(stderr, "caerwyn: {}", *error);
+        }
+        // NOLINTNEXTLINE(bugprone-empty-catch)
+        catch (...)
+        {
+        }
+
         return EXIT_FAILURE;
     }
 
@@ -146,11 +174,27 @@ try
 }
 catch (const std::exception& exception)
 {
-    std::println(stderr, "caerwyn: {}", exception.what());
+    try
+    {
+        std::println(stderr, "caerwyn: {}", exception.what());
+    }
+    // NOLINTNEXTLINE(bugprone-empty-catch)
+    catch (...)
+    {
+    }
+
     return EXIT_FAILURE;
 }
 catch (...)
 {
-    std::println(stderr, "caerwyn: Unhandled non-standard exception.");
+    try
+    {
+        std::println(stderr, "caerwyn: Unhandled non-standard exception.");
+    }
+    // NOLINTNEXTLINE(bugprone-empty-catch)
+    catch (...)
+    {
+    }
+
     return EXIT_FAILURE;
 }

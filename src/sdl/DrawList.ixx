@@ -38,7 +38,7 @@ export namespace awen::sdl
         int y{};
         int fontSize{};
         Color color{};
-        std::optional<FontHandle> font{};
+        std::optional<FontHandle> font;
     };
 
     struct DrawPolygon

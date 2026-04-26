@@ -28,6 +28,9 @@ export namespace awen::widget
     class Scrollbar : public Widget
     {
     public:
+        static constexpr auto DefaultBarWidth = 12.0F;
+        static constexpr auto MinThumbHeight = 20.0F;
+
         Scrollbar()
         {
             auto track = std::make_unique<NodeRectangle>();
@@ -77,12 +80,13 @@ export namespace awen::widget
 
         [[nodiscard]] auto synchronize(flecs::entity entity) const -> flecs::entity override
         {
-            track_->setSize(glm::vec2{bounds_.width, bounds_.height});
+            const auto bounds = getBounds();
+            track_->setSize(glm::vec2{bounds.width, bounds.height});
 
             const auto thumbHeightPx = computeThumbHeight();
             const auto thumbYPx = computeThumbY(thumbHeightPx);
 
-            thumb_->setSize(glm::vec2{bounds_.width, thumbHeightPx});
+            thumb_->setSize(glm::vec2{bounds.width, thumbHeightPx});
             thumbTransform_->setPosition(glm::vec2{0.0F, thumbYPx});
 
             return Widget::synchronize(entity);
@@ -93,11 +97,11 @@ export namespace awen::widget
         {
             if (contentHeight_ <= 0.0F || viewportHeight_ >= contentHeight_)
             {
-                return bounds_.height;
+                return getBounds().height;
             }
 
             const auto ratio = viewportHeight_ / contentHeight_;
-            return std::max(20.0F, bounds_.height * ratio);
+            return std::max(MinThumbHeight, getBounds().height * ratio);
         }
 
         [[nodiscard]] auto computeThumbY(float thumbHeightPx) const -> float
@@ -109,7 +113,7 @@ export namespace awen::widget
 
             const auto maxOffset = contentHeight_ - viewportHeight_;
             const auto offset = scrollOffsetPtr_ != nullptr ? std::clamp(*scrollOffsetPtr_, 0.0F, maxOffset) : 0.0F;
-            const auto travel = bounds_.height - thumbHeightPx;
+            const auto travel = getBounds().height - thumbHeightPx;
             return (offset / maxOffset) * travel;
         }
 
@@ -126,10 +130,11 @@ export namespace awen::widget
                 {
                     const auto thumbHeightPx = computeThumbHeight();
                     const auto thumbYPx = computeThumbY(thumbHeightPx);
+                    const auto bounds = getBounds();
                     const auto thumbRect = Rect{
-                        .x = bounds_.x,
-                        .y = bounds_.y + thumbYPx,
-                        .width = bounds_.width,
+                        .x = bounds.x,
+                        .y = bounds.y + thumbYPx,
+                        .width = bounds.width,
                         .height = thumbHeightPx,
                     };
 
@@ -153,7 +158,7 @@ export namespace awen::widget
                 }
 
                 const auto thumbHeightPx = computeThumbHeight();
-                const auto travel = std::max(1.0F, bounds_.height - thumbHeightPx);
+                const auto travel = std::max(1.0F, getBounds().height - thumbHeightPx);
                 const auto maxOffset = contentHeight_ - viewportHeight_;
                 const auto deltaPx = static_cast<float>(motion->y) - dragStartMouseY_;
                 const auto deltaOffset = (deltaPx / travel) * maxOffset;
@@ -168,7 +173,7 @@ export namespace awen::widget
         float* scrollOffsetPtr_{nullptr};
         float contentHeight_{};
         float viewportHeight_{};
-        float barWidth_{12.0F};
+        float barWidth_{DefaultBarWidth};
         float dragStartMouseY_{};
         float dragStartOffset_{};
         bool dragging_{false};

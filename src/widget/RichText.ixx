@@ -34,9 +34,11 @@ export namespace awen::widget
     /// @brief A styled run of text within a `RichTextLabel`.
     struct TextRun
     {
+        static constexpr auto DefaultFontSize = 16;
+
         std::string text;
         awen::sdl::FontHandle font{};
-        int fontSize{16};
+        int fontSize{DefaultFontSize};
         Color color{colors::White};
     };
 
@@ -47,6 +49,8 @@ export namespace awen::widget
     class RichTextLabel : public Widget
     {
     public:
+        static constexpr auto DefaultLineSpacing = 4.0F;
+
         auto setRuns(std::vector<TextRun> runs) -> void
         {
             runs_ = std::move(runs);
@@ -359,7 +363,7 @@ export namespace awen::widget
         std::vector<Fragment> fragments_;
         std::vector<awen::core::Object*> ownedChildren_;
         WrapMode wrapMode_{WrapMode::None};
-        float lineSpacing_{4.0F};
+        float lineSpacing_{DefaultLineSpacing};
         float measuredWidth_{};
         float measuredHeight_{};
         float lastLayoutWidth_{-1.0F};

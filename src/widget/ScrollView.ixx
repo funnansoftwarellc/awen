@@ -1,6 +1,7 @@
 module;
 
 #include <algorithm>
+#include <awen/flecs/Flecs.hpp>
 #include <glm/vec2.hpp>
 #include <memory>
 #include <variant>
@@ -24,6 +25,11 @@ export namespace awen::widget
     class ScrollView : public Widget
     {
     public:
+        static constexpr auto DefaultScrollbarWidth = 12.0F;
+        static constexpr auto DefaultWheelStep = 40.0F;
+        static constexpr auto DefaultFillWindowOnResize = false;
+        static constexpr auto UnboundedMeasureHeight = 1.0e6F;
+
         ScrollView()
         {
             auto viewport = std::make_unique<Viewport>();
@@ -90,9 +96,10 @@ export namespace awen::widget
         {
             Widget::arrange(bounds);
 
-            const auto contentHeight = (viewport_ != nullptr && viewport_->getContent() != nullptr)
-                                           ? viewport_->getContent()->measure(Size{.width = bounds.width - scrollbarWidth_, .height = 1.0e6F}).height
-                                           : 0.0F;
+            const auto contentHeight =
+                (viewport_ != nullptr && viewport_->getContent() != nullptr)
+                    ? viewport_->getContent()->measure(Size{.width = bounds.width - scrollbarWidth_, .height = UnboundedMeasureHeight}).height
+                    : 0.0F;
 
             const auto viewportHeight = bounds.height;
             const auto maxOffset = std::max(0.0F, contentHeight - viewportHeight);
@@ -155,11 +162,12 @@ export namespace awen::widget
                 return;
             }
 
-            const auto contentHeight = (viewport_->getContent() != nullptr)
-                                           ? viewport_->getContent()->measure(Size{.width = viewport_->getBounds().width, .height = 1.0e6F}).height
-                                           : 0.0F;
+            const auto contentHeight =
+                (viewport_->getContent() != nullptr)
+                    ? viewport_->getContent()->measure(Size{.width = viewport_->getBounds().width, .height = UnboundedMeasureHeight}).height
+                    : 0.0F;
             const auto maxOffset = std::max(0.0F, contentHeight - viewport_->getBounds().height);
-            scrollOffsetY_ = std::clamp(scrollOffsetY_ - wheel->dy * wheelStep_, 0.0F, maxOffset);
+            scrollOffsetY_ = std::clamp(scrollOffsetY_ - (wheel->dy * wheelStep_), 0.0F, maxOffset);
             viewport_->setScrollOffsetY(scrollOffsetY_);
 
             // Re-arrange viewport content so its world position updates immediately.
@@ -178,8 +186,8 @@ export namespace awen::widget
         Scrollbar* scrollbar_{nullptr};
         awen::core::ScopedConnection inputConnection_;
         float scrollOffsetY_{};
-        float scrollbarWidth_{12.0F};
-        float wheelStep_{40.0F};
-        bool fillWindowOnResize_{false};
+        float scrollbarWidth_{DefaultScrollbarWidth};
+        float wheelStep_{DefaultWheelStep};
+        bool fillWindowOnResize_{DefaultFillWindowOnResize};
     };
 }

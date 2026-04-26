@@ -69,7 +69,7 @@ export namespace awen::widget::components
         std::string value;
         int fontSize{};
         Color color{};
-        std::optional<awen::sdl::FontHandle> font{};
+        std::optional<awen::sdl::FontHandle> font;
 
         Text() = default;
 

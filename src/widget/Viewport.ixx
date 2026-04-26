@@ -86,7 +86,7 @@ export namespace awen::widget
                 return Size{};
             }
 
-            return contentWidget_->measure(Size{.width = bounds_.width, .height = 1.0e6F});
+            return contentWidget_->measure(Size{.width = getBounds().width, .height = 1.0e6F});
         }
 
         [[nodiscard]] auto measure(Size availableSize) -> Size override

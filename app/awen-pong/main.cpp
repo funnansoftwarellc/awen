@@ -43,6 +43,7 @@ namespace
     constexpr auto HintFontSize = 16;
     constexpr auto Deg2Rad = std::numbers::pi_v<float> / 180.0F;
     constexpr auto MaxDashes = 220;
+    constexpr auto ClearAlpha = 120;
 
     struct Paddle
     {
@@ -210,7 +211,7 @@ try
     window->setTitle("Awen SDL Pong");
     window->setSize({InitWidth, InitHeight});
     window->setPosition({WindowPositionX, WindowPositionY});
-    window->setClearColor(awen::sdl::Color{.r = 0, .g = 0, .b = 0, .a = 120});
+    window->setClearColor(awen::sdl::Color{.r = 0, .g = 0, .b = 0, .a = ClearAlpha});
 
     const auto sw0 = InitWidth;
     const auto sh0 = InitHeight;

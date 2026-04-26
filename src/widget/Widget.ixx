@@ -173,7 +173,7 @@ export namespace awen::widget
             return entity;
         }
 
-    protected:
+    private:
         Rect bounds_{};
         Insets padding_{};
     };

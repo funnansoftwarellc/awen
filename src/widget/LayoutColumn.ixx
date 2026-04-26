@@ -28,7 +28,7 @@ export namespace awen::widget
 
         [[nodiscard]] auto measure(Size availableSize) -> Size override
         {
-            const auto contentWidth = std::max(0.0F, availableSize.width - padding_.horizontal());
+            const auto contentWidth = std::max(0.0F, availableSize.width - getPadding().horizontal());
             auto totalHeight = 0.0F;
             auto count = 0;
 
@@ -53,7 +53,7 @@ export namespace awen::widget
 
             return Size{
                 .width = availableSize.width,
-                .height = totalHeight + padding_.vertical(),
+                .height = totalHeight + getPadding().vertical(),
             };
         }
 
