@@ -57,8 +57,9 @@ namespace
 
     auto formatTimestamp(std::chrono::system_clock::time_point tp) -> std::string
     {
-        const auto local = std::chrono::zoned_time{std::chrono::current_zone(), tp};
-        return std::format("{:%H:%M}", local);
+        const auto daypoint = std::chrono::floor<std::chrono::days>(tp);
+        const auto timeOfDay = std::chrono::hh_mm_ss{tp - daypoint};
+        return std::format("{:02}:{:02}", timeOfDay.hours().count(), timeOfDay.minutes().count());
     }
 
     auto buildMessages() -> std::vector<ChatMessage>
