@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application") version "8.7.3" apply false
+    id("com.android.application") version "9.0.0" apply false
 }
 
 // When invoked via the CMake `apk` target, BUILD_DIR is passed as a Gradle

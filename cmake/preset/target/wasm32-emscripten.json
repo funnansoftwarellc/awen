@@ -5,7 +5,7 @@
             "name": "target-wasm32-emscripten",
             "hidden": true,
             "cacheVariables": {
-                "VCPKG_TARGET_TRIPLET": "wasm32-emscripten-release"
+                "VCPKG_TARGET_TRIPLET": "wasm32-emscripten"
             }
         }
     ]

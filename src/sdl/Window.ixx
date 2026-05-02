@@ -63,6 +63,12 @@ export namespace awen::sdl
 
             ++refCount_;
 
+            // Constrain Android/iOS to landscape orientations.  Without this
+            // hint SDL passes an empty orientation string to the Java side,
+            // which then requests SCREEN_ORIENTATION_FULL_USER and lets the
+            // device's rotation-lock setting override the manifest.
+            SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+
             auto flags = SDL_WindowFlags{};
 
             if (createInfo.resizable)
@@ -161,9 +167,20 @@ export namespace awen::sdl
         {
             pressedKeys_.clear();
             releasedKeys_.clear();
+            pointerPressed_ = false;
+            pointerReleased_ = false;
 
             auto result = PollResult{.open = open_, .events = {}};
             auto event = SDL_Event{};
+
+            const auto updatePointerLogical = [this](float windowX, float windowY)
+            {
+                auto logicalX = windowX;
+                auto logicalY = windowY;
+                std::ignore = SDL_RenderCoordinatesFromWindow(renderer_, windowX, windowY, &logicalX, &logicalY);
+                pointerX_ = logicalX;
+                pointerY_ = logicalY;
+            };
 
             while (SDL_PollEvent(&event))
             {
@@ -206,6 +223,28 @@ export namespace awen::sdl
                         break;
                     }
 
+                    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                        if (event.button.button == SDL_BUTTON_LEFT)
+                        {
+                            pointerDown_ = true;
+                            pointerPressed_ = true;
+                            updatePointerLogical(event.button.x, event.button.y);
+                        }
+                        break;
+
+                    case SDL_EVENT_MOUSE_BUTTON_UP:
+                        if (event.button.button == SDL_BUTTON_LEFT)
+                        {
+                            pointerDown_ = false;
+                            pointerReleased_ = true;
+                            updatePointerLogical(event.button.x, event.button.y);
+                        }
+                        break;
+
+                    case SDL_EVENT_MOUSE_MOTION:
+                        updatePointerLogical(event.motion.x, event.motion.y);
+                        break;
+
                     default:
                         break;
                 }
@@ -239,6 +278,31 @@ export namespace awen::sdl
             return screenHeight_;
         }
 
+        [[nodiscard]] static auto isPointerDown() -> bool
+        {
+            return pointerDown_;
+        }
+
+        [[nodiscard]] static auto isPointerPressed() -> bool
+        {
+            return pointerPressed_;
+        }
+
+        [[nodiscard]] static auto isPointerReleased() -> bool
+        {
+            return pointerReleased_;
+        }
+
+        [[nodiscard]] static auto getPointerX() -> float
+        {
+            return pointerX_;
+        }
+
+        [[nodiscard]] static auto getPointerY() -> float
+        {
+            return pointerY_;
+        }
+
     private:
         Window(SDL_Window* nativeWindow, SDL_Renderer* nativeRenderer) : window_{nativeWindow}, renderer_{nativeRenderer}
         {
@@ -253,6 +317,11 @@ export namespace awen::sdl
                 downKeys_.clear();
                 pressedKeys_.clear();
                 releasedKeys_.clear();
+                pointerDown_ = false;
+                pointerPressed_ = false;
+                pointerReleased_ = false;
+                pointerX_ = 0.0F;
+                pointerY_ = 0.0F;
                 TTF_Quit();
                 SDL_Quit();
                 screenWidth_ = 0;
@@ -271,5 +340,10 @@ export namespace awen::sdl
         static inline std::unordered_set<SDL_Keycode> downKeys_{};     // NOLINT(readability-identifier-naming)
         static inline std::unordered_set<SDL_Keycode> pressedKeys_{};  // NOLINT(readability-identifier-naming)
         static inline std::unordered_set<SDL_Keycode> releasedKeys_{}; // NOLINT(readability-identifier-naming)
+        static inline bool pointerDown_ = false;                       // NOLINT(readability-identifier-naming)
+        static inline bool pointerPressed_ = false;                    // NOLINT(readability-identifier-naming)
+        static inline bool pointerReleased_ = false;                   // NOLINT(readability-identifier-naming)
+        static inline float pointerX_ = 0.0F;                          // NOLINT(readability-identifier-naming)
+        static inline float pointerY_ = 0.0F;                          // NOLINT(readability-identifier-naming)
     };
 }

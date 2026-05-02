@@ -223,6 +223,36 @@ export namespace awen::widget
             return awen::sdl::Window::getScreenHeight();
         }
 
+        /// @brief Returns whether a pointer (mouse or touch) is currently held down.
+        [[nodiscard]] static auto isPointerDown() -> bool
+        {
+            return awen::sdl::Window::isPointerDown();
+        }
+
+        /// @brief Returns whether a pointer was pressed during the current event pump.
+        [[nodiscard]] static auto isPointerPressed() -> bool
+        {
+            return awen::sdl::Window::isPointerPressed();
+        }
+
+        /// @brief Returns whether a pointer was released during the current event pump.
+        [[nodiscard]] static auto isPointerReleased() -> bool
+        {
+            return awen::sdl::Window::isPointerReleased();
+        }
+
+        /// @brief Gets the latest pointer X position in logical coordinates.
+        [[nodiscard]] static auto getPointerX() -> float
+        {
+            return awen::sdl::Window::getPointerX();
+        }
+
+        /// @brief Gets the latest pointer Y position in logical coordinates.
+        [[nodiscard]] static auto getPointerY() -> float
+        {
+            return awen::sdl::Window::getPointerY();
+        }
+
         /// @brief Measures the width of text using the default SDL_ttf font.
         /// @param text The text to measure.
         /// @param fontSize The font size in points.

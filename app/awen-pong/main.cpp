@@ -1,3 +1,5 @@
+#include <SDL3/SDL_main.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -193,7 +195,7 @@ namespace
     }
 }
 
-auto main() -> int // NOLINT(bugprone-exception-escape)
+auto main(int /*argc*/, char* /*argv*/[]) -> int // NOLINT(bugprone-exception-escape)
 try
 {
     using awen::widget::EventKeyboard;
@@ -321,6 +323,13 @@ try
             if (Window::isKeyDown(EventKeyboard::Key::s))
             {
                 state.leftPad.y += PaddleSpeed * deltaTime;
+            }
+
+            // While a pointer (mouse or touch) is held, snap the left paddle's
+            // centre to the pointer Y so the player can drag the paddle.
+            if (Window::isPointerDown())
+            {
+                state.leftPad.y = Window::getPointerY() - (PaddleHeight * Half);
             }
 
             clampPaddle(state.leftPad, sh);

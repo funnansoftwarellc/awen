@@ -7,7 +7,7 @@
             "cacheVariables": {
                 "ANDROID_ABI": "arm64-v8a",
                 "ANDROID_PLATFORM": "android-35",
-                "VCPKG_TARGET_TRIPLET": "arm64-android-release"
+                "VCPKG_TARGET_TRIPLET": "arm64-android"
             }
         }
     ]

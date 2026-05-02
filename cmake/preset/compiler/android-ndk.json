@@ -4,12 +4,12 @@
         {
             "name": "compiler-android-ndk",
             "hidden": true,
-            "toolchainFile": "${sourceDir}/cmake/android/toolchain.cmake",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
                 "CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -pedantic -Wno-unused-command-line-argument",
                 "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic -Wno-unused-command-line-argument",
-                "BUILD_SHARED_LIBS": false
+                "BUILD_SHARED_LIBS": false,
+                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
             }
         }
     ]
