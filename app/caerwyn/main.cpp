@@ -1,46 +1,49 @@
-#include <print>
-
 #include <SDL3/SDL.h>
+#include <awen/flecs/Flecs.hpp>
+
+import awen.sdl.ecs;
+
+using awen::core::EnumMask;
+using awen::sdl::ecs::ColorRectangle;
+using awen::sdl::ecs::Drawable;
+using awen::sdl::ecs::Window;
 
 auto main() -> int
 try
 {
-    constexpr auto width = 1080;
-    constexpr auto height = 1920;
-
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
         return EXIT_FAILURE;
     }
 
-    auto flags = SDL_WindowFlags{};
-    flags |= SDL_WINDOW_RESIZABLE;
-    flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    auto world = flecs::world{};
+    world.import<awen::sdl::ecs::Module>();
 
-    auto* window = SDL_CreateWindow("Caerwyn", width, height, flags);
+    auto ew = world.entity();
 
-    auto* device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_DXIL, true, "Caerwyn");
+    ew.set<Window>({
+        .title = "Caerwyn",
+        .color = awen::sdl::ecs::colors::DarkGray,
+        .flags = EnumMask{Window::Flags::Resizable, Window::Flags::HighPixelDensity},
+        .x = 80,
+        .y = 80,
+        .width = 720,
+        .height = 1280,
+    });
 
-    auto* renderer = SDL_CreateGPURenderer(device, window);
+    auto er = world.entity();
+    er.set<Drawable>(ColorRectangle{
+        .color = awen::sdl::ecs::colors::Red,
+        .x = 100,
+        .y = 100,
+        .width = 200,
+        .height = 150,
+    });
 
-    auto running = true;
-    while (running)
+    while (ew.get<Window>().running)
     {
-        SDL_Event event;
-
-        while (SDL_PollEvent(&event))
-        {
-            if (event.type == SDL_EVENT_QUIT)
-            {
-                running = false;
-            }
-        }
+        world.progress();
     }
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyGPUDevice(device);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
 
     return EXIT_SUCCESS;
 }

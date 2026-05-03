@@ -25,7 +25,8 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        awen-widget
+        awen-flecs
+        awen-sdl-ecs
 )
 
 if(EMSCRIPTEN)
