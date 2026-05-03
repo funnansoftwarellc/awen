@@ -119,9 +119,7 @@ export namespace awen::core
         /// libc++) the source's target is preserved.  We must explicitly clear
         /// the source so a subsequent destructor or @ref disconnect call on the
         /// moved-from Connection is a no-op rather than a stray disconnect.
-        Connection(Connection&& other) noexcept :
-            alive_(std::move(other.alive_)),
-            disconnectFn_(std::move(other.disconnectFn_))
+        Connection(Connection&& other) noexcept : alive_(std::move(other.alive_)), disconnectFn_(std::move(other.disconnectFn_))
         {
             other.alive_.reset();
             other.disconnectFn_ = nullptr;
