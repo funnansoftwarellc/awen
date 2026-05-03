@@ -70,7 +70,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2-dev \
     libxft-dev libxext-dev \
     libegl1-mesa-dev \
-    libibus-1.0-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # SDL3
