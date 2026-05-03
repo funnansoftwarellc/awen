@@ -6,6 +6,18 @@ else()
     add_executable(${PROJECT_NAME})
 endif()
 
+if(ANDROID)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E make_directory
+            "${CMAKE_SOURCE_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "$<TARGET_FILE:${PROJECT_NAME}>"
+            "${CMAKE_SOURCE_DIR}/android/app/src/main/jniLibs/${ANDROID_ABI}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+        COMMENT "Staging $<TARGET_FILE_NAME:${PROJECT_NAME}> → android/app/src/main/jniLibs/${ANDROID_ABI}/"
+        VERBATIM
+    )
+endif()
+
 target_sources(${PROJECT_NAME}
     PRIVATE
         main.cpp

@@ -112,6 +112,37 @@ export namespace awen::core
         /// @brief Constructs a null, disconnected connection.
         Connection() = default;
 
+        /// @brief Move-constructs from @p other, leaving it disconnected.
+        ///
+        /// std::function's defaulted move semantics leave the moved-from object
+        /// in a valid but unspecified state — on some implementations (notably
+        /// libc++) the source's target is preserved.  We must explicitly clear
+        /// the source so a subsequent destructor or @ref disconnect call on the
+        /// moved-from Connection is a no-op rather than a stray disconnect.
+        Connection(Connection&& other) noexcept : alive_(std::move(other.alive_)), disconnectFn_(std::move(other.disconnectFn_))
+        {
+            other.alive_.reset();
+            other.disconnectFn_ = nullptr;
+        }
+
+        /// @brief Move-assigns from @p other, leaving it disconnected.
+        auto operator=(Connection&& other) noexcept -> Connection&
+        {
+            if (this != &other)
+            {
+                alive_ = std::move(other.alive_);
+                disconnectFn_ = std::move(other.disconnectFn_);
+                other.alive_.reset();
+                other.disconnectFn_ = nullptr;
+            }
+
+            return *this;
+        }
+
+        Connection(const Connection&) = default;
+        auto operator=(const Connection&) -> Connection& = default;
+        ~Connection() = default;
+
         /// @brief Disconnects the slot from its signal. Idempotent.
         auto disconnect() noexcept -> void
         {

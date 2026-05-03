@@ -1,6 +1,7 @@
 {
     "editor.formatOnSave": true,
     "cmake.configureOnOpen": false,
+    "cmake.configureOnEdit": false,
     "files.associations": {
         "*.ixx": "cpp",
         "*.cppm": "cpp"
