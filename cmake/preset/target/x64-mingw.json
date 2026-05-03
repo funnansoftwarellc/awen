@@ -1,0 +1,12 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "target-x64-mingw",
+            "hidden": true,
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
+            }
+        }
+    ]
+}

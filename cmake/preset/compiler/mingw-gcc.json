@@ -1,0 +1,18 @@
+{
+    "version": 7,
+    "configurePresets": [
+        {
+            "name": "compiler-mingw-gcc",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -pedantic -DWINPTHREAD_COND_DECL=inline -DWINPTHREAD_CLOCK_DECL=inline -DWINPTHREAD_MUTEX_DECL=inline -DWINPTHREAD_NANOSLEEP_DECL=inline -DWINPTHREAD_RWLOCK_DECL=inline",
+                "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic -DWINPTHREAD_COND_DECL=inline -DWINPTHREAD_CLOCK_DECL=inline -DWINPTHREAD_MUTEX_DECL=inline -DWINPTHREAD_NANOSLEEP_DECL=inline -DWINPTHREAD_RWLOCK_DECL=inline",
+                "CMAKE_CXX_STANDARD_LIBRARIES": "-lstdc++exp",
+                "BUILD_SHARED_LIBS": false
+            }
+        }
+    ]
+}

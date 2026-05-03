@@ -3,12 +3,14 @@
     "include": [
         "../binarydir.json",
         "../debug.json",
+        "../compiler/mingw-gcc.json",
         "../compiler/msvc.json",
         "../ninja.json",
         "../release.json",
         "../vcpkg.json",
         "../host/x64-windows.json",
         "../target/x64-windows.json",
+        "../target/x64-mingw.json",
         "../compiler/visualstudio.json"
     ],
     "configurePresets": [
@@ -44,6 +46,30 @@
                 "host-x64-windows",
                 "target-x64-windows"
             ]
+        },
+        {
+            "name": "x64-windows-mingw-gcc-debug",
+            "inherits": [
+                "binarydir",
+                "debug",
+                "compiler-mingw-gcc",
+                "ninja",
+                "vcpkg",
+                "host-x64-windows",
+                "target-x64-mingw"
+            ]
+        },
+        {
+            "name": "x64-windows-mingw-gcc-release",
+            "inherits": [
+                "binarydir",
+                "release",
+                "compiler-mingw-gcc",
+                "ninja",
+                "vcpkg",
+                "host-x64-windows",
+                "target-x64-mingw"
+            ]
         }
     ],
     "buildPresets": [
@@ -58,6 +84,14 @@
         {
             "name": "x64-windows-msvc-release",
             "configurePreset": "x64-windows-msvc-release"
+        },
+        {
+            "name": "x64-windows-mingw-gcc-debug",
+            "configurePreset": "x64-windows-mingw-gcc-debug"
+        },
+        {
+            "name": "x64-windows-mingw-gcc-release",
+            "configurePreset": "x64-windows-mingw-gcc-release"
         }
     ],
     "testPresets": [
@@ -71,6 +105,20 @@
         {
             "name": "x64-windows-msvc-release",
             "configurePreset": "x64-windows-msvc-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "x64-windows-mingw-gcc-debug",
+            "configurePreset": "x64-windows-mingw-gcc-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "x64-windows-mingw-gcc-release",
+            "configurePreset": "x64-windows-mingw-gcc-release",
             "output": {
                 "outputOnFailure": true
             }
