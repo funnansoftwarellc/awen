@@ -1,8 +1,11 @@
 module;
 
 #include <awen/flecs/Flecs.hpp>
+
 #include <glm/vec2.hpp>
+
 #include <string>
+#include <variant>
 #include <vector>
 
 export module awen.sdl.drawables;
@@ -11,45 +14,24 @@ export import awen.sdl.color;
 
 export namespace awen::sdl
 {
-    /// @brief Tag added to any entity that owns at least one drawable shape component.
-    /// @note Currently advisory; queries use the shape components directly.
-    struct Renderable
-    {
-    };
-
-    /// @brief Filled axis-aligned rectangle in local space, anchored at the entity's transform.
-    struct RectangleFill
+    /// @brief Filled axis-aligned rectangle.
+    struct Rectangle
     {
         glm::vec2 size{};
         glm::vec2 anchor{0.5F, 0.5F};
         Color color{colors::White};
     };
 
-    /// @brief Outlined axis-aligned rectangle in local space.
-    struct RectangleOutline
-    {
-        glm::vec2 size{};
-        glm::vec2 anchor{0.5F, 0.5F};
-        Color color{colors::White};
-        float thickness{1.0F};
-    };
-
-    /// @brief Filled circle centered at the entity's transform.
-    struct CircleFill
+    /// @brief Filled circle centred at the entity's transform.
+    struct Circle
     {
         float radius{};
         Color color{colors::White};
     };
 
-    /// @brief Outlined circle centered at the entity's transform.
-    struct CircleOutline
-    {
-        float radius{};
-        Color color{colors::White};
-        float thickness{1.0F};
-    };
-
-    /// @brief Line segment in local space relative to the entity's transform.
+    /// @brief Line segment in local space.
+    /// @note `thickness` is currently ignored by the SDL renderer (it draws
+    ///       a 1-pixel line). Reserved for a future geometry-based path.
     struct Line
     {
         glm::vec2 from{};
@@ -58,16 +40,18 @@ export namespace awen::sdl
         float thickness{1.0F};
     };
 
-    /// @brief Polygon in local space relative to the entity's transform.
-    /// @note Filled polygons are rasterized as a fan from `points[0]`.
+    /// @brief Polygon in local space.
+    /// @note Filled polygons are rasterised as a fan from `points[0]`.
     struct Polygon
     {
         std::vector<glm::vec2> points;
         Color color{colors::White};
-        bool filled{true};
     };
 
     /// @brief Text label rendered with a Font resource entity.
+    /// @note The renderer rasterises the text through `TTF_RenderText_Blended`
+    ///       and creates a fresh `SDL_Texture` every frame. Use sparingly; a
+    ///       cached-texture path is a planned follow-up.
     struct TextLabel
     {
         std::string text;
@@ -83,5 +67,21 @@ export namespace awen::sdl
         glm::vec2 size{};
         glm::vec2 anchor{0.5F, 0.5F};
         Color tint{colors::White};
+    };
+
+    /// @brief Drawable component. Pick exactly one shape kind per entity.
+    struct Drawable
+    {
+        std::variant<Rectangle, Circle, Line, Polygon, TextLabel, Sprite> shape;
+    };
+
+    /// @brief Optional outline modifier. Drawn after the entity's Drawable.
+    /// @note Only meaningful when paired with a Rectangle, Circle, or Polygon.
+    /// @note `thickness` is currently ignored by the SDL renderer (1-pixel
+    ///       outline). Reserved for a future geometry-based path.
+    struct Outline
+    {
+        Color color{colors::White};
+        float thickness{1.0F};
     };
 }

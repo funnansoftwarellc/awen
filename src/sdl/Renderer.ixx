@@ -3,11 +3,15 @@ module;
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <awen/flecs/Flecs.hpp>
+
+#include <glm/vec2.hpp>
+
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
-#include <glm/vec2.hpp>
+#include <numbers>
+#include <span>
 #include <string>
 #include <variant>
 #include <vector>
@@ -21,533 +25,309 @@ export import awen.sdl.transform;
 
 import awen.core.overloaded;
 
+namespace awen::sdl::detail
+{
+    auto setColor(SDL_Renderer* sdlRenderer, Color color) -> void
+    {
+        SDL_SetRenderDrawColor(sdlRenderer, color.r, color.g, color.b, color.a);
+    }
+
+    auto toFColor(Color color) -> SDL_FColor
+    {
+        return SDL_FColor{
+            .r = static_cast<float>(color.r) / 255.0F,
+            .g = static_cast<float>(color.g) / 255.0F,
+            .b = static_cast<float>(color.b) / 255.0F,
+            .a = static_cast<float>(color.a) / 255.0F,
+        };
+    }
+
+    auto fontFor(const flecs::world& world, flecs::entity_t fontId) -> TTF_Font*
+    {
+        if (fontId == 0)
+        {
+            return nullptr;
+        }
+
+        const auto entity = world.entity(fontId);
+
+        if (!entity.is_valid())
+        {
+            return nullptr;
+        }
+
+        const auto* font = entity.try_get<Font>();
+
+        return font != nullptr ? font->handle : nullptr;
+    }
+
+    auto textureFor(const flecs::world& world, flecs::entity_t textureId) -> const Texture*
+    {
+        if (textureId == 0)
+        {
+            return nullptr;
+        }
+
+        const auto entity = world.entity(textureId);
+
+        if (!entity.is_valid())
+        {
+            return nullptr;
+        }
+
+        return entity.try_get<Texture>();
+    }
+
+    auto worldPolygon(const WorldTransform& world, const std::vector<glm::vec2>& points) -> std::vector<SDL_FPoint>
+    {
+        auto out = std::vector<SDL_FPoint>{};
+        out.reserve(points.size());
+
+        for (const auto& point : points)
+        {
+            const auto worldPoint = applyWorld(world, point);
+            out.push_back(SDL_FPoint{.x = worldPoint.x, .y = worldPoint.y});
+        }
+
+        return out;
+    }
+
+    /// @brief Transform a fixed-size array of local-space points to SDL_FPoints.
+    template <std::size_t N>
+    auto worldPolygon(const WorldTransform& world, const std::array<glm::vec2, N>& points) -> std::array<SDL_FPoint, N>
+    {
+        auto out = std::array<SDL_FPoint, N>{};
+
+        for (auto i = std::size_t{0}; i < N; ++i)
+        {
+            const auto worldPoint = applyWorld(world, points[i]);
+            out[i] = SDL_FPoint{.x = worldPoint.x, .y = worldPoint.y};
+        }
+
+        return out;
+    }
+
+    auto drawCircleFill(SDL_Renderer* sdlRenderer, glm::vec2 center, float radius) -> void
+    {
+        const auto radiusInt = static_cast<int>(std::ceil(radius));
+
+        for (auto dy = -radiusInt; dy <= radiusInt; ++dy)
+        {
+            const auto y = static_cast<float>(dy);
+            const auto x = std::sqrt(std::max(0.0F, (radius * radius) - (y * y)));
+
+            SDL_RenderLine(sdlRenderer, center.x - x, center.y + y, center.x + x, center.y + y);
+        }
+    }
+
+    auto drawCircleOutline(SDL_Renderer* sdlRenderer, glm::vec2 center, float radius) -> void
+    {
+        const auto steps = std::max(16, static_cast<int>(radius * 4.0F));
+        auto previous = glm::vec2{center.x + radius, center.y};
+
+        for (auto i = 1; i <= steps; ++i)
+        {
+            const auto theta = (static_cast<float>(i) / static_cast<float>(steps)) * 2.0F * std::numbers::pi_v<float>;
+            const auto next = glm::vec2{center.x + (radius * std::cos(theta)), center.y + (radius * std::sin(theta))};
+
+            SDL_RenderLine(sdlRenderer, previous.x, previous.y, next.x, next.y);
+
+            previous = next;
+        }
+    }
+
+    auto drawPolygonFill(SDL_Renderer* sdlRenderer, std::span<const SDL_FPoint> points, Color color) -> void
+    {
+        if (points.size() < 3)
+        {
+            return;
+        }
+
+        const auto fillColor = toFColor(color);
+        auto vertices = std::vector<SDL_Vertex>{};
+        vertices.reserve(points.size());
+
+        for (const auto& point : points)
+        {
+            vertices.push_back(SDL_Vertex{.position = point, .color = fillColor, .tex_coord = SDL_FPoint{}});
+        }
+
+        auto indices = std::vector<int>{};
+        indices.reserve((points.size() - 2) * 3);
+
+        for (auto i = std::size_t{1}; i + 1 < points.size(); ++i)
+        {
+            indices.push_back(0);
+            indices.push_back(static_cast<int>(i));
+            indices.push_back(static_cast<int>(i + 1));
+        }
+
+        SDL_RenderGeometry(sdlRenderer, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+                           static_cast<int>(indices.size()));
+    }
+
+    auto drawPolygonOutline(SDL_Renderer* sdlRenderer, std::span<const SDL_FPoint> points) -> void
+    {
+        if (points.size() < 2)
+        {
+            return;
+        }
+
+        for (auto i = std::size_t{0}; i < points.size(); ++i)
+        {
+            const auto& a = points[i];
+            const auto& b = points[(i + 1) % points.size()];
+
+            SDL_RenderLine(sdlRenderer, a.x, a.y, b.x, b.y);
+        }
+    }
+
+    auto rectangleCornerPoints(const Rectangle& rectangle) -> std::array<glm::vec2, 4>
+    {
+        const auto offset = rectangle.size * rectangle.anchor;
+        const auto topLeft = -offset;
+        const auto bottomRight = rectangle.size - offset;
+
+        return std::array<glm::vec2, 4>{
+            topLeft,
+            glm::vec2{bottomRight.x, topLeft.y},
+            bottomRight,
+            glm::vec2{topLeft.x, bottomRight.y},
+        };
+    }
+}
+
 export namespace awen::sdl
 {
-    /// @brief Renderer-internal: a resolved draw command with world-space placement.
-    struct DrawCommand
+    /// @brief Draw the entity's Drawable through SDL_Renderer using its
+    ///        WorldTransform. Applies the optional Outline modifier on top.
+    auto drawEntity(const flecs::world& world, SDL_Renderer* sdlRenderer, flecs::entity entity, const Drawable& drawable,
+                    const WorldTransform& transform) -> void
     {
-        struct Rect
-        {
-            float x{};
-            float y{};
-            float w{};
-            float h{};
-            Color color{};
-        };
+        const auto* outline = entity.try_get<Outline>();
 
-        struct RectOutline
-        {
-            float x{};
-            float y{};
-            float w{};
-            float h{};
-            Color color{};
-            float thickness{1.0F};
-        };
-
-        struct Circle
-        {
-            float cx{};
-            float cy{};
-            float radius{};
-            Color color{};
-            bool filled{true};
-            float thickness{1.0F};
-        };
-
-        struct LineCmd
-        {
-            float x1{};
-            float y1{};
-            float x2{};
-            float y2{};
-            Color color{};
-            float thickness{1.0F};
-        };
-
-        struct Poly
-        {
-            std::vector<SDL_FPoint> points;
-            Color color{};
-            bool filled{true};
-        };
-
-        struct Text
-        {
-            std::string text;
-            float x{};
-            float y{};
-            glm::vec2 anchor{};
-            flecs::entity_t font{};
-            Color color{};
-        };
-
-        struct SpriteCmd
-        {
-            flecs::entity_t texture{};
-            float x{};
-            float y{};
-            float w{};
-            float h{};
-            float rotationDegrees{};
-            Color tint{};
-        };
-
-        using Variant = std::variant<Rect, RectOutline, Circle, LineCmd, Poly, Text, SpriteCmd>;
-
-        Variant payload;
-        std::int32_t z{};
-    };
-
-    /// @brief Singleton component holding the per-frame, sorted draw command list.
-    struct DrawList
-    {
-        std::vector<DrawCommand> commands;
-    };
-
-    namespace detail
-    {
-        /// @brief Transform a local-space point through a WorldTransform.
-        inline auto applyWorld(const WorldTransform& w, glm::vec2 local) -> glm::vec2
-        {
-            const auto cosR = std::cos(w.rotation);
-            const auto sinR = std::sin(w.rotation);
-            const auto scaled = glm::vec2{local.x * w.scale.x, local.y * w.scale.y};
-
-            return glm::vec2{
-                w.position.x + (scaled.x * cosR) - (scaled.y * sinR),
-                w.position.y + (scaled.x * sinR) + (scaled.y * cosR),
-            };
-        }
-
-        inline auto worldOf(flecs::entity e) -> WorldTransform
-        {
-            if (const auto* w = e.try_get<WorldTransform>())
-            {
-                return *w;
-            }
-
-            return WorldTransform{};
-        }
-
-        inline auto pickZ(flecs::entity e) -> std::int32_t
-        {
-            if (const auto* z = e.try_get<ZOrder>())
-            {
-                return z->value;
-            }
-
-            return 0;
-        }
-    }
-
-    /// @brief Build the draw list from drawable component queries.
-    /// @note Run during the OnPreRender phase, after transform propagation.
-    inline auto buildDrawList(flecs::world world) -> void
-    {
-        auto& list = world.ensure<DrawList>();
-        list.commands.clear();
-
-        world.each(
-            [&list](flecs::entity e, const RectangleFill& shape)
-            {
-                const auto w = detail::worldOf(e);
-                const auto offset = glm::vec2{shape.size.x * shape.anchor.x, shape.size.y * shape.anchor.y};
-                const auto topLeft = detail::applyWorld(w, -offset);
-
-                list.commands.push_back(DrawCommand{
-                    .payload = DrawCommand::Rect{
-                        .x = topLeft.x,
-                        .y = topLeft.y,
-                        .w = shape.size.x * w.scale.x,
-                        .h = shape.size.y * w.scale.y,
-                        .color = shape.color,
-                    },
-                    .z = detail::pickZ(e),
-                });
-            });
-
-        world.each(
-            [&list](flecs::entity e, const RectangleOutline& shape)
-            {
-                const auto w = detail::worldOf(e);
-                const auto offset = glm::vec2{shape.size.x * shape.anchor.x, shape.size.y * shape.anchor.y};
-                const auto topLeft = detail::applyWorld(w, -offset);
-
-                list.commands.push_back(DrawCommand{
-                    .payload = DrawCommand::RectOutline{
-                        .x = topLeft.x,
-                        .y = topLeft.y,
-                        .w = shape.size.x * w.scale.x,
-                        .h = shape.size.y * w.scale.y,
-                        .color = shape.color,
-                        .thickness = shape.thickness,
-                    },
-                    .z = detail::pickZ(e),
-                });
-            });
-
-        world.each(
-            [&list](flecs::entity e, const CircleFill& shape)
-            {
-                const auto w = detail::worldOf(e);
-
-                list.commands.push_back(DrawCommand{
-                    .payload = DrawCommand::Circle{
-                        .cx = w.position.x,
-                        .cy = w.position.y,
-                        .radius = shape.radius * w.scale.x,
-                        .color = shape.color,
-                        .filled = true,
-                    },
-                    .z = detail::pickZ(e),
-                });
-            });
-
-        world.each(
-            [&list](flecs::entity e, const CircleOutline& shape)
-            {
-                const auto w = detail::worldOf(e);
-
-                list.commands.push_back(DrawCommand{
-                    .payload = DrawCommand::Circle{
-                        .cx = w.position.x,
-                        .cy = w.position.y,
-                        .radius = shape.radius * w.scale.x,
-                        .color = shape.color,
-                        .filled = false,
-                        .thickness = shape.thickness,
-                    },
-                    .z = detail::pickZ(e),
-                });
-            });
-
-        world.each(
-            [&list](flecs::entity e, const Line& shape)
-            {
-                const auto w = detail::worldOf(e);
-                const auto p1 = detail::applyWorld(w, shape.from);
-                const auto p2 = detail::applyWorld(w, shape.to);
-
-                list.commands.push_back(DrawCommand{
-                    .payload = DrawCommand::LineCmd{
-                        .x1 = p1.x,
-                        .y1 = p1.y,
-                        .x2 = p2.x,
-                        .y2 = p2.y,
-                        .color = shape.color,
-                        .thickness = shape.thickness,
-                    },
-                    .z = detail::pickZ(e),
-                });
-            });
-
-        world.each(
-            [&list](flecs::entity e, const Polygon& shape)
-            {
-                const auto w = detail::worldOf(e);
-                auto cmd = DrawCommand::Poly{.color = shape.color, .filled = shape.filled};
-                cmd.points.reserve(shape.points.size());
-
-                for (const auto& p : shape.points)
+        std::visit(
+            awen::core::Overloaded{
+                [&](const Rectangle& rectangle)
                 {
-                    const auto worldPoint = detail::applyWorld(w, p);
-                    cmd.points.push_back(SDL_FPoint{.x = worldPoint.x, .y = worldPoint.y});
-                }
+                    const auto worldPoints = detail::worldPolygon(transform, detail::rectangleCornerPoints(rectangle));
 
-                list.commands.push_back(DrawCommand{.payload = std::move(cmd), .z = detail::pickZ(e)});
-            });
+                    detail::drawPolygonFill(sdlRenderer, worldPoints, rectangle.color);
 
-        world.each(
-            [&list](flecs::entity e, const TextLabel& shape)
-            {
-                const auto w = detail::worldOf(e);
+                    if (outline != nullptr)
+                    {
+                        detail::setColor(sdlRenderer, outline->color);
+                        detail::drawPolygonOutline(sdlRenderer, worldPoints);
+                    }
+                },
+                [&](const Circle& circle)
+                {
+                    const auto center = applyWorld(transform, glm::vec2{});
+                    const auto radius = circle.radius * worldScaleX(transform);
 
-                list.commands.push_back(DrawCommand{
-                    .payload = DrawCommand::Text{
-                        .text = shape.text,
-                        .x = w.position.x,
-                        .y = w.position.y,
-                        .anchor = shape.anchor,
-                        .font = shape.font,
-                        .color = shape.color,
-                    },
-                    .z = detail::pickZ(e),
-                });
-            });
+                    detail::setColor(sdlRenderer, circle.color);
+                    detail::drawCircleFill(sdlRenderer, center, radius);
 
-        world.each(
-            [&list](flecs::entity e, const Sprite& shape)
-            {
-                const auto w = detail::worldOf(e);
-                const auto offset = glm::vec2{shape.size.x * shape.anchor.x, shape.size.y * shape.anchor.y};
-                const auto topLeft = detail::applyWorld(w, -offset);
+                    if (outline != nullptr)
+                    {
+                        detail::setColor(sdlRenderer, outline->color);
+                        detail::drawCircleOutline(sdlRenderer, center, radius);
+                    }
+                },
+                [&](const Line& line)
+                {
+                    const auto from = applyWorld(transform, line.from);
+                    const auto to = applyWorld(transform, line.to);
 
-                list.commands.push_back(DrawCommand{
-                    .payload = DrawCommand::SpriteCmd{
-                        .texture = shape.texture,
+                    detail::setColor(sdlRenderer, line.color);
+                    SDL_RenderLine(sdlRenderer, from.x, from.y, to.x, to.y);
+                },
+                [&](const Polygon& polygon)
+                {
+                    const auto worldPoints = detail::worldPolygon(transform, polygon.points);
+
+                    detail::drawPolygonFill(sdlRenderer, worldPoints, polygon.color);
+
+                    if (outline != nullptr)
+                    {
+                        detail::setColor(sdlRenderer, outline->color);
+                        detail::drawPolygonOutline(sdlRenderer, worldPoints);
+                    }
+                },
+                [&](const TextLabel& label)
+                {
+                    auto* font = detail::fontFor(world, label.font);
+
+                    if (font == nullptr || label.text.empty())
+                    {
+                        return;
+                    }
+
+                    const auto sdlColor = SDL_Color{.r = label.color.r, .g = label.color.g, .b = label.color.b, .a = label.color.a};
+                    auto* surface = TTF_RenderText_Blended(font, label.text.c_str(), 0, sdlColor);
+
+                    if (surface == nullptr)
+                    {
+                        return;
+                    }
+
+                    auto* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
+
+                    if (texture == nullptr)
+                    {
+                        SDL_DestroySurface(surface);
+                        return;
+                    }
+
+                    const auto width = static_cast<float>(surface->w);
+                    const auto height = static_cast<float>(surface->h);
+                    SDL_DestroySurface(surface);
+
+                    const auto position = applyWorld(transform, glm::vec2{});
+                    const auto dest = SDL_FRect{
+                        .x = position.x - (label.anchor.x * width),
+                        .y = position.y - (label.anchor.y * height),
+                        .w = width,
+                        .h = height,
+                    };
+
+                    SDL_RenderTexture(sdlRenderer, texture, nullptr, &dest);
+                    SDL_DestroyTexture(texture);
+                },
+                [&](const Sprite& sprite)
+                {
+                    const auto* texture = detail::textureFor(world, sprite.texture);
+
+                    if (texture == nullptr || texture->handle == nullptr)
+                    {
+                        return;
+                    }
+
+                    SDL_SetTextureColorMod(texture->handle, sprite.tint.r, sprite.tint.g, sprite.tint.b);
+                    SDL_SetTextureAlphaMod(texture->handle, sprite.tint.a);
+
+                    const auto offset = sprite.size * sprite.anchor;
+                    const auto topLeft = applyWorld(transform, -offset);
+                    const auto scale = worldScaleX(transform);
+                    const auto rotationDegrees = worldRotation(transform) * (180.0F / std::numbers::pi_v<float>);
+                    const auto dest = SDL_FRect{
                         .x = topLeft.x,
                         .y = topLeft.y,
-                        .w = shape.size.x * w.scale.x,
-                        .h = shape.size.y * w.scale.y,
-                        .rotationDegrees = w.rotation * (180.0F / 3.14159265358979F),
-                        .tint = shape.tint,
-                    },
-                    .z = detail::pickZ(e),
-                });
-            });
-    }
+                        .w = sprite.size.x * scale,
+                        .h = sprite.size.y * scale,
+                    };
 
-    /// @brief Stable-sort the draw list by Z order ascending.
-    inline auto sortDrawList(flecs::world world) -> void
-    {
-        auto& list = world.ensure<DrawList>();
-        std::stable_sort(list.commands.begin(), list.commands.end(), [](const DrawCommand& a, const DrawCommand& b) { return a.z < b.z; });
-    }
-
-    namespace detail
-    {
-        inline auto setColor(SDL_Renderer* r, Color c) -> void
-        {
-            SDL_SetRenderDrawColor(r, c.r, c.g, c.b, c.a);
-        }
-
-        inline auto drawCircleOutline(SDL_Renderer* r, float cx, float cy, float radius) -> void
-        {
-            constexpr auto pi = 3.14159265358979F;
-            const auto steps = std::max(16, static_cast<int>(radius * 4.0F));
-            auto prevX = cx + radius;
-            auto prevY = cy;
-
-            for (auto i = 1; i <= steps; ++i)
-            {
-                const auto theta = (static_cast<float>(i) / static_cast<float>(steps)) * 2.0F * pi;
-                const auto x = cx + (radius * std::cos(theta));
-                const auto y = cy + (radius * std::sin(theta));
-
-                SDL_RenderLine(r, prevX, prevY, x, y);
-
-                prevX = x;
-                prevY = y;
-            }
-        }
-
-        inline auto drawCircleFill(SDL_Renderer* r, float cx, float cy, float radius) -> void
-        {
-            const auto radiusInt = static_cast<int>(std::ceil(radius));
-
-            for (auto dy = -radiusInt; dy <= radiusInt; ++dy)
-            {
-                const auto y = static_cast<float>(dy);
-                const auto x = std::sqrt(std::max(0.0F, (radius * radius) - (y * y)));
-
-                SDL_RenderLine(r, cx - x, cy + y, cx + x, cy + y);
-            }
-        }
-
-        inline auto drawPolygonFill(SDL_Renderer* r, const std::vector<SDL_FPoint>& pts, Color color) -> void
-        {
-            if (pts.size() < 3)
-            {
-                return;
-            }
-
-            auto vertices = std::vector<SDL_Vertex>{};
-            vertices.reserve(pts.size());
-
-            const auto fc = SDL_FColor{
-                .r = static_cast<float>(color.r) / 255.0F,
-                .g = static_cast<float>(color.g) / 255.0F,
-                .b = static_cast<float>(color.b) / 255.0F,
-                .a = static_cast<float>(color.a) / 255.0F,
-            };
-
-            for (const auto& p : pts)
-            {
-                vertices.push_back(SDL_Vertex{.position = p, .color = fc, .tex_coord = SDL_FPoint{}});
-            }
-
-            auto indices = std::vector<int>{};
-            indices.reserve((pts.size() - 2) * 3);
-
-            for (auto i = std::size_t{1}; i + 1 < pts.size(); ++i)
-            {
-                indices.push_back(0);
-                indices.push_back(static_cast<int>(i));
-                indices.push_back(static_cast<int>(i + 1));
-            }
-
-            SDL_RenderGeometry(r, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(), static_cast<int>(indices.size()));
-        }
-
-        inline auto drawPolygonOutline(SDL_Renderer* r, const std::vector<SDL_FPoint>& pts) -> void
-        {
-            if (pts.size() < 2)
-            {
-                return;
-            }
-
-            for (auto i = std::size_t{0}; i < pts.size(); ++i)
-            {
-                const auto& a = pts[i];
-                const auto& b = pts[(i + 1) % pts.size()];
-
-                SDL_RenderLine(r, a.x, a.y, b.x, b.y);
-            }
-        }
-
-        inline auto fontFor(flecs::world world, flecs::entity_t fontId) -> TTF_Font*
-        {
-            if (fontId == 0)
-            {
-                return nullptr;
-            }
-
-            auto entity = world.entity(fontId);
-
-            if (!entity.is_valid())
-            {
-                return nullptr;
-            }
-
-            const auto* font = entity.try_get<Font>();
-            return font != nullptr ? font->handle : nullptr;
-        }
-
-        inline auto textureFor(flecs::world world, flecs::entity_t texId) -> const Texture*
-        {
-            if (texId == 0)
-            {
-                return nullptr;
-            }
-
-            auto entity = world.entity(texId);
-
-            if (!entity.is_valid())
-            {
-                return nullptr;
-            }
-
-            return entity.try_get<Texture>();
-        }
-    }
-
-    /// @brief Dispatch the sorted draw list to the SDL renderer.
-    inline auto dispatchDrawList(flecs::world world, SDL_Renderer* sdlRenderer) -> void
-    {
-        const auto& list = world.ensure<DrawList>();
-
-        for (const auto& cmd : list.commands)
-        {
-            std::visit(
-                awen::core::Overloaded{
-                    [sdlRenderer](const DrawCommand::Rect& x)
+                    if (std::abs(rotationDegrees) < 0.001F)
                     {
-                        detail::setColor(sdlRenderer, x.color);
-                        const auto rect = SDL_FRect{.x = x.x, .y = x.y, .w = x.w, .h = x.h};
-                        SDL_RenderFillRect(sdlRenderer, &rect);
-                    },
-                    [sdlRenderer](const DrawCommand::RectOutline& x)
+                        SDL_RenderTexture(sdlRenderer, texture->handle, nullptr, &dest);
+                    }
+                    else
                     {
-                        detail::setColor(sdlRenderer, x.color);
-                        const auto rect = SDL_FRect{.x = x.x, .y = x.y, .w = x.w, .h = x.h};
-                        SDL_RenderRect(sdlRenderer, &rect);
-                    },
-                    [sdlRenderer](const DrawCommand::Circle& x)
-                    {
-                        detail::setColor(sdlRenderer, x.color);
-
-                        if (x.filled)
-                        {
-                            detail::drawCircleFill(sdlRenderer, x.cx, x.cy, x.radius);
-                        }
-                        else
-                        {
-                            detail::drawCircleOutline(sdlRenderer, x.cx, x.cy, x.radius);
-                        }
-                    },
-                    [sdlRenderer](const DrawCommand::LineCmd& x)
-                    {
-                        detail::setColor(sdlRenderer, x.color);
-                        SDL_RenderLine(sdlRenderer, x.x1, x.y1, x.x2, x.y2);
-                    },
-                    [sdlRenderer](const DrawCommand::Poly& x)
-                    {
-                        if (x.filled)
-                        {
-                            detail::drawPolygonFill(sdlRenderer, x.points, x.color);
-                        }
-                        else
-                        {
-                            detail::setColor(sdlRenderer, x.color);
-                            detail::drawPolygonOutline(sdlRenderer, x.points);
-                        }
-                    },
-                    [sdlRenderer, &world](const DrawCommand::Text& x)
-                    {
-                        auto* font = detail::fontFor(world, x.font);
-
-                        if (font == nullptr || x.text.empty())
-                        {
-                            return;
-                        }
-
-                        const auto sdlColor = SDL_Color{.r = x.color.r, .g = x.color.g, .b = x.color.b, .a = x.color.a};
-                        auto* surface = TTF_RenderText_Blended(font, x.text.c_str(), 0, sdlColor);
-
-                        if (surface == nullptr)
-                        {
-                            return;
-                        }
-
-                        auto* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
-
-                        if (texture == nullptr)
-                        {
-                            SDL_DestroySurface(surface);
-                            return;
-                        }
-
-                        const auto width = static_cast<float>(surface->w);
-                        const auto height = static_cast<float>(surface->h);
-                        SDL_DestroySurface(surface);
-
-                        const auto dest = SDL_FRect{
-                            .x = x.x - (x.anchor.x * width),
-                            .y = x.y - (x.anchor.y * height),
-                            .w = width,
-                            .h = height,
-                        };
-
-                        SDL_RenderTexture(sdlRenderer, texture, nullptr, &dest);
-                        SDL_DestroyTexture(texture);
-                    },
-                    [sdlRenderer, &world](const DrawCommand::SpriteCmd& x)
-                    {
-                        const auto* tex = detail::textureFor(world, x.texture);
-
-                        if (tex == nullptr || tex->handle == nullptr)
-                        {
-                            return;
-                        }
-
-                        SDL_SetTextureColorMod(tex->handle, x.tint.r, x.tint.g, x.tint.b);
-                        SDL_SetTextureAlphaMod(tex->handle, x.tint.a);
-
-                        const auto dest = SDL_FRect{.x = x.x, .y = x.y, .w = x.w, .h = x.h};
-
-                        if (std::abs(x.rotationDegrees) < 0.001F)
-                        {
-                            SDL_RenderTexture(sdlRenderer, tex->handle, nullptr, &dest);
-                        }
-                        else
-                        {
-                            const auto center = SDL_FPoint{.x = x.w * 0.5F, .y = x.h * 0.5F};
-                            SDL_RenderTextureRotated(sdlRenderer, tex->handle, nullptr, &dest, x.rotationDegrees, &center, SDL_FLIP_NONE);
-                        }
-                    },
+                        const auto pivot = SDL_FPoint{.x = dest.w * sprite.anchor.x, .y = dest.h * sprite.anchor.y};
+                        SDL_RenderTextureRotated(sdlRenderer, texture->handle, nullptr, &dest, rotationDegrees, &pivot, SDL_FLIP_NONE);
+                    }
                 },
-                cmd.payload);
-        }
+            },
+            drawable.shape);
     }
 }

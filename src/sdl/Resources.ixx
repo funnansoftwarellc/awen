@@ -34,7 +34,7 @@ export namespace awen::sdl
     /// @param path Filesystem path to the .ttf file.
     /// @param pointSize Font point size.
     /// @return Entity carrying a Font component, or an invalid entity on failure.
-    inline auto loadFont(flecs::world& world, std::string_view path, int pointSize) -> flecs::entity
+    auto loadFont(flecs::world& world, std::string_view path, int pointSize) -> flecs::entity
     {
         auto* handle = TTF_OpenFont(std::string{path}.c_str(), static_cast<float>(pointSize));
 

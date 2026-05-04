@@ -12,18 +12,20 @@
 #include <numbers>
 #include <random>
 #include <string>
+#include <variant>
 
 import awen.sdl;
 
 using awen::core::EnumMask;
 using awen::sdl::AppState;
-using awen::sdl::CircleFill;
+using awen::sdl::Circle;
+using awen::sdl::Drawable;
 using awen::sdl::FrameTiming;
 using awen::sdl::KeyboardState;
 using awen::sdl::loadFont;
 using awen::sdl::LocalTransform;
 using awen::sdl::MouseState;
-using awen::sdl::RectangleFill;
+using awen::sdl::Rectangle;
 using awen::sdl::TextLabel;
 using awen::sdl::Window;
 using awen::sdl::WindowHandles;
@@ -224,7 +226,7 @@ namespace
     }
 
     /// @brief Resolve the current renderer-output size for the main window.
-    auto windowSize(flecs::world world) -> glm::vec2
+    auto windowSize(const flecs::world& world) -> glm::vec2
     {
         auto size = glm::vec2{InitWidth, InitHeight};
 
@@ -241,6 +243,18 @@ namespace
             });
 
         return size;
+    }
+
+    /// @brief Mutate the TextLabel alternative inside an entity's Drawable.
+    template <typename F>
+    auto withTextLabel(flecs::entity entity, F&& fn) -> void
+    {
+        auto& drawable = entity.get_mut<Drawable>();
+
+        if (auto* label = std::get_if<TextLabel>(&drawable.shape))
+        {
+            std::forward<F>(fn)(*label);
+        }
     }
 }
 
@@ -281,26 +295,26 @@ try
         world.entity()
             .set<DashTag>({.index = i})
             .set<LocalTransform>({.position = {-DashWidth, -DashHeight}})
-            .set<RectangleFill>({.size = {DashWidth, DashHeight}, .anchor = {0.0F, 0.0F}, .color = colors::DarkGray})
+            .set<Drawable>({.shape = Rectangle{.size = {DashWidth, DashHeight}, .anchor = {0.0F, 0.0F}, .color = colors::DarkGray}})
             .set<ZOrder>({.value = 0});
     }
 
     world.entity("LeftPaddle")
         .add<LeftPaddleTag>()
         .set<LocalTransform>({.position = {PaddleOffset, 0.0F}})
-        .set<RectangleFill>({.size = {PaddleWidth, PaddleHeight}, .anchor = {0.0F, 0.0F}, .color = colors::White})
+        .set<Drawable>({.shape = Rectangle{.size = {PaddleWidth, PaddleHeight}, .anchor = {0.0F, 0.0F}, .color = colors::White}})
         .set<ZOrder>({.value = 10});
 
     world.entity("RightPaddle")
         .add<RightPaddleTag>()
         .set<LocalTransform>({.position = {0.0F, 0.0F}})
-        .set<RectangleFill>({.size = {PaddleWidth, PaddleHeight}, .anchor = {0.0F, 0.0F}, .color = colors::White})
+        .set<Drawable>({.shape = Rectangle{.size = {PaddleWidth, PaddleHeight}, .anchor = {0.0F, 0.0F}, .color = colors::White}})
         .set<ZOrder>({.value = 10});
 
     world.entity("Ball")
         .add<BallTag>()
         .set<LocalTransform>({.position = {0.0F, 0.0F}})
-        .set<CircleFill>({.radius = BallRadius, .color = colors::White})
+        .set<Drawable>({.shape = Circle{.radius = BallRadius, .color = colors::White}})
         .set<ZOrder>({.value = 10});
 
     if (fontEntity.is_valid())
@@ -308,13 +322,13 @@ try
         world.entity("LeftScore")
             .add<LeftScoreTag>()
             .set<LocalTransform>({.position = {0.0F, ScoreY}})
-            .set<TextLabel>({.text = "0", .font = fontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::White})
+            .set<Drawable>({.shape = TextLabel{.text = "0", .font = fontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::White}})
             .set<ZOrder>({.value = 5});
 
         world.entity("RightScore")
             .add<RightScoreTag>()
             .set<LocalTransform>({.position = {0.0F, ScoreY}})
-            .set<TextLabel>({.text = "0", .font = fontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::White})
+            .set<Drawable>({.shape = TextLabel{.text = "0", .font = fontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::White}})
             .set<ZOrder>({.value = 5});
     }
 
@@ -323,13 +337,14 @@ try
         world.entity("LeftHint")
             .add<LeftHintTag>()
             .set<LocalTransform>({.position = {HintMargin, 0.0F}})
-            .set<TextLabel>({.text = "W / S", .font = hintFontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::DarkGray})
+            .set<Drawable>({.shape = TextLabel{.text = "W / S", .font = hintFontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::DarkGray}})
             .set<ZOrder>({.value = 5});
 
         world.entity("RightHint")
             .add<RightHintTag>()
             .set<LocalTransform>({.position = {0.0F, 0.0F}})
-            .set<TextLabel>({.text = "P2: AI  [SPACE]", .font = hintFontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::DarkGray})
+            .set<Drawable>(
+                {.shape = TextLabel{.text = "P2: AI  [SPACE]", .font = hintFontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::DarkGray}})
             .set<ZOrder>({.value = 5});
     }
 
@@ -339,7 +354,7 @@ try
         .run(
             [](flecs::iter& it)
             {
-                auto world = it.world();
+                const auto& world = it.world();
                 auto& state = world.get_mut<PongState>();
                 const auto& keyboard = world.get<KeyboardState>();
                 const auto& mouse = world.get<MouseState>();
@@ -399,7 +414,7 @@ try
         .run(
             [](flecs::iter& it)
             {
-                auto world = it.world();
+                const auto& world = it.world();
                 auto& state = world.get_mut<PongState>();
                 const auto screen = windowSize(world);
 
@@ -412,7 +427,7 @@ try
         .run(
             [](flecs::iter& it)
             {
-                auto world = it.world();
+                const auto& world = it.world();
                 const auto& state = world.get<PongState>();
                 const auto screen = windowSize(world);
                 const auto halfWidth = screen.x * Half;
@@ -426,48 +441,62 @@ try
                 world.each([&state](flecs::entity, const BallTag&, LocalTransform& t) { t.position = state.ball.position; });
 
                 world.each(
-                    [&state, halfWidth](flecs::entity, const LeftScoreTag&, LocalTransform& t, TextLabel& label)
+                    [&state, halfWidth](flecs::entity entity, const LeftScoreTag&, LocalTransform& t)
                     {
-                        const auto str = std::to_string(state.leftPad.score);
-
-                        if (label.text != str)
-                        {
-                            label.text = str;
-                        }
-
                         t.position = glm::vec2{halfWidth - ScoreOffsetFromCenter, ScoreY};
+
+                        withTextLabel(entity,
+                                      [&state](TextLabel& label)
+                                      {
+                                          const auto str = std::to_string(state.leftPad.score);
+
+                                          if (label.text != str)
+                                          {
+                                              label.text = str;
+                                          }
+                                      });
                     });
 
                 world.each(
-                    [&state, halfWidth](flecs::entity, const RightScoreTag&, LocalTransform& t, TextLabel& label)
+                    [&state, halfWidth](flecs::entity entity, const RightScoreTag&, LocalTransform& t)
                     {
-                        const auto str = std::to_string(state.rightPad.score);
-
-                        if (label.text != str)
-                        {
-                            label.text = str;
-                        }
-
-                        // Anchor right side to the right edge of the score area.
-                        label.anchor = glm::vec2{1.0F, 0.0F};
                         t.position = glm::vec2{halfWidth + ScoreOffsetFromCenter, ScoreY};
+
+                        withTextLabel(entity,
+                                      [&state](TextLabel& label)
+                                      {
+                                          const auto str = std::to_string(state.rightPad.score);
+
+                                          if (label.text != str)
+                                          {
+                                              label.text = str;
+                                          }
+
+                                          // Anchor right side to the right edge of the score area.
+                                          label.anchor = glm::vec2{1.0F, 0.0F};
+                                      });
                     });
 
                 world.each([screen](flecs::entity, const LeftHintTag&, LocalTransform& t)
                            { t.position = glm::vec2{HintMargin, screen.y - HintYFromBottom}; });
 
                 world.each(
-                    [&state, screen](flecs::entity, const RightHintTag&, LocalTransform& t, TextLabel& label)
+                    [&state, screen](flecs::entity entity, const RightHintTag&, LocalTransform& t)
                     {
-                        const auto* p2Text = state.p2Ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
-
-                        if (label.text != p2Text)
-                        {
-                            label.text = p2Text;
-                        }
-
-                        label.anchor = glm::vec2{1.0F, 0.0F};
                         t.position = glm::vec2{screen.x - HintMargin, screen.y - HintYFromBottom};
+
+                        withTextLabel(entity,
+                                      [&state](TextLabel& label)
+                                      {
+                                          const auto* p2Text = state.p2Ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
+
+                                          if (label.text != p2Text)
+                                          {
+                                              label.text = p2Text;
+                                          }
+
+                                          label.anchor = glm::vec2{1.0F, 0.0F};
+                                      });
                     });
 
                 world.each(

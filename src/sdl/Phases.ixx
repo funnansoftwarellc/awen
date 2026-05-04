@@ -40,13 +40,13 @@ export namespace awen::sdl::phases
 
     /// @brief Register all awen phase tags as flecs phases layered on built-in phases.
     /// @param world The flecs world.
-    inline auto registerAll(flecs::world& world) -> void
+    auto registerAll(flecs::world& world) -> void
     {
         world.component<OnEvent>().add(flecs::Phase).depends_on(flecs::OnLoad);
         world.component<OnUpdate>().add(flecs::Phase).depends_on(flecs::OnUpdate);
         world.component<OnPhysics>().add(flecs::Phase).depends_on(flecs::PostUpdate);
         world.component<OnPreRender>().add(flecs::Phase).depends_on(flecs::PreStore);
         world.component<OnRender>().add(flecs::Phase).depends_on(flecs::OnStore);
-        world.component<OnPostRender>().add(flecs::Phase).depends_on(world.component<OnRender>());
+        world.component<OnPostRender>().add(flecs::Phase).depends_on(world.entity<OnRender>());
     }
 }

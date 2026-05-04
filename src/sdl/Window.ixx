@@ -4,7 +4,7 @@ module;
 #include <cstdint>
 #include <string>
 
-export module awen.sdl.components;
+export module awen.sdl.window;
 
 export import awen.sdl.color;
 export import awen.core.enummask;

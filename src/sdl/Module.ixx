@@ -2,17 +2,19 @@ module;
 
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <algorithm>
 #include <awen/flecs/Flecs.hpp>
-#include <cstdint>
+
 #include <glm/vec2.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 
 export module awen.sdl;
 
 export import awen.sdl.color;
-export import awen.sdl.components;
 export import awen.sdl.drawables;
 export import awen.sdl.input;
 export import awen.sdl.phases;
@@ -20,11 +22,12 @@ export import awen.sdl.renderer;
 export import awen.sdl.resources;
 export import awen.sdl.singletons;
 export import awen.sdl.transform;
+export import awen.sdl.window;
 
 namespace awen::sdl::detail
 {
     /// @brief Translate awen window flags to SDL window flags.
-    inline auto toSdlFlags(const Window& window) -> SDL_WindowFlags
+    auto toSdlFlags(const Window& window) -> SDL_WindowFlags
     {
         auto flags = SDL_WindowFlags{};
 
@@ -42,21 +45,19 @@ namespace awen::sdl::detail
     }
 
     /// @brief Iteratively propagate WorldTransform from roots through children.
-    inline auto propagateTransforms(flecs::world world) -> void
+    auto propagateTransforms(const flecs::query<const LocalTransform>& localQuery) -> void
     {
         auto stack = std::vector<std::pair<flecs::entity, WorldTransform>>{};
 
-        const auto rootQuery = world.query_builder<const LocalTransform>().build();
-
-        rootQuery.each(
-            [&](flecs::entity e, const LocalTransform&)
+        localQuery.each(
+            [&](flecs::entity entity, const LocalTransform&)
             {
-                const auto parent = e.parent();
+                const auto parent = entity.parent();
                 const auto isRoot = !parent.is_valid() || parent.try_get<LocalTransform>() == nullptr;
 
                 if (isRoot)
                 {
-                    stack.emplace_back(e, WorldTransform{});
+                    stack.emplace_back(entity, WorldTransform{});
                 }
             });
 
@@ -78,7 +79,7 @@ namespace awen::sdl::detail
     }
 
     /// @brief Pump SDL events and update the input + window-event singletons.
-    inline auto pumpEvents(flecs::world world) -> void
+    auto pumpEvents(const flecs::world& world) -> void
     {
         auto& keyboard = world.ensure<KeyboardState>();
         auto& mouse = world.ensure<MouseState>();
@@ -185,7 +186,7 @@ namespace awen::sdl::detail
     }
 
     /// @brief Update FrameTiming from the most recent flecs delta.
-    inline auto updateTiming(flecs::world world, float delta) -> void
+    auto updateTiming(const flecs::world& world, float delta) -> void
     {
         auto& timing = world.ensure<FrameTiming>();
 
@@ -202,6 +203,18 @@ namespace awen::sdl::detail
         {
             constexpr auto smoothing = 0.1F;
             timing.fps = (timing.fps * (1.0F - smoothing)) + (instantaneous * smoothing);
+        }
+    }
+
+    /// @brief Apply size/position/title/colour changes to an existing SDL window.
+    auto applyWindowProperties(SDL_Window* sdlWindow, const Window& window) -> void
+    {
+        SDL_SetWindowTitle(sdlWindow, window.title.c_str());
+        SDL_SetWindowSize(sdlWindow, window.width, window.height);
+
+        if (window.x != 0 || window.y != 0)
+        {
+            SDL_SetWindowPosition(sdlWindow, window.x, window.y);
         }
     }
 }
@@ -224,15 +237,20 @@ export namespace awen::sdl
 
             registerWindowObservers(world);
             registerResourceObservers(world);
+            registerDrawableObservers(world);
+
+            buildQueries(world);
 
             registerEventSystem(world);
             registerTransformSystem(world);
-            registerDrawListSystems(world);
             registerRenderSystem(world);
             registerPostRenderSystem(world);
         }
 
     private:
+        flecs::query<const LocalTransform> localTransforms_{};
+        flecs::query<const Drawable, const WorldTransform, const ZOrder> orderedDrawables_{};
+
         static auto initializeSdl(flecs::world& world) -> void
         {
             auto& flags = world.ensure<InitFlags>();
@@ -266,7 +284,6 @@ export namespace awen::sdl
             world.set<KeyboardState>(KeyboardState{});
             world.set<MouseState>(MouseState{});
             world.set<WindowEvents>(WindowEvents{});
-            world.set<DrawList>(DrawList{});
         }
 
         static auto registerWindowObservers(flecs::world& world) -> void
@@ -276,8 +293,13 @@ export namespace awen::sdl
                 .each(
                     [](flecs::entity entity, Window& window)
                     {
-                        if (entity.has<WindowHandles>())
+                        if (const auto* handles = entity.try_get<WindowHandles>())
                         {
+                            if (handles->window != nullptr)
+                            {
+                                detail::applyWindowProperties(handles->window, window);
+                            }
+
                             return;
                         }
 
@@ -353,6 +375,39 @@ export namespace awen::sdl
                     });
         }
 
+        static auto registerDrawableObservers(flecs::world& world) -> void
+        {
+            // Ensure every drawable carries a ZOrder so the ordered render
+            // query can sort by it (flecs requires the order_by component
+            // to be a non-optional query term).
+            world.observer<Drawable>("awen::sdl::DrawableOnAdd")
+                .event(flecs::OnAdd)
+                .each(
+                    [](flecs::entity entity, Drawable&)
+                    {
+                        if (!entity.has<ZOrder>())
+                        {
+                            entity.set<ZOrder>(ZOrder{});
+                        }
+                    });
+        }
+
+        auto buildQueries(flecs::world& world) -> void
+        {
+            localTransforms_ = world.query_builder<const LocalTransform>().build();
+
+            orderedDrawables_ = world.query_builder<const Drawable, const WorldTransform, const ZOrder>()
+                                    .order_by<ZOrder>(
+                                        [](flecs::entity_t, const ZOrder* a, flecs::entity_t, const ZOrder* b)
+                                        {
+                                            const auto av = a != nullptr ? a->value : 0;
+                                            const auto bv = b != nullptr ? b->value : 0;
+
+                                            return (av > bv) - (av < bv);
+                                        })
+                                    .build();
+        }
+
         static auto registerEventSystem(flecs::world& world) -> void
         {
             world.system("awen::sdl::EventPump")
@@ -360,32 +415,25 @@ export namespace awen::sdl
                 .run(
                     [](flecs::iter& it)
                     {
-                        auto world = it.world();
+                        const auto& world = it.world();
                         detail::updateTiming(world, it.delta_time());
                         detail::pumpEvents(world);
                     });
         }
 
-        static auto registerTransformSystem(flecs::world& world) -> void
+        auto registerTransformSystem(flecs::world& world) -> void
         {
             world.system("awen::sdl::TransformPropagation")
                 .kind<phases::OnPreRender>()
-                .run([](flecs::iter& it) { detail::propagateTransforms(it.world()); });
+                .run([this](flecs::iter&) { detail::propagateTransforms(localTransforms_); });
         }
 
-        static auto registerDrawListSystems(flecs::world& world) -> void
-        {
-            world.system("awen::sdl::BuildDrawList").kind<phases::OnPreRender>().run([](flecs::iter& it) { buildDrawList(it.world()); });
-
-            world.system("awen::sdl::SortDrawList").kind<phases::OnPreRender>().run([](flecs::iter& it) { sortDrawList(it.world()); });
-        }
-
-        static auto registerRenderSystem(flecs::world& world) -> void
+        auto registerRenderSystem(flecs::world& world) -> void
         {
             world.system<const Window, const WindowHandles>("awen::sdl::Render")
                 .kind<phases::OnRender>()
                 .each(
-                    [](flecs::entity entity, const Window& window, const WindowHandles& handles)
+                    [this](flecs::entity entity, const Window& window, const WindowHandles& handles)
                     {
                         if (handles.renderer == nullptr)
                         {
@@ -395,7 +443,10 @@ export namespace awen::sdl
                         SDL_SetRenderDrawColor(handles.renderer, window.color.r, window.color.g, window.color.b, window.color.a);
                         SDL_RenderClear(handles.renderer);
 
-                        dispatchDrawList(entity.world(), handles.renderer);
+                        const auto& world = entity.world();
+
+                        orderedDrawables_.each([&](flecs::entity drawable, const Drawable& shape, const WorldTransform& transform, const ZOrder&)
+                                               { drawEntity(world, handles.renderer, drawable, shape, transform); });
 
                         SDL_RenderPresent(handles.renderer);
                     });

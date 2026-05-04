@@ -1,9 +1,15 @@
 module;
 
 #include <awen/flecs/Flecs.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_transform_2d.hpp>
+#include <glm/mat3x3.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+
 #include <cmath>
 #include <cstdint>
-#include <glm/vec2.hpp>
 
 export module awen.sdl.transform;
 
@@ -17,42 +23,60 @@ export namespace awen::sdl
         float rotation{};
     };
 
-    /// @brief World-space 2D transform produced by the hierarchy propagation system.
-    /// @note Decomposed (not a matrix) so SDL_Render* calls can consume it directly.
+    /// @brief World-space 2D transform produced by hierarchy propagation.
+    /// @note Stored as a glm::mat3 so SDL_Render* call sites can transform
+    ///       points uniformly regardless of how the parent chain composed.
     struct WorldTransform
     {
-        glm::vec2 position{};
-        glm::vec2 scale{1.0F, 1.0F};
-        float rotation{};
+        glm::mat3 matrix{1.0F};
     };
 
-    /// @brief Render layer; lower values are drawn first.
+    /// @brief Render layer. Lower values draw first.
     struct ZOrder
     {
         std::int32_t value{};
     };
 
-    /// @brief Compose a parent world transform with a child local transform.
-    /// @param parent Parent's WorldTransform.
-    /// @param local Child's LocalTransform.
-    /// @return Child's WorldTransform.
-    inline auto compose(const WorldTransform& parent, const LocalTransform& local) -> WorldTransform
+    /// @brief Build the affine matrix for a local transform.
+    auto toMatrix(const LocalTransform& local) -> glm::mat3
     {
-        const auto cosR = std::cos(parent.rotation);
-        const auto sinR = std::sin(parent.rotation);
-        const auto scaledLocal = glm::vec2{local.position.x * parent.scale.x, local.position.y * parent.scale.y};
-        const auto rotated = glm::vec2{(scaledLocal.x * cosR) - (scaledLocal.y * sinR), (scaledLocal.x * sinR) + (scaledLocal.y * cosR)};
+        auto matrix = glm::mat3{1.0F};
+        matrix = glm::translate(matrix, local.position);
+        matrix = glm::rotate(matrix, local.rotation);
+        matrix = glm::scale(matrix, local.scale);
 
-        return WorldTransform{
-            .position = parent.position + rotated,
-            .scale = glm::vec2{parent.scale.x * local.scale.x, parent.scale.y * local.scale.y},
-            .rotation = parent.rotation + local.rotation,
-        };
+        return matrix;
     }
 
-    /// @brief Make `child` a child of `parent` via flecs ChildOf relationship.
-    inline auto setParent(flecs::entity child, flecs::entity parent) -> void
+    /// @brief Compose a parent world matrix with a child local transform.
+    auto compose(const WorldTransform& parent, const LocalTransform& local) -> WorldTransform
     {
-        child.child_of(parent);
+        return WorldTransform{.matrix = parent.matrix * toMatrix(local)};
+    }
+
+    /// @brief Transform a local-space point through a world matrix.
+    auto applyWorld(const WorldTransform& world, glm::vec2 local) -> glm::vec2
+    {
+        const auto homogeneous = world.matrix * glm::vec3{local, 1.0F};
+
+        return glm::vec2{homogeneous.x, homogeneous.y};
+    }
+
+    /// @brief Extract the world-space translation from a world matrix.
+    auto worldPosition(const WorldTransform& world) -> glm::vec2
+    {
+        return glm::vec2{world.matrix[2].x, world.matrix[2].y};
+    }
+
+    /// @brief Extract a uniform scale factor from a world matrix's X basis.
+    auto worldScaleX(const WorldTransform& world) -> float
+    {
+        return glm::length(glm::vec2{world.matrix[0].x, world.matrix[0].y});
+    }
+
+    /// @brief Extract the rotation angle (radians) from a world matrix.
+    auto worldRotation(const WorldTransform& world) -> float
+    {
+        return std::atan2(world.matrix[0].y, world.matrix[0].x);
     }
 }

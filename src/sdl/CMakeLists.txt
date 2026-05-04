@@ -5,7 +5,6 @@ add_library(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES FILES
         Color.ixx
-        Components.ixx
         Drawables.ixx
         Input.ixx
         Module.ixx
@@ -14,6 +13,7 @@ target_sources(${PROJECT_NAME} PUBLIC
         Resources.ixx
         Singletons.ixx
         Transform.ixx
+        Window.ixx
 )
 
 find_package(SDL3 CONFIG REQUIRED)

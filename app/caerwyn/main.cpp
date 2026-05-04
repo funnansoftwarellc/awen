@@ -4,13 +4,13 @@ import awen.sdl;
 
 using awen::core::EnumMask;
 using awen::sdl::AppState;
-using awen::sdl::CircleFill;
-using awen::sdl::CircleOutline;
+using awen::sdl::Circle;
+using awen::sdl::Drawable;
 using awen::sdl::Line;
 using awen::sdl::LocalTransform;
+using awen::sdl::Outline;
 using awen::sdl::Polygon;
-using awen::sdl::RectangleFill;
-using awen::sdl::RectangleOutline;
+using awen::sdl::Rectangle;
 using awen::sdl::Window;
 using awen::sdl::ZOrder;
 namespace colors = awen::sdl::colors;
@@ -33,33 +33,41 @@ try
             .height = 720,
         });
 
-    world.entity().set<LocalTransform>({.position = {200.0F, 150.0F}}).set<RectangleFill>({.size = {200.0F, 120.0F}, .color = colors::Red});
+    world.entity()
+        .set<LocalTransform>({.position = {200.0F, 150.0F}})
+        .set<Drawable>({.shape = Rectangle{.size = {200.0F, 120.0F}, .color = colors::Red}});
 
     world.entity()
         .set<LocalTransform>({.position = {500.0F, 150.0F}})
-        .set<RectangleOutline>({.size = {200.0F, 120.0F}, .color = colors::Yellow, .thickness = 2.0F});
+        .set<Drawable>({.shape = Rectangle{.size = {200.0F, 120.0F}, .color = colors::DarkGray}})
+        .set<Outline>({.color = colors::Yellow, .thickness = 2.0F});
 
-    world.entity().set<LocalTransform>({.position = {800.0F, 150.0F}}).set<CircleFill>({.radius = 60.0F, .color = colors::Green});
+    world.entity()
+        .set<LocalTransform>({.position = {800.0F, 150.0F}})
+        .set<Drawable>({.shape = Circle{.radius = 60.0F, .color = colors::Green}});
 
-    world.entity().set<LocalTransform>({.position = {1000.0F, 150.0F}}).set<CircleOutline>({.radius = 60.0F, .color = colors::Blue});
+    world.entity()
+        .set<LocalTransform>({.position = {1000.0F, 150.0F}})
+        .set<Drawable>({.shape = Circle{.radius = 60.0F, .color = colors::DarkGray}})
+        .set<Outline>({.color = colors::Blue, .thickness = 2.0F});
 
     world.entity()
         .set<LocalTransform>({.position = {200.0F, 350.0F}})
-        .set<Line>({.from = {-80.0F, 0.0F}, .to = {80.0F, 0.0F}, .color = colors::White, .thickness = 1.0F});
+        .set<Drawable>({.shape = Line{.from = {-80.0F, 0.0F}, .to = {80.0F, 0.0F}, .color = colors::White, .thickness = 1.0F}});
 
     world.entity()
         .set<LocalTransform>({.position = {500.0F, 380.0F}})
-        .set<Polygon>({.points = {{0.0F, -60.0F}, {60.0F, 60.0F}, {-60.0F, 60.0F}}, .color = colors::Purple, .filled = true});
+        .set<Drawable>({.shape = Polygon{.points = {{0.0F, -60.0F}, {60.0F, 60.0F}, {-60.0F, 60.0F}}, .color = colors::Purple}});
 
     const auto parent = world.entity("HierarchyParent")
                             .set<LocalTransform>({.position = {950.0F, 420.0F}})
-                            .set<RectangleFill>({.size = {120.0F, 120.0F}, .color = colors::Orange})
+                            .set<Drawable>({.shape = Rectangle{.size = {120.0F, 120.0F}, .color = colors::Orange}})
                             .set<ZOrder>({.value = 0});
 
     world.entity("HierarchyChild")
         .child_of(parent)
         .set<LocalTransform>({.position = {0.0F, 0.0F}, .scale = {0.4F, 0.4F}})
-        .set<RectangleFill>({.size = {120.0F, 120.0F}, .color = colors::White})
+        .set<Drawable>({.shape = Rectangle{.size = {120.0F, 120.0F}, .color = colors::White}})
         .set<ZOrder>({.value = 1});
 
     world.system<LocalTransform>("RotateHierarchyParent")
