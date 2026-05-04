@@ -1,83 +1,133 @@
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_scancode.h>
+
+#include <awen/flecs/Flecs.hpp>
+
+#include <glm/vec2.hpp>
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
-#include <memory>
 #include <numbers>
-#include <print>
 #include <random>
 #include <string>
-#include <vector>
 
-#include <chrono>
+import awen.sdl;
 
-import awen.core;
-import awen.widget;
+using awen::core::EnumMask;
+using awen::sdl::AppState;
+using awen::sdl::CircleFill;
+using awen::sdl::FrameTiming;
+using awen::sdl::KeyboardState;
+using awen::sdl::loadFont;
+using awen::sdl::LocalTransform;
+using awen::sdl::MouseState;
+using awen::sdl::RectangleFill;
+using awen::sdl::TextLabel;
+using awen::sdl::Window;
+using awen::sdl::WindowHandles;
+using awen::sdl::ZOrder;
+namespace colors = awen::sdl::colors;
+namespace phases = awen::sdl::phases;
 
 namespace
 {
-    constexpr auto InitWidth = 1280.0F;
-    constexpr auto InitHeight = 720.0F;
-    constexpr auto WindowPositionX = 80.0F;
-    constexpr auto WindowPositionY = 80.0F;
+    constexpr auto InitWidth = 1280;
+    constexpr auto InitHeight = 720;
+    constexpr auto WindowPositionX = 80;
+    constexpr auto WindowPositionY = 80;
+
     constexpr auto PaddleWidth = 14.0F;
     constexpr auto PaddleHeight = 90.0F;
     constexpr auto PaddleSpeed = 380.0F;
     constexpr auto PaddleOffset = 128.0F;
+
     constexpr auto BallRadius = 10.0F;
     constexpr auto BallInitSpeed = 300.0F;
     constexpr auto BallSpeedUp = 1.05F;
     constexpr auto BallMaxSpeed = 700.0F;
     constexpr auto MaxBounceAngle = 60.0F;
-    constexpr auto Half = 0.5F;
-    constexpr auto AiSpeedRatio = 0.85F;
     constexpr auto BallLaunchAngle = 30;
-    constexpr auto DashWidth = 4.0F;
-    constexpr auto DashCenterOffset = 2.0F;
-    constexpr auto DashGap = 20;
-    constexpr auto DashHeight = 10;
-    constexpr auto ScoreXLeft = 70;
-    constexpr auto ScoreY = 18;
-    constexpr auto ScoreFontSize = 52;
-    constexpr auto HintX = 10;
-    constexpr auto HintYFromBottom = 22;
-    constexpr auto HintFontSize = 16;
+
+    constexpr auto AiSpeedRatio = 0.85F;
+    constexpr auto Half = 0.5F;
     constexpr auto Deg2Rad = std::numbers::pi_v<float> / 180.0F;
+
+    constexpr auto DashWidth = 4.0F;
+    constexpr auto DashHeight = 10.0F;
+    constexpr auto DashGap = 20;
     constexpr auto MaxDashes = 220;
 
+    constexpr auto ScoreFontSize = 52;
+    constexpr auto HintFontSize = 16;
+    constexpr auto ScoreOffsetFromCenter = 70.0F;
+    constexpr auto ScoreY = 18.0F;
+    constexpr auto HintMargin = 10.0F;
+    constexpr auto HintYFromBottom = 22.0F;
+
+    /// @brief Per-side paddle state.
     struct Paddle
     {
-        float x{};
         float y{};
         int score{};
     };
 
+    /// @brief Ball position + velocity.
     struct Ball
     {
-        float x{};
-        float y{};
-        float vx{};
-        float vy{};
+        glm::vec2 position{};
+        glm::vec2 velocity{};
     };
 
-    struct ScreenSize
-    {
-        float w{};
-        float h{};
-    };
-
-    struct GameState
+    /// @brief Singleton game state owned by the world.
+    struct PongState
     {
         Paddle leftPad;
         Paddle rightPad;
         Ball ball;
         bool p2Ai{true};
+        bool spaceLatch{};
+    };
+
+    /// @brief Tag components used to look up the paddle, ball and HUD entities.
+    struct LeftPaddleTag
+    {
+    };
+
+    struct RightPaddleTag
+    {
+    };
+
+    struct BallTag
+    {
+    };
+
+    struct LeftScoreTag
+    {
+    };
+
+    struct RightScoreTag
+    {
+    };
+
+    struct LeftHintTag
+    {
+    };
+
+    struct RightHintTag
+    {
+    };
+
+    struct DashTag
+    {
+        int index{};
     };
 
     auto randomValue(int min, int max) -> int
     {
         static auto rng = std::mt19937{std::random_device{}()};
+
         return std::uniform_int_distribution<int>{min, max}(rng);
     }
 
@@ -87,25 +137,24 @@ namespace
         paddle.y = std::min(screenHeight - PaddleHeight, paddle.y);
     }
 
-    auto resetBall(Ball& ball, int direction, ScreenSize screen) -> void
+    auto resetBall(Ball& ball, int direction, glm::vec2 screen) -> void
     {
-        ball.x = screen.w * Half;
-        ball.y = screen.h * Half;
+        ball.position = screen * Half;
         const auto angle = static_cast<float>(randomValue(-BallLaunchAngle, BallLaunchAngle)) * Deg2Rad;
-        ball.vx = static_cast<float>(direction) * BallInitSpeed * std::cos(angle);
-        ball.vy = BallInitSpeed * std::sin(angle);
+        ball.velocity = glm::vec2{static_cast<float>(direction) * BallInitSpeed * std::cos(angle), BallInitSpeed * std::sin(angle)};
     }
 
-    auto boostedSpeed(float vx, float vy) -> float
+    auto boostedSpeed(glm::vec2 v) -> float
     {
-        const auto speed = std::sqrt((vx * vx) + (vy * vy)) * BallSpeedUp;
+        const auto speed = std::sqrt((v.x * v.x) + (v.y * v.y)) * BallSpeedUp;
+
         return std::min(speed, BallMaxSpeed);
     }
 
-    auto updateAi(Paddle& paddle, const Ball& ball, ScreenSize screen, float deltaTime) -> void
+    auto updateAi(Paddle& paddle, const Ball& ball, glm::vec2 screen, float deltaTime) -> void
     {
         const auto center = paddle.y + (PaddleHeight * Half);
-        const auto diff = ball.y - center;
+        const auto diff = ball.position.y - center;
         const auto move = PaddleSpeed * AiSpeedRatio * deltaTime;
 
         if (std::abs(diff) < move)
@@ -117,289 +166,334 @@ namespace
             paddle.y += (diff > 0.0F) ? move : -move;
         }
 
-        clampPaddle(paddle, screen.h);
+        clampPaddle(paddle, screen.y);
     }
 
-    auto updatePhysics(GameState& state, ScreenSize screen, float dt) -> void
+    auto updatePhysics(PongState& state, glm::vec2 screen, float dt) -> void
     {
-        state.ball.x += state.ball.vx * dt;
-        state.ball.y += state.ball.vy * dt;
+        state.ball.position += state.ball.velocity * dt;
 
-        if (state.ball.y - BallRadius < 0.0F)
+        if (state.ball.position.y - BallRadius < 0.0F)
         {
-            state.ball.y = BallRadius;
-            state.ball.vy = std::abs(state.ball.vy);
+            state.ball.position.y = BallRadius;
+            state.ball.velocity.y = std::abs(state.ball.velocity.y);
         }
 
-        if (state.ball.y + BallRadius > screen.h)
+        if (state.ball.position.y + BallRadius > screen.y)
         {
-            state.ball.y = screen.h - BallRadius;
-            state.ball.vy = -std::abs(state.ball.vy);
+            state.ball.position.y = screen.y - BallRadius;
+            state.ball.velocity.y = -std::abs(state.ball.velocity.y);
         }
 
-        if (state.ball.vx < 0.0F && state.ball.x - BallRadius <= state.leftPad.x + PaddleWidth && state.ball.x - BallRadius >= state.leftPad.x
-            && state.ball.y >= state.leftPad.y && state.ball.y <= state.leftPad.y + PaddleHeight)
+        const auto leftPaddleX = PaddleOffset;
+        const auto rightPaddleX = screen.x - PaddleOffset - PaddleWidth;
+
+        if (state.ball.velocity.x < 0.0F && state.ball.position.x - BallRadius <= leftPaddleX + PaddleWidth
+            && state.ball.position.x - BallRadius >= leftPaddleX && state.ball.position.y >= state.leftPad.y
+            && state.ball.position.y <= state.leftPad.y + PaddleHeight)
         {
-            const auto hitPos = (state.ball.y - (state.leftPad.y + (PaddleHeight * Half))) / (PaddleHeight * Half);
+            const auto hitPos = (state.ball.position.y - (state.leftPad.y + (PaddleHeight * Half))) / (PaddleHeight * Half);
             const auto angle = hitPos * MaxBounceAngle * Deg2Rad;
-            const auto speed = boostedSpeed(state.ball.vx, state.ball.vy);
-            state.ball.vx = speed * std::cos(angle);
-            state.ball.vy = speed * std::sin(angle);
-            state.ball.x = state.leftPad.x + PaddleWidth + BallRadius;
+            const auto speed = boostedSpeed(state.ball.velocity);
+            state.ball.velocity = glm::vec2{speed * std::cos(angle), speed * std::sin(angle)};
+            state.ball.position.x = leftPaddleX + PaddleWidth + BallRadius;
         }
 
-        if (state.ball.vx > 0.0F && state.ball.x + BallRadius >= state.rightPad.x && state.ball.x + BallRadius <= state.rightPad.x + PaddleWidth
-            && state.ball.y >= state.rightPad.y && state.ball.y <= state.rightPad.y + PaddleHeight)
+        if (state.ball.velocity.x > 0.0F && state.ball.position.x + BallRadius >= rightPaddleX
+            && state.ball.position.x + BallRadius <= rightPaddleX + PaddleWidth && state.ball.position.y >= state.rightPad.y
+            && state.ball.position.y <= state.rightPad.y + PaddleHeight)
         {
-            const auto hitPos = (state.ball.y - (state.rightPad.y + (PaddleHeight * Half))) / (PaddleHeight * Half);
+            const auto hitPos = (state.ball.position.y - (state.rightPad.y + (PaddleHeight * Half))) / (PaddleHeight * Half);
             const auto angle = hitPos * MaxBounceAngle * Deg2Rad;
-            const auto speed = boostedSpeed(state.ball.vx, state.ball.vy);
-            state.ball.vx = -speed * std::cos(angle);
-            state.ball.vy = speed * std::sin(angle);
-            state.ball.x = state.rightPad.x - BallRadius;
+            const auto speed = boostedSpeed(state.ball.velocity);
+            state.ball.velocity = glm::vec2{-speed * std::cos(angle), speed * std::sin(angle)};
+            state.ball.position.x = rightPaddleX - BallRadius;
         }
 
-        if (state.ball.x - BallRadius > screen.w)
+        if (state.ball.position.x - BallRadius > screen.x)
         {
             ++state.leftPad.score;
             resetBall(state.ball, -1, screen);
         }
 
-        if (state.ball.x + BallRadius < 0.0F)
+        if (state.ball.position.x + BallRadius < 0.0F)
         {
             ++state.rightPad.score;
             resetBall(state.ball, 1, screen);
         }
     }
 
-    auto handleP2Input(Paddle& paddle, const Ball& ball, ScreenSize screen, bool isAi, float deltaTime) -> void
+    /// @brief Resolve the current renderer-output size for the main window.
+    auto windowSize(flecs::world world) -> glm::vec2
     {
-        if (isAi)
-        {
-            updateAi(paddle, ball, screen, deltaTime);
-        }
-        else
-        {
-            if (awen::widget::Window::isKeyDown(awen::widget::EventKeyboard::Key::up))
-            {
-                paddle.y -= PaddleSpeed * deltaTime;
-            }
+        auto size = glm::vec2{InitWidth, InitHeight};
 
-            if (awen::widget::Window::isKeyDown(awen::widget::EventKeyboard::Key::down))
+        world.each(
+            [&size](flecs::entity, const Window&, const WindowHandles& handles)
             {
-                paddle.y += PaddleSpeed * deltaTime;
-            }
+                if (handles.window != nullptr)
+                {
+                    auto w = 0;
+                    auto h = 0;
+                    SDL_GetWindowSize(handles.window, &w, &h);
+                    size = glm::vec2{static_cast<float>(w), static_cast<float>(h)};
+                }
+            });
 
-            clampPaddle(paddle, screen.h);
-        }
+        return size;
     }
 }
 
-auto main(int /*argc*/, char* /*argv*/[]) -> int // NOLINT(bugprone-exception-escape)
+auto main(int /*argc*/, char* /*argv*/[]) -> int
 try
 {
-    using awen::widget::EventKeyboard;
-    using awen::widget::NodeCircle;
-    using awen::widget::NodeRectangle;
-    using awen::widget::NodeText;
-    using awen::widget::NodeTransform;
-    using awen::widget::Window;
+    auto world = flecs::world{};
+    world.import<awen::sdl::Module>();
 
-    auto engine = awen::core::Engine{};
+    world.entity("MainWindow")
+        .set<Window>({
+            .title = "Awen SDL Pong",
+            .color = colors::Black,
+            .flags = EnumMask{Window::Flags::Resizable, Window::Flags::HighPixelDensity},
+            .x = WindowPositionX,
+            .y = WindowPositionY,
+            .width = InitWidth,
+            .height = InitHeight,
+        });
 
-    auto window = std::make_unique<Window>();
-    auto* windowNode = window.get();
-    window->setTitle("Awen SDL Pong");
-    window->setSize({InitWidth, InitHeight});
-    window->setPosition({WindowPositionX, WindowPositionY});
-    window->setClearColor(awen::sdl::Color{.r = 0, .g = 0, .b = 0, .a = 120});
+    const auto fontEntity = loadFont(world, "fonts/DejaVuSans.ttf", ScoreFontSize);
+    const auto hintFontEntity = loadFont(world, "fonts/DejaVuSans.ttf", HintFontSize);
 
-    const auto sw0 = InitWidth;
-    const auto sh0 = InitHeight;
-
-    auto state = GameState{
-        .leftPad = {.x = PaddleOffset, .y = (sh0 * Half) - (PaddleHeight * Half), .score = 0},
-        .rightPad = {.x = sw0 - PaddleOffset - PaddleWidth, .y = (sh0 * Half) - (PaddleHeight * Half), .score = 0},
+    world.set<PongState>(PongState{
+        .leftPad = {.y = (InitHeight * Half) - (PaddleHeight * Half), .score = 0},
+        .rightPad = {.y = (InitHeight * Half) - (PaddleHeight * Half), .score = 0},
         .ball = {},
         .p2Ai = true,
-    };
+    });
 
-    resetBall(state.ball, 1, ScreenSize{.w = sw0, .h = sh0});
-
-    auto dashes = std::vector<NodeTransform*>{};
-    dashes.reserve(MaxDashes);
+    {
+        auto& state = world.get_mut<PongState>();
+        resetBall(state.ball, 1, glm::vec2{InitWidth, InitHeight});
+    }
 
     for (auto i = 0; i < MaxDashes; ++i)
     {
-        auto dashTransform = std::make_unique<NodeTransform>();
-        auto dash = std::make_unique<NodeRectangle>();
-        dash->setSize({DashWidth, static_cast<float>(DashHeight)});
-        dash->setColor(awen::widget::colors::DarkGray);
-        dashes.push_back(dashTransform.get());
-        dashTransform->addChild(std::move(dash));
-        window->addChild(std::move(dashTransform));
+        world.entity()
+            .set<DashTag>({.index = i})
+            .set<LocalTransform>({.position = {-DashWidth, -DashHeight}})
+            .set<RectangleFill>({.size = {DashWidth, DashHeight}, .anchor = {0.0F, 0.0F}, .color = colors::DarkGray})
+            .set<ZOrder>({.value = 0});
     }
 
-    auto leftPaddleTransform = std::make_unique<NodeTransform>();
-    auto leftPaddle = std::make_unique<NodeRectangle>();
-    leftPaddle->setSize({PaddleWidth, PaddleHeight});
-    leftPaddle->setColor(awen::widget::colors::White);
-    auto* leftPaddleNode = leftPaddleTransform.get();
-    leftPaddleTransform->addChild(std::move(leftPaddle));
-    window->addChild(std::move(leftPaddleTransform));
+    world.entity("LeftPaddle")
+        .add<LeftPaddleTag>()
+        .set<LocalTransform>({.position = {PaddleOffset, 0.0F}})
+        .set<RectangleFill>({.size = {PaddleWidth, PaddleHeight}, .anchor = {0.0F, 0.0F}, .color = colors::White})
+        .set<ZOrder>({.value = 10});
 
-    auto rightPaddleTransform = std::make_unique<NodeTransform>();
-    auto rightPaddle = std::make_unique<NodeRectangle>();
-    rightPaddle->setSize({PaddleWidth, PaddleHeight});
-    rightPaddle->setColor(awen::widget::colors::White);
-    auto* rightPaddleNode = rightPaddleTransform.get();
-    rightPaddleTransform->addChild(std::move(rightPaddle));
-    window->addChild(std::move(rightPaddleTransform));
+    world.entity("RightPaddle")
+        .add<RightPaddleTag>()
+        .set<LocalTransform>({.position = {0.0F, 0.0F}})
+        .set<RectangleFill>({.size = {PaddleWidth, PaddleHeight}, .anchor = {0.0F, 0.0F}, .color = colors::White})
+        .set<ZOrder>({.value = 10});
 
-    auto ballTransform = std::make_unique<NodeTransform>();
-    auto ball = std::make_unique<NodeCircle>();
-    ball->setRadius(BallRadius);
-    ball->setColor(awen::widget::colors::White);
-    auto* ballNode = ballTransform.get();
-    ballTransform->addChild(std::move(ball));
-    window->addChild(std::move(ballTransform));
+    world.entity("Ball")
+        .add<BallTag>()
+        .set<LocalTransform>({.position = {0.0F, 0.0F}})
+        .set<CircleFill>({.radius = BallRadius, .color = colors::White})
+        .set<ZOrder>({.value = 10});
 
-    auto leftScoreTransform = std::make_unique<NodeTransform>();
-    auto leftScore = std::make_unique<NodeText>();
-    leftScore->setFontSize(ScoreFontSize);
-    leftScore->setColor(awen::widget::colors::White);
-    auto* leftScoreTransformNode = leftScoreTransform.get();
-    auto* leftScoreNode = leftScore.get();
-    leftScoreTransform->addChild(std::move(leftScore));
-    window->addChild(std::move(leftScoreTransform));
-
-    auto rightScoreTransform = std::make_unique<NodeTransform>();
-    auto rightScore = std::make_unique<NodeText>();
-    rightScore->setFontSize(ScoreFontSize);
-    rightScore->setColor(awen::widget::colors::White);
-    auto* rightScoreTransformNode = rightScoreTransform.get();
-    auto* rightScoreNode = rightScore.get();
-    rightScoreTransform->addChild(std::move(rightScore));
-    window->addChild(std::move(rightScoreTransform));
-
-    auto leftHintTransform = std::make_unique<NodeTransform>();
-    auto leftHint = std::make_unique<NodeText>();
-    leftHint->setText("W / S");
-    leftHint->setFontSize(HintFontSize);
-    leftHint->setColor(awen::widget::colors::DarkGray);
-    auto* leftHintTransformNode = leftHintTransform.get();
-    leftHintTransform->addChild(std::move(leftHint));
-    window->addChild(std::move(leftHintTransform));
-
-    auto rightHintTransform = std::make_unique<NodeTransform>();
-    auto rightHint = std::make_unique<NodeText>();
-    rightHint->setFontSize(HintFontSize);
-    rightHint->setColor(awen::widget::colors::DarkGray);
-    auto* rightHintTransformNode = rightHintTransform.get();
-    auto* rightHintNode = rightHint.get();
-    rightHintTransform->addChild(std::move(rightHint));
-    window->addChild(std::move(rightHintTransform));
-
-    engine.onUpdate().connect(
-        [&](std::chrono::duration<float> dt)
-        {
-            const auto deltaTime = dt.count();
-            const auto sw = static_cast<float>(Window::getScreenWidth());
-            const auto sh = static_cast<float>(Window::getScreenHeight());
-            const auto screen = ScreenSize{.w = sw, .h = sh};
-
-            state.rightPad.x = sw - PaddleOffset - PaddleWidth;
-
-            if (Window::isKeyPressed(EventKeyboard::Key::space))
-            {
-                state.p2Ai = !state.p2Ai;
-            }
-
-            if (Window::isKeyDown(EventKeyboard::Key::w))
-            {
-                state.leftPad.y -= PaddleSpeed * deltaTime;
-            }
-
-            if (Window::isKeyDown(EventKeyboard::Key::s))
-            {
-                state.leftPad.y += PaddleSpeed * deltaTime;
-            }
-
-            // While a pointer (mouse or touch) is held, snap the left paddle's
-            // centre to the pointer Y so the player can drag the paddle.
-            if (Window::isPointerDown())
-            {
-                state.leftPad.y = Window::getPointerY() - (PaddleHeight * Half);
-            }
-
-            clampPaddle(state.leftPad, sh);
-
-            handleP2Input(state.rightPad, state.ball, screen, state.p2Ai, deltaTime);
-
-            updatePhysics(state, screen, deltaTime);
-
-            const auto halfWidth = sw * Half;
-            const auto screenWidthInt = static_cast<int>(sw);
-            const auto screenHeightInt = static_cast<int>(sh);
-
-            auto dashIndex = 0;
-
-            for (auto y = 0; y < screenHeightInt && dashIndex < MaxDashes; y += DashGap, ++dashIndex)
-            {
-                dashes[static_cast<std::size_t>(dashIndex)]->setPosition( // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
-                    {halfWidth - DashCenterOffset, static_cast<float>(y)});
-            }
-
-            for (; dashIndex < MaxDashes; ++dashIndex)
-            {
-                dashes[static_cast<std::size_t>(dashIndex)]->setPosition( // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
-                    {-DashWidth, -static_cast<float>(DashHeight)});
-            }
-
-            leftPaddleNode->setPosition({state.leftPad.x, state.leftPad.y});
-            rightPaddleNode->setPosition({state.rightPad.x, state.rightPad.y});
-            ballNode->setPosition({state.ball.x, state.ball.y});
-
-            const auto leftScoreStr = std::to_string(state.leftPad.score);
-            const auto rightScoreStr = std::to_string(state.rightPad.score);
-
-            leftScoreNode->setText(leftScoreStr);
-            leftScoreTransformNode->setPosition({static_cast<float>(static_cast<int>(halfWidth) - ScoreXLeft), static_cast<float>(ScoreY)});
-
-            rightScoreNode->setText(rightScoreStr);
-            rightScoreTransformNode->setPosition({
-                static_cast<float>(static_cast<int>(halfWidth) + ScoreXLeft - Window::measureText(rightScoreStr.c_str(), ScoreFontSize)),
-                static_cast<float>(ScoreY),
-            });
-
-            leftHintTransformNode->setPosition({static_cast<float>(HintX), static_cast<float>(screenHeightInt - HintYFromBottom)});
-
-            const auto* p2Text = state.p2Ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
-            rightHintNode->setText(p2Text);
-            rightHintTransformNode->setPosition({
-                static_cast<float>(screenWidthInt - Window::measureText(p2Text, HintFontSize) - HintX),
-                static_cast<float>(screenHeightInt - HintYFromBottom),
-            });
-        });
-
-    engine.addChild(std::move(window));
-    const auto result = engine.run();
-
-    if (const auto& error = windowNode->getLastError(); error.has_value())
+    if (fontEntity.is_valid())
     {
-        std::println(stderr, "awen-widget-pong: {}", *error);
-        return EXIT_FAILURE;
+        world.entity("LeftScore")
+            .add<LeftScoreTag>()
+            .set<LocalTransform>({.position = {0.0F, ScoreY}})
+            .set<TextLabel>({.text = "0", .font = fontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::White})
+            .set<ZOrder>({.value = 5});
+
+        world.entity("RightScore")
+            .add<RightScoreTag>()
+            .set<LocalTransform>({.position = {0.0F, ScoreY}})
+            .set<TextLabel>({.text = "0", .font = fontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::White})
+            .set<ZOrder>({.value = 5});
     }
 
-    return result;
-}
-catch (const std::exception& exception)
-{
-    std::println(stderr, "awen-widget-pong: {}", exception.what());
-    return EXIT_FAILURE;
+    if (hintFontEntity.is_valid())
+    {
+        world.entity("LeftHint")
+            .add<LeftHintTag>()
+            .set<LocalTransform>({.position = {HintMargin, 0.0F}})
+            .set<TextLabel>({.text = "W / S", .font = hintFontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::DarkGray})
+            .set<ZOrder>({.value = 5});
+
+        world.entity("RightHint")
+            .add<RightHintTag>()
+            .set<LocalTransform>({.position = {0.0F, 0.0F}})
+            .set<TextLabel>({.text = "P2: AI  [SPACE]", .font = hintFontEntity.id(), .anchor = {0.0F, 0.0F}, .color = colors::DarkGray})
+            .set<ZOrder>({.value = 5});
+    }
+
+    // Input + AI: read keyboard/mouse, update paddle Y in PongState.
+    world.system("PongInput")
+        .kind<phases::OnUpdate>()
+        .run(
+            [](flecs::iter& it)
+            {
+                auto world = it.world();
+                auto& state = world.get_mut<PongState>();
+                const auto& keyboard = world.get<KeyboardState>();
+                const auto& mouse = world.get<MouseState>();
+                const auto screen = windowSize(world);
+                const auto dt = it.delta_time();
+
+                if (keyboard.wasPressed(SDL_SCANCODE_ESCAPE))
+                {
+                    world.get_mut<AppState>().running = false;
+                }
+
+                if (keyboard.wasPressed(SDL_SCANCODE_SPACE))
+                {
+                    state.p2Ai = !state.p2Ai;
+                }
+
+                if (keyboard.isDown(SDL_SCANCODE_W))
+                {
+                    state.leftPad.y -= PaddleSpeed * dt;
+                }
+
+                if (keyboard.isDown(SDL_SCANCODE_S))
+                {
+                    state.leftPad.y += PaddleSpeed * dt;
+                }
+
+                if (mouse.isButtonDown(SDL_BUTTON_LEFT))
+                {
+                    state.leftPad.y = mouse.position.y - (PaddleHeight * Half);
+                }
+
+                clampPaddle(state.leftPad, screen.y);
+
+                if (state.p2Ai)
+                {
+                    updateAi(state.rightPad, state.ball, screen, dt);
+                }
+                else
+                {
+                    if (keyboard.isDown(SDL_SCANCODE_UP))
+                    {
+                        state.rightPad.y -= PaddleSpeed * dt;
+                    }
+
+                    if (keyboard.isDown(SDL_SCANCODE_DOWN))
+                    {
+                        state.rightPad.y += PaddleSpeed * dt;
+                    }
+
+                    clampPaddle(state.rightPad, screen.y);
+                }
+            });
+
+    // Physics: ball motion, collisions, scoring.
+    world.system("PongPhysics")
+        .kind<phases::OnPhysics>()
+        .run(
+            [](flecs::iter& it)
+            {
+                auto world = it.world();
+                auto& state = world.get_mut<PongState>();
+                const auto screen = windowSize(world);
+
+                updatePhysics(state, screen, it.delta_time());
+            });
+
+    // Sync game state into entity transforms / labels.
+    world.system("PongSync")
+        .kind<phases::OnPreRender>()
+        .run(
+            [](flecs::iter& it)
+            {
+                auto world = it.world();
+                const auto& state = world.get<PongState>();
+                const auto screen = windowSize(world);
+                const auto halfWidth = screen.x * Half;
+
+                world.each([&state](flecs::entity, const LeftPaddleTag&, LocalTransform& t)
+                           { t.position = glm::vec2{PaddleOffset, state.leftPad.y}; });
+
+                world.each([&state, screen](flecs::entity, const RightPaddleTag&, LocalTransform& t)
+                           { t.position = glm::vec2{screen.x - PaddleOffset - PaddleWidth, state.rightPad.y}; });
+
+                world.each([&state](flecs::entity, const BallTag&, LocalTransform& t) { t.position = state.ball.position; });
+
+                world.each(
+                    [&state, halfWidth](flecs::entity, const LeftScoreTag&, LocalTransform& t, TextLabel& label)
+                    {
+                        const auto str = std::to_string(state.leftPad.score);
+
+                        if (label.text != str)
+                        {
+                            label.text = str;
+                        }
+
+                        t.position = glm::vec2{halfWidth - ScoreOffsetFromCenter, ScoreY};
+                    });
+
+                world.each(
+                    [&state, halfWidth](flecs::entity, const RightScoreTag&, LocalTransform& t, TextLabel& label)
+                    {
+                        const auto str = std::to_string(state.rightPad.score);
+
+                        if (label.text != str)
+                        {
+                            label.text = str;
+                        }
+
+                        // Anchor right side to the right edge of the score area.
+                        label.anchor = glm::vec2{1.0F, 0.0F};
+                        t.position = glm::vec2{halfWidth + ScoreOffsetFromCenter, ScoreY};
+                    });
+
+                world.each([screen](flecs::entity, const LeftHintTag&, LocalTransform& t)
+                           { t.position = glm::vec2{HintMargin, screen.y - HintYFromBottom}; });
+
+                world.each(
+                    [&state, screen](flecs::entity, const RightHintTag&, LocalTransform& t, TextLabel& label)
+                    {
+                        const auto* p2Text = state.p2Ai ? "P2: AI  [SPACE]" : "UP/DOWN  [SPACE]";
+
+                        if (label.text != p2Text)
+                        {
+                            label.text = p2Text;
+                        }
+
+                        label.anchor = glm::vec2{1.0F, 0.0F};
+                        t.position = glm::vec2{screen.x - HintMargin, screen.y - HintYFromBottom};
+                    });
+
+                world.each(
+                    [halfWidth, screen](flecs::entity, const DashTag& tag, LocalTransform& t)
+                    {
+                        const auto y = static_cast<float>(tag.index * DashGap);
+
+                        if (y >= screen.y)
+                        {
+                            t.position = glm::vec2{-DashWidth, -DashHeight};
+                        }
+                        else
+                        {
+                            t.position = glm::vec2{halfWidth - (DashWidth * Half), y};
+                        }
+                    });
+            });
+
+    while (world.get<AppState>().running)
+    {
+        world.progress();
+    }
+
+    return EXIT_SUCCESS;
 }
 catch (...)
 {
-    std::println(stderr, "awen-widget-pong: Unhandled non-standard exception.");
     return EXIT_FAILURE;
 }

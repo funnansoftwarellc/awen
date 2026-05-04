@@ -26,7 +26,7 @@ target_sources(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         awen-flecs
-        awen-sdl-ecs
+        awen-sdl
 )
 
 if(EMSCRIPTEN)
