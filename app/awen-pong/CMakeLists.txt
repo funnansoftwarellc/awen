@@ -23,6 +23,14 @@ target_sources(${PROJECT_NAME}
         main.cpp
 )
 
+target_sources(${PROJECT_NAME} PRIVATE
+    FILE_SET cxx_modules TYPE CXX_MODULES FILES
+        Actions.ixx
+        Components.ixx
+        Constants.ixx
+        Module.ixx
+)
+
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         awen-sdl
