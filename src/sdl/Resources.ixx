@@ -31,12 +31,33 @@ export namespace awen::sdl
 
     /// @brief Load a TTF font as a resource entity.
     /// @param world The flecs world.
-    /// @param path Filesystem path to the .ttf file.
+    /// @param path Filesystem path to the .ttf file. Absolute paths are used
+    ///        as-is; relative paths are resolved first against the current
+    ///        working directory, and on failure against `SDL_GetBasePath()`
+    ///        (the directory containing the executable).
     /// @param pointSize Font point size.
     /// @return Entity carrying a Font component, or an invalid entity on failure.
     auto loadFont(flecs::world& world, std::string_view path, int pointSize) -> flecs::entity
     {
-        auto* handle = TTF_OpenFont(std::string{path}.c_str(), static_cast<float>(pointSize));
+        const auto pointSizeF = static_cast<float>(pointSize);
+        auto resolved = std::string{path};
+        auto* handle = TTF_OpenFont(resolved.c_str(), pointSizeF);
+
+        if (handle == nullptr)
+        {
+            const auto* base = SDL_GetBasePath();
+
+            if (base != nullptr)
+            {
+                auto fallback = std::string{base} + resolved;
+                handle = TTF_OpenFont(fallback.c_str(), pointSizeF);
+
+                if (handle != nullptr)
+                {
+                    resolved = std::move(fallback);
+                }
+            }
+        }
 
         if (handle == nullptr)
         {
@@ -48,7 +69,7 @@ export namespace awen::sdl
         entity.set<Font>({
             .handle = handle,
             .pointSize = pointSize,
-            .path = std::string{path},
+            .path = std::move(resolved),
         });
 
         return entity;

@@ -1,5 +1,6 @@
 module;
 
+#include <SDL3/SDL.h>
 #include <awen/flecs/Flecs.hpp>
 
 #include <glm/vec2.hpp>
@@ -48,11 +49,11 @@ export namespace awen::sdl
         Color color{colors::White};
     };
 
-    /// @brief Text label rendered with a Font resource entity.
-    /// @note The renderer rasterises the text through `TTF_RenderText_Blended`
-    ///       and creates a fresh `SDL_Texture` every frame. Use sparingly; a
-    ///       cached-texture path is a planned follow-up.
-    struct TextLabel
+    /// @brief Text rendered with a Font resource entity.
+    /// @note The renderer caches the rasterised texture in a TextCache
+    ///       component on the entity and only re-rasterises when `text`,
+    ///       `font`, or `color` change.
+    struct Text
     {
         std::string text;
         flecs::entity_t font{};
@@ -72,7 +73,7 @@ export namespace awen::sdl
     /// @brief Drawable component. Pick exactly one shape kind per entity.
     struct Drawable
     {
-        std::variant<Rectangle, Circle, Line, Polygon, TextLabel, Sprite> shape;
+        std::variant<Rectangle, Circle, Line, Polygon, Text, Sprite> shape;
     };
 
     /// @brief Optional outline modifier. Drawn after the entity's Drawable.
@@ -83,5 +84,21 @@ export namespace awen::sdl
     {
         Color color{colors::White};
         float thickness{1.0F};
+    };
+
+    /// @brief Internal cached SDL_Texture for a Text drawable.
+    /// @note Attached automatically by the renderer the first time a
+    ///       Text entity is drawn. Reused on subsequent frames as long
+    ///       as `text`, `font`, `color`, and `renderer` are unchanged.
+    ///       Cleaned up by an OnRemove observer (registered by the Module).
+    struct TextCache
+    {
+        SDL_Texture* handle{};
+        SDL_Renderer* renderer{};
+        int width{};
+        int height{};
+        std::string text;
+        flecs::entity_t font{};
+        Color color{};
     };
 }

@@ -10,6 +10,7 @@ module;
 #include <cstddef>
 #include <cstdint>
 #include <utility>
+#include <variant>
 #include <vector>
 
 export module awen.sdl;
@@ -373,21 +374,41 @@ export namespace awen::sdl
                             texture.handle = nullptr;
                         }
                     });
+
+            world.observer<TextCache>("awen::sdl::TextCacheOnRemove")
+                .event(flecs::OnRemove)
+                .each(
+                    [](flecs::entity, TextCache& cache)
+                    {
+                        if (cache.handle != nullptr)
+                        {
+                            SDL_DestroyTexture(cache.handle);
+                            cache.handle = nullptr;
+                        }
+                    });
         }
 
         static auto registerDrawableObservers(flecs::world& world) -> void
         {
             // Ensure every drawable carries a ZOrder so the ordered render
             // query can sort by it (flecs requires the order_by component
-            // to be a non-optional query term).
-            world.observer<Drawable>("awen::sdl::DrawableOnAdd")
-                .event(flecs::OnAdd)
+            // to be a non-optional query term). Also attach an empty
+            // TextCache up-front when the drawable is a Text, so the
+            // renderer can populate it via get_mut without causing a
+            // mid-iteration table move.
+            world.observer<Drawable>("awen::sdl::DrawableOnSet")
+                .event(flecs::OnSet)
                 .each(
-                    [](flecs::entity entity, Drawable&)
+                    [](flecs::entity entity, Drawable& drawable)
                     {
                         if (!entity.has<ZOrder>())
                         {
                             entity.set<ZOrder>(ZOrder{});
+                        }
+
+                        if (std::holds_alternative<Text>(drawable.shape) && !entity.has<TextCache>())
+                        {
+                            entity.set<TextCache>(TextCache{});
                         }
                     });
         }

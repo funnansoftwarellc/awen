@@ -254,7 +254,7 @@ export namespace awen::sdl
                         detail::drawPolygonOutline(sdlRenderer, worldPoints);
                     }
                 },
-                [&](const TextLabel& label)
+                [&](const Text& label)
                 {
                     auto* font = detail::fontFor(world, label.font);
 
@@ -263,26 +263,54 @@ export namespace awen::sdl
                         return;
                     }
 
-                    const auto sdlColor = SDL_Color{.r = label.color.r, .g = label.color.g, .b = label.color.b, .a = label.color.a};
-                    auto* surface = TTF_RenderText_Blended(font, label.text.c_str(), 0, sdlColor);
+                    auto* cache = entity.try_get_mut<TextCache>();
 
-                    if (surface == nullptr)
+                    if (cache == nullptr)
                     {
                         return;
                     }
 
-                    auto* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
+                    const auto cacheStale = cache->handle == nullptr || cache->renderer != sdlRenderer || cache->font != label.font
+                                            || cache->color != label.color || cache->text != label.text;
 
-                    if (texture == nullptr)
+                    if (cacheStale)
                     {
+                        const auto sdlColor = SDL_Color{.r = label.color.r, .g = label.color.g, .b = label.color.b, .a = label.color.a};
+                        auto* surface = TTF_RenderText_Blended(font, label.text.c_str(), 0, sdlColor);
+
+                        if (surface == nullptr)
+                        {
+                            return;
+                        }
+
+                        auto* texture = SDL_CreateTextureFromSurface(sdlRenderer, surface);
+                        const auto width = surface->w;
+                        const auto height = surface->h;
                         SDL_DestroySurface(surface);
-                        return;
+
+                        if (texture == nullptr)
+                        {
+                            return;
+                        }
+
+                        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+
+                        if (cache->handle != nullptr)
+                        {
+                            SDL_DestroyTexture(cache->handle);
+                        }
+
+                        cache->handle = texture;
+                        cache->renderer = sdlRenderer;
+                        cache->width = width;
+                        cache->height = height;
+                        cache->text = label.text;
+                        cache->font = label.font;
+                        cache->color = label.color;
                     }
 
-                    const auto width = static_cast<float>(surface->w);
-                    const auto height = static_cast<float>(surface->h);
-                    SDL_DestroySurface(surface);
-
+                    const auto width = static_cast<float>(cache->width);
+                    const auto height = static_cast<float>(cache->height);
                     const auto position = applyWorld(transform, glm::vec2{});
                     const auto dest = SDL_FRect{
                         .x = position.x - (label.anchor.x * width),
@@ -291,8 +319,7 @@ export namespace awen::sdl
                         .h = height,
                     };
 
-                    SDL_RenderTexture(sdlRenderer, texture, nullptr, &dest);
-                    SDL_DestroyTexture(texture);
+                    SDL_RenderTexture(sdlRenderer, cache->handle, nullptr, &dest);
                 },
                 [&](const Sprite& sprite)
                 {
