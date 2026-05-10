@@ -5,6 +5,7 @@ module;
 
 export module awen.graphics.ecs;
 export import awen.graphics.ecs.components;
+export import awen.core.ecs;
 
 export namespace awn::graphics::ecs
 {
@@ -22,7 +23,6 @@ export namespace awn::graphics::ecs
             world.component<DrawCircle>("DrawCircle");
             world.component<DrawText>("DrawText");
             world.component<Window>("Window");
-            world.component<WindowRuntime>("WindowRuntime");
 
             // Initialize the native raylib window whenever a Window component is set.
             world.observer<Window>()
@@ -49,14 +49,26 @@ export namespace awn::graphics::ecs
                         });
                     });
 
-            // Keep WindowRuntime synchronized with the native window close state.
-            world.system<WindowRuntime>().each(
-                [](WindowRuntime& runtime)
-                {
-                    if (runtime.created)
+            world.observer<Window>()
+                .event(flecs::OnRemove)
+                .each(
+                    [](flecs::entity, const Window&)
                     {
-                        PollInputEvents();
-                        runtime.should_close = WindowShouldClose();
+                        if (IsWindowReady())
+                        {
+                            CloseWindow();
+                        }
+                    });
+
+            // Keep WindowRuntime synchronized with the native window close state.
+            world.system<awn::core::RunState>().kind<awn::core::ecs::phases::OnEvent>().each(
+                [](awn::core::RunState& run_state)
+                {
+                    PollInputEvents();
+
+                    if (WindowShouldClose())
+                    {
+                        run_state.type = awn::core::RunState::Type::stopping;
                     }
                 });
         }
