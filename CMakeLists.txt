@@ -24,7 +24,10 @@ endif()
 include(CTest)
 include(GoogleTest)
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+find_package(Qt6 6.10 CONFIG REQUIRED COMPONENTS Quick)
+
+qt_standard_project_setup(REQUIRES 6.10)
+
 
 add_subdirectory(app)
 add_subdirectory(src)
