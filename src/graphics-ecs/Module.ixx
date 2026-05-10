@@ -2,6 +2,7 @@ module;
 
 #include <awen/flecs.h>
 #include <raylib.h>
+#include <iterator>
 
 export module awen.graphics.ecs;
 export import awen.graphics.ecs.components;

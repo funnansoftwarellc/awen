@@ -9,7 +9,6 @@ namespace
 {
     constexpr auto init_width = 1280;
     constexpr auto init_height = 720;
-    constexpr auto target_fps = 60;
 }
 
 auto main() -> int
@@ -19,7 +18,7 @@ try
     engine.load<awn::graphics::ecs::Module>();
 
     // Create and configure the window entity.
-    auto window = engine.world()
+    std::ignore = engine.world()
                       .entity("MainWindow")
                       .set<awn::graphics::ecs::Window>({
                           .title = "Awen - Pong",
