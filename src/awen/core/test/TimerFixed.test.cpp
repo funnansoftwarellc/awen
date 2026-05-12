@@ -5,7 +5,6 @@
 #include <QSignalSpy>
 #include <QTimer>
 
-
 using awen::core::TimerFixed;
 
 TEST(TimerFixed, DefaultState)
