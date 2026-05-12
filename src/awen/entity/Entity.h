@@ -1,12 +1,14 @@
 #pragma once
 
+#include <awen/entity/export.hxx>
+
 #include <QObject>
 #include <QString>
 #include <QtQml>
 
 namespace awen
 {
-    struct Entity
+    struct AWEN_ENTITY_EXPORT Entity
     {
         Q_GADGET
         Q_PROPERTY(QString name MEMBER name)

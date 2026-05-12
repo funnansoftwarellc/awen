@@ -48,3 +48,6 @@ build/
 
 # Qt
 .qmlls.ini
+
+# Briarthorn
+briarthorn/

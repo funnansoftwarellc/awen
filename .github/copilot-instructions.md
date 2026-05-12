@@ -66,3 +66,10 @@
 
 ## CMake Style
 - Place `find_package()` calls immediately before the `target_link_libraries()` / `target_include_directories()` / `target_compile_definitions()` calls that consume them — not at the top of the file
+
+## Testing
+- Test files are named `ClassName.test.cpp` (e.g., `TimerFixed.test.cpp`)
+- Test directories are named `test` (singular, not `tests`)
+- Every test target that exercises Qt signals or timers must use a custom `main.cpp` that constructs a `QCoreApplication` before calling `::testing::InitGoogleTest` and `RUN_ALL_TESTS()`
+- Use `gtest_discover_tests()` (from the `GoogleTest` CMake module) to register tests with CTest
+- Wrap `add_subdirectory(test)` in `if(BUILD_TESTING) … endif()` in each module's `CMakeLists.txt`
