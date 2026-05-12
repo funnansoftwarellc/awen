@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.28.3)
 
-project(awen)
+project(awen VERSION 2026.3.20)
 
 include(GNUInstallDirs)
 include(GenerateExportHeader)
+include(CMakePackageConfigHelpers)
 include(cmake/target/apk.cmake)
 include(cmake/target/clang-format.cmake)
 include(cmake/target/clang-tidy.cmake)
@@ -26,9 +27,11 @@ include(CTest)
 include(GoogleTest)
 include(cmake/qt-vcpkg-fixup.cmake)
 
-find_package(Qt6 6.10 CONFIG REQUIRED COMPONENTS Quick)
+set(AWEN_QT_VERSION 6.10)
 
-qt_standard_project_setup(REQUIRES 6.10)
+find_package(Qt6 ${AWEN_QT_VERSION} CONFIG REQUIRED COMPONENTS Quick)
+
+qt_standard_project_setup(REQUIRES ${AWEN_QT_VERSION})
 
 # Collect every qt_add_qml_module output under a single tree so that all
 # in-project QML modules (e.g. awen.entity) are discoverable via a single
@@ -42,6 +45,31 @@ set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml" CACHE PATH
 # platform or preset. See: https://doc.qt.io/qt-6/qtqml-tooling-qmlls.html
 set(QT_QML_GENERATE_QMLLS_INI ON CACHE BOOL "Generate .qmlls.ini for qmlls" FORCE)
 
+set(awenInstallCmakeDir "${CMAKE_INSTALL_DATADIR}/awen")
+
+configure_package_config_file(
+	cmake/awen-config.cmake.in
+	"${CMAKE_CURRENT_BINARY_DIR}/awen-config.cmake"
+	INSTALL_DESTINATION "${awenInstallCmakeDir}"
+)
+
+write_basic_package_version_file(
+	"${CMAKE_CURRENT_BINARY_DIR}/awen-config-version.cmake"
+	VERSION "${PROJECT_VERSION}"
+	COMPATIBILITY SameMajorVersion
+)
 
 add_subdirectory(src)
 add_subdirectory(app)
+
+install(EXPORT awen-targets
+	FILE awen-targets.cmake
+	NAMESPACE awen::
+	DESTINATION "${awenInstallCmakeDir}"
+)
+
+install(FILES
+	"${CMAKE_CURRENT_BINARY_DIR}/awen-config.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/awen-config-version.cmake"
+	DESTINATION "${awenInstallCmakeDir}"
+)

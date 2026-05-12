@@ -12,6 +12,11 @@ generate_export_header(${PROJECT_NAME}
     BASE_NAME AWEN_ENTITY
 )
 
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+        EXPORT_NAME entity
+)
+
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         Qt6::Core
@@ -37,6 +42,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 install(TARGETS ${PROJECT_NAME}
+    EXPORT awen-targets
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

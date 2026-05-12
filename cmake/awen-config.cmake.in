@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(Qt6 @AWEN_QT_VERSION@ CONFIG REQUIRED COMPONENTS Core Quick)
+
+include("${CMAKE_CURRENT_LIST_DIR}/awen-targets.cmake")
+
+check_required_components(awen)

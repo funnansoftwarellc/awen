@@ -9,7 +9,7 @@ target_sources(${PROJECT_NAME}
 )
 
 find_package(GTest CONFIG REQUIRED)
-find_package(Qt6 6.10 CONFIG REQUIRED COMPONENTS Core Test)
+find_package(Qt6 ${AWEN_QT_VERSION} CONFIG REQUIRED COMPONENTS Core Test)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
