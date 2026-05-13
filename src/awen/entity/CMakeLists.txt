@@ -1,8 +1,11 @@
 project(awen-entity)
 
+set(awenEntityQmlOutputTargets)
+
 qt_add_qml_module(${PROJECT_NAME}
     URI awen.entity
     VERSION 1.0
+    OUTPUT_TARGETS awenEntityQmlOutputTargets
     SOURCES
         Entity.h
 )
@@ -41,6 +44,15 @@ target_include_directories(${PROJECT_NAME}
         "$<INSTALL_INTERFACE:include>"
 )
 
+set(awenEntityQmlResourceTargets)
+
+foreach(awenEntityQmlOutputTarget IN LISTS awenEntityQmlOutputTargets)
+    get_target_property(awenEntityQmlResourceName "${awenEntityQmlOutputTarget}" _qt_resource_name)
+    if(awenEntityQmlResourceName)
+        list(APPEND awenEntityQmlResourceTargets "${awenEntityQmlOutputTarget}")
+    endif()
+endforeach()
+
 install(TARGETS ${PROJECT_NAME}
     EXPORT awen-targets
     BUNDLE DESTINATION .
@@ -49,3 +61,10 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
+
+if(awenEntityQmlResourceTargets)
+    install(TARGETS ${awenEntityQmlResourceTargets}
+        EXPORT awen-targets
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/awen"
+    )
+endif()

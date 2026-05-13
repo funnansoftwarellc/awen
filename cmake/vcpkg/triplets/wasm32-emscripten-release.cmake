@@ -23,3 +23,12 @@ set(VCPKG_LIBRARY_LINKAGE static)
 set(VCPKG_CMAKE_SYSTEM_NAME Emscripten)
 set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${EMSCRIPTEN_ROOT}/cmake/Modules/Platform/Emscripten.cmake")
 set(VCPKG_BUILD_TYPE release)
+
+# Qt 6.10 on wasm enables the `thread` feature (transitively via qtdeclarative
+# and testlib), which forces `-pthread` on the final link line and therefore
+# requires every static object linked into the binary to have been compiled
+# with the `atomics` and `bulk-memory` Wasm features. Propagate `-pthread` to
+# every dependency so they all agree with Qt.
+set(VCPKG_C_FLAGS "-pthread")
+set(VCPKG_CXX_FLAGS "-pthread")
+set(VCPKG_LINKER_FLAGS "-pthread")

@@ -1,8 +1,11 @@
 project(awen-core)
 
+set(awenCoreQmlOutputTargets)
+
 qt_add_qml_module(${PROJECT_NAME}
     URI awen.core
     VERSION 1.0
+    OUTPUT_TARGETS awenCoreQmlOutputTargets
     SOURCES
         TimerFixed.hpp
         TimerFixed.cpp
@@ -42,6 +45,15 @@ target_include_directories(${PROJECT_NAME}
         "$<INSTALL_INTERFACE:include>"
 )
 
+set(awenCoreQmlResourceTargets)
+
+foreach(awenCoreQmlOutputTarget IN LISTS awenCoreQmlOutputTargets)
+    get_target_property(awenCoreQmlResourceName "${awenCoreQmlOutputTarget}" _qt_resource_name)
+    if(awenCoreQmlResourceName)
+        list(APPEND awenCoreQmlResourceTargets "${awenCoreQmlOutputTarget}")
+    endif()
+endforeach()
+
 install(TARGETS ${PROJECT_NAME}
     EXPORT awen-targets
     BUNDLE DESTINATION .
@@ -51,6 +63,13 @@ install(TARGETS ${PROJECT_NAME}
     FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-if(BUILD_TESTING)
+if(awenCoreQmlResourceTargets)
+    install(TARGETS ${awenCoreQmlResourceTargets}
+        EXPORT awen-targets
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/awen"
+    )
+endif()
+
+if(BUILD_TESTING AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     add_subdirectory(test)
 endif()
