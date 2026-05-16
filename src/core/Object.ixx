@@ -48,7 +48,7 @@ export namespace awen::core
                 child->update(x);
             }
         }
-        
+
         // NOLINTNEXTLINE(misc-no-recursion)
         auto updateFixed(std::chrono::duration<float> x) -> void
         {

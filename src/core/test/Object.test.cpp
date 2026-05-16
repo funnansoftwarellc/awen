@@ -117,7 +117,7 @@ TEST(Object, UpdateFixedSignal)
     Object obj;
     std::optional<float> expected;
     std::ignore = obj.onUpdateFixed([&](auto x) { expected = x.count(); });
-    
+
     constexpr auto duration = std::chrono::duration<float>(0.1F);
     obj.updateFixed(duration);
     EXPECT_TRUE(expected.has_value());
