@@ -1,11 +1,8 @@
 {
-    "name": "awen",
-    "version-string": "2026.5.15",
-    "port-version": 1,
-    "description": "A modern C++ game engine for creation and exploration.",
-    "homepage": "https://github.com/funnansoftwarellc/awen",
-    "dependencies": [
-        "raylib",
-        "gtest"
-    ]
+  "name": "awen",
+  "version-string": "2026.5.15",
+  "port-version": 1,
+  "description": "A modern C++ game engine for creation and exploration.",
+  "homepage": "https://github.com/funnansoftwarellc/awen",
+  "dependencies": ["raylib", "gtest", "palsigslot"]
 }

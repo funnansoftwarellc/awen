@@ -4,7 +4,7 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
     if(CLANG_TIDY)
         include(ProcessorCount)
         ProcessorCount(NPROC)
-        set(CLANG_TIDY_SOURCE_FILTER "^${CMAKE_SOURCE_DIR}/app/.*\\.cpp$")
+        set(CLANG_TIDY_SOURCE_FILTER "^${CMAKE_SOURCE_DIR}/app/.*\\.(cpp|ixx)$")
         set(CLANG_TIDY_SCRIPT "${CMAKE_BINARY_DIR}/run-clang-tidy.sh")
 
         if(NPROC LESS 3)
