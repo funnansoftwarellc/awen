@@ -7,10 +7,12 @@
       "cacheVariables": {
         "BUILD_SHARED_LIBS": false,
         "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic",
+        "CMAKE_C_FLAGS": "-Werror -Wall -Wextra -pedantic -U_FORTIFY_SOURCE",
+        "CMAKE_C_FLAGS_RELEASE": "-O2 -DNDEBUG",
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_CXX_EXTENSIONS": false,
-        "CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -pedantic",
+        "CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -pedantic -U_FORTIFY_SOURCE",
+        "CMAKE_CXX_FLAGS_RELEASE": "-O2 -DNDEBUG",
         "CMAKE_CXX_STANDARD_REQUIRED": true,
         "CMAKE_CXX_STANDARD": "23",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true

@@ -21,13 +21,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tar \
     && rm -rf /var/lib/apt/lists/*
 
-# GCC 15.
+# GCC 16.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc-15 \
-    g++-15 \
+    gcc-16 \
+    g++-16 \
     && rm -rf /var/lib/apt/lists/* \
-    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100 \
-    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-16 100 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-16 100
 
 # Add the official LLVM apt repository so clang-22 packages are available.
 RUN curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key \
