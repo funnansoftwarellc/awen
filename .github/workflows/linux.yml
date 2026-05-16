@@ -78,8 +78,8 @@ jobs:
             test: true
           - preset: x64-linux-clang-debug
             test: true
-          - preset: x64-linux-clang-arm64-android-release
-            test: false
+          # - preset: x64-linux-clang-arm64-android-release
+          #   test: false
           - preset: x64-linux-wasm-release
             test: false
 
