@@ -65,6 +65,7 @@ export namespace awen::core
         auto run() -> int
         {
             start_ = std::chrono::steady_clock::now();
+            running_ = true;
 
             while (running_)
             {
@@ -83,10 +84,19 @@ export namespace awen::core
                     accumulate_ -= updateFixedInterval_;
                     ++count;
                 }
+
+                renderPre();
+                render();
+                renderPost();
             }
 
             return EXIT_SUCCESS;
         };
+
+        auto stop() noexcept -> void
+        {
+            running_ = false;
+        }
 
     private:
         std::chrono::steady_clock::time_point start_;

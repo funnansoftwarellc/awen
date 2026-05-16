@@ -7,6 +7,7 @@ module;
 #include <ranges>
 #include <sigslot/signal.hpp>
 #include <typeindex>
+#include <typeinfo>
 #include <unordered_map>
 #include <vector>
 
@@ -49,6 +50,11 @@ export namespace awen::core
             }
         }
 
+        /// @brief Performs fixed updates on this object and all its children. The fixed update is performed by emitting the updateFixed signal, which
+        /// can be connected to by any slot. The updateFixed signal is emitted with a duration parameter that represents the time elapsed since the
+        /// last fixed update. The updateFixed function also recursively calls the updateFixed function of all its children, passing the same duration
+        /// parameter.
+        /// @param x The duration parameter that represents the time elapsed since the last fixed update.
         // NOLINTNEXTLINE(misc-no-recursion)
         auto updateFixed(std::chrono::duration<float> x) -> void
         {
@@ -57,6 +63,41 @@ export namespace awen::core
             for (const auto& child : children_)
             {
                 child->updateFixed(x);
+            }
+        }
+
+        // NOLINTNEXTLINE(misc-no-recursion)
+        auto renderPre() -> void
+        {
+            renderPre_();
+
+            for (const auto& child : children_)
+            {
+                child->renderPre();
+            }
+        }
+
+        /// @brief Renders this object and all its children. The render is performed by emitting the render signal, which can be connected to by any
+        /// slot. The render signal is emitted with no parameters. The render function also recursively calls the render function of all its children.
+        // NOLINTNEXTLINE(misc-no-recursion)
+        auto render() -> void
+        {
+            render_();
+
+            for (const auto& child : children_)
+            {
+                child->render();
+            }
+        }
+
+        // NOLINTNEXTLINE(misc-no-recursion)
+        auto renderPost() -> void
+        {
+            renderPost_();
+
+            for (const auto& child : children_)
+            {
+                child->renderPost();
             }
         }
 
@@ -180,6 +221,21 @@ export namespace awen::core
             return updateFixed_.connect(x);
         }
 
+        auto onRenderPre(auto x) -> sigslot::connection
+        {
+            return renderPre_.connect(x);
+        }
+
+        auto onRender(auto x) -> sigslot::connection
+        {
+            return render_.connect(x);
+        }
+
+        auto onRenderPost(auto x) -> sigslot::connection
+        {
+            return renderPost_.connect(x);
+        }
+
     private:
         auto removeChild(Object* child) -> std::unique_ptr<Object>
         {
@@ -214,5 +270,8 @@ export namespace awen::core
         sigslot::signal<> destroyed_;
         sigslot::signal<std::chrono::duration<float>> update_;
         sigslot::signal<std::chrono::duration<float>> updateFixed_;
+        sigslot::signal<> renderPre_;
+        sigslot::signal<> render_;
+        sigslot::signal<> renderPost_;
     };
 }

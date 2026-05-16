@@ -1,32 +1,27 @@
 #include <raylib.h>
 #include <cstdlib>
+#include <tuple>
+#include <typeinfo>
 
 import awen.core;
+import awen.raylib;
+
+using awen::raylib::Window;
 
 auto main() -> int
 {
     constexpr auto width{1280};
     constexpr auto height{720};
-    constexpr auto fontSize{50};
-    constexpr auto textPosX{350};
-    constexpr auto testPosY{200};
 
-    const awen::core::Engine engine;
-    (void)engine;
+    awen::core::Engine engine;
 
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(width, height, "Awen");
+    auto* window = engine.addChild<Window>(Window::Traits{
+        .title = "Awen",
+        .width = width,
+        .height = height,
+    });
 
-    while (!WindowShouldClose())
-    {
-        BeginDrawing();
-        ClearBackground(BLACK);
-        DrawText("Hello, Awen!", textPosX, testPosY, fontSize, ORANGE);
-        DrawFPS(0, 0);
-        EndDrawing();
-    }
+    std::ignore = window->addChild<awen::raylib::Text>();
 
-    CloseWindow();
-
-    return EXIT_SUCCESS;
+    return engine.run();
 }

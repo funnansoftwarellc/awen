@@ -122,3 +122,30 @@ TEST(Object, UpdateFixedSignal)
     obj.updateFixed(duration);
     EXPECT_TRUE(expected.has_value());
 }
+
+TEST(Object, RenderPreSignal)
+{
+    Object obj;
+    bool rendered = false;
+    std::ignore = obj.onRenderPre([&]() { rendered = true; });
+    obj.renderPre();
+    EXPECT_TRUE(rendered);
+}
+
+TEST(Object, RenderSignal)
+{
+    Object obj;
+    bool rendered = false;
+    std::ignore = obj.onRender([&]() { rendered = true; });
+    obj.render();
+    EXPECT_TRUE(rendered);
+}
+
+TEST(Object, RenderPostSignal)
+{
+    Object obj;
+    bool rendered = false;
+    std::ignore = obj.onRenderPost([&]() { rendered = true; });
+    obj.renderPost();
+    EXPECT_TRUE(rendered);
+}

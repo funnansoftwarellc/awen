@@ -8,14 +8,6 @@ target_sources(${PROJECT_NAME}
 )
 
 if(EMSCRIPTEN)
-    set(raylib_USE_STATIC_LIBS ON)
-
-    target_link_options(${PROJECT_NAME}
-        PRIVATE
-            -sUSE_GLFW=3
-            -sASYNCIFY
-    )
-
     set_target_properties(${PROJECT_NAME} PROPERTIES
         SUFFIX ".html"
     )
@@ -28,29 +20,10 @@ if(EMSCRIPTEN)
     )
 endif()
 
-find_package(raylib CONFIG REQUIRED)
-
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        raylib
-        awen-core
+        awen-raylib
 )
-
-if(NOT EMSCRIPTEN)
-    find_package(glfw3 CONFIG REQUIRED)
-
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-            glfw
-    )
-endif()
-
-if(WIN32)
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-            winmm
-    )
-endif()
 
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
