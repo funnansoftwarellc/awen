@@ -8,6 +8,6 @@ TEST(Object, OnDestroyedSignal)
 {
     Object obj;
     bool destroyed = false;
-    obj.onDestroyed.connect([&]() { destroyed = true; });
+    std::ignore = obj.onDestroyed.connect([&]() { destroyed = true; });
     EXPECT_FALSE(destroyed);
 }
