@@ -138,6 +138,24 @@
       }
     },
     {
+      "name": "x64-linux-gcc-release-unit",
+      "inherits": "x64-linux-gcc-release",
+      "filter": {
+        "include": {
+          "name": "^UNIT_"
+        }
+      }
+    },
+    {
+      "name": "x64-linux-gcc-release-graphics",
+      "inherits": "x64-linux-gcc-release",
+      "filter": {
+        "include": {
+          "name": "^GRAPHICS_"
+        }
+      }
+    },
+    {
       "name": "x64-linux-clang-debug",
       "configurePreset": "x64-linux-clang-debug",
       "output": {
