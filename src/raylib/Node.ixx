@@ -8,7 +8,7 @@ module;
 #include <vector>
 
 export module awen.raylib.node;
-import awen.core.object;
+import awen.core;
 
 export namespace awen::raylib
 {
@@ -57,6 +57,19 @@ export namespace awen::raylib
         [[nodiscard]] auto getRotation() const noexcept -> float
         {
             return rotation_;
+        }
+
+        [[nodiscard]] auto addNode(std::unique_ptr<Node> node) -> Node*
+        {
+            if (node == nullptr)
+            {
+                return nullptr;
+            }
+
+            auto* nodePtr = node.get();
+            addChild(std::move(node));
+            nodes_.emplace_back(nodePtr);
+            return nodePtr;
         }
 
         template <TypeNode T, typename... Args>
@@ -126,6 +139,29 @@ export namespace awen::raylib
             return renderPost_.connect(x);
         }
 
+        [[nodiscard]] auto getEngine() noexcept -> core::Engine*
+        {
+            if (engine_ != nullptr)
+            {
+                return engine_;
+            }
+
+            auto* parent = getParent();
+
+            while (parent != nullptr)
+            {
+                if (auto* engine = dynamic_cast<core::Engine*>(parent))
+                {
+                    engine_ = engine;
+                    break;
+                }
+
+                parent = parent->getParent();
+            }
+
+            return engine_;
+        }
+
     private:
         using awen::core::Object::addChild;
         std::vector<Node*> nodes_;
@@ -135,5 +171,6 @@ export namespace awen::raylib
         sigslot::signal_st<> renderPre_;
         sigslot::signal_st<> render_;
         sigslot::signal_st<> renderPost_;
+        awen::core::Engine* engine_{};
     };
 }

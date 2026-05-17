@@ -9,7 +9,7 @@
 /// @param suite The test suite name.
 /// @param name  The test case name (will be prefixed with UNIT_).
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define UNIT_TEST(suite, name) TEST(suite, UNIT_##name)
+#define UNIT_TEST(suite, name) TEST(UNIT_##suite, name)
 
 /// @brief Defines a graphics test case.
 /// @details Wraps the gtest TEST macro and prefixes the test name with GRAPHICS_,
@@ -18,4 +18,4 @@
 /// @param suite The test suite name.
 /// @param name  The test case name (will be prefixed with GRAPHICS_).
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define GRAPHICS_TEST(suite, name) TEST(suite, GRAPHICS_##name)
+#define GRAPHICS_TEST(suite, name) TEST(GRAPHICS_##suite, name)

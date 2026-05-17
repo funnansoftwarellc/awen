@@ -40,13 +40,28 @@ export namespace awen::core
             destroyed_();
         }
 
+        auto startup() -> void
+        {
+            if (started_)
+            {
+                return;
+            }
+
+            started_ = true;
+
+            startup_();
+
+            for (const auto& child : children_)
+            {
+                child->startup();
+            }
+        }
+
         auto updatePre() -> void
         {
             updatePre_();
 
-            const auto& children = getChildren();
-
-            for (const auto& child : children)
+            for (const auto& child : children_)
             {
                 child->updatePre();
             }
@@ -61,9 +76,7 @@ export namespace awen::core
         {
             update_(x);
 
-            const auto& children = getChildren();
-
-            for (const auto& child : children)
+            for (const auto& child : children_)
             {
                 child->update(x);
             }
@@ -73,9 +86,7 @@ export namespace awen::core
         {
             updatePost_();
 
-            const auto& children = getChildren();
-
-            for (const auto& child : children)
+            for (const auto& child : children_)
             {
                 child->updatePost();
             }
@@ -90,9 +101,7 @@ export namespace awen::core
         {
             updateFixed_(x);
 
-            const auto& children = getChildren();
-
-            for (const auto& child : children)
+            for (const auto& child : children_)
             {
                 child->updateFixed(x);
             }
@@ -283,6 +292,11 @@ export namespace awen::core
             return destroyed_.connect(x);
         }
 
+        auto onStartup(auto x) -> sigslot::connection
+        {
+            return startup_.connect(x);
+        }
+
         auto onUpdatePre(auto x) -> sigslot::connection
         {
             return updatePre_.connect(x);
@@ -335,9 +349,11 @@ export namespace awen::core
         std::unordered_map<std::type_index, std::vector<Object*>> typeChildren_;
         Object* parent_{};
         sigslot::signal_st<> destroyed_;
+        sigslot::signal_st<> startup_;
         sigslot::signal_st<> updatePre_;
         sigslot::signal_st<std::chrono::duration<float>> update_;
         sigslot::signal_st<std::chrono::duration<float>> updateFixed_;
         sigslot::signal_st<> updatePost_;
+        bool started_{false};
     };
 }

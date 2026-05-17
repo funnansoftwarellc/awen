@@ -173,8 +173,7 @@ UNIT_TEST(Object, UpdatePreSignal)
     bool called = false;
     std::ignore = obj.onUpdatePre([&]() { called = true; });
 
-    constexpr auto duration = std::chrono::duration<float>(0.1F);
-    obj.update(duration);
+    obj.updatePre();
     EXPECT_TRUE(called);
 }
 
@@ -206,7 +205,77 @@ UNIT_TEST(Object, UpdatePostSignal)
     bool called = false;
     std::ignore = obj.onUpdatePost([&]() { called = true; });
 
-    constexpr auto duration = std::chrono::duration<float>(0.1F);
-    obj.update(duration);
+    obj.updatePost();
     EXPECT_TRUE(called);
+}
+
+UNIT_TEST(Object, UpdateRecursive)
+{
+    Object parent;
+    auto* child = parent.addChild(std::make_unique<Object>());
+    EXPECT_NE(child, nullptr);
+
+    bool parentCalled = false;
+    bool childCalled = false;
+    std::ignore = parent.onUpdate([&](auto) { parentCalled = true; });
+    std::ignore = child->onUpdate([&](auto) { childCalled = true; });
+
+    constexpr auto duration = std::chrono::duration<float>(0.1F);
+    parent.update(duration);
+    EXPECT_TRUE(parentCalled);
+    EXPECT_TRUE(childCalled);
+}
+
+UNIT_TEST(Object, UpdateFixedRecursive)
+{
+    Object parent;
+    auto* child = parent.addChild(std::make_unique<Object>());
+    EXPECT_NE(child, nullptr);
+
+    bool parentCalled = false;
+    bool childCalled = false;
+    std::ignore = parent.onUpdateFixed([&](auto) { parentCalled = true; });
+    std::ignore = child->onUpdateFixed([&](auto) { childCalled = true; });
+
+    constexpr auto duration = std::chrono::duration<float>(0.1F);
+    parent.updateFixed(duration);
+    EXPECT_TRUE(parentCalled);
+    EXPECT_TRUE(childCalled);
+}
+
+UNIT_TEST(Object, StartupSignal)
+{
+    Object obj;
+    bool called = false;
+    std::ignore = obj.onStartup([&]() { called = true; });
+
+    obj.startup();
+    EXPECT_TRUE(called);
+}
+
+UNIT_TEST(Object, StartupRecursive)
+{
+    Object parent;
+    auto* child = parent.addChild(std::make_unique<Object>());
+    EXPECT_NE(child, nullptr);
+
+    bool parentCalled = false;
+    bool childCalled = false;
+    std::ignore = parent.onStartup([&]() { parentCalled = true; });
+    std::ignore = child->onStartup([&]() { childCalled = true; });
+
+    parent.startup();
+    EXPECT_TRUE(parentCalled);
+    EXPECT_TRUE(childCalled);
+}
+
+UNIT_TEST(Object, StartupMultipleCalls)
+{
+    Object obj;
+    int callCount = 0;
+    std::ignore = obj.onStartup([&]() { ++callCount; });
+
+    obj.startup();
+    obj.startup();
+    EXPECT_EQ(callCount, 1);
 }

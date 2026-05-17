@@ -40,7 +40,7 @@ export namespace awen::raylib
                 {
                     if (WindowShouldClose())
                     {
-                        auto* engine = dynamic_cast<awen::core::Engine*>(getParent());
+                        auto* engine = rootNode_->getEngine();
 
                         if (engine != nullptr)
                         {
@@ -156,12 +156,18 @@ export namespace awen::raylib
 
         auto setRootNode(std::unique_ptr<Node> node) -> void
         {
-            rootNode_ = std::move(node);
+            if (node == nullptr)
+            {
+                return;
+            }
+
+            rootNode_ = node.get();
+            addChild(std::move(node));
         }
 
         [[nodiscard]] auto getRootNode() const -> Node*
         {
-            return rootNode_.get();
+            return rootNode_;
         }
 
     private:
@@ -171,6 +177,6 @@ export namespace awen::raylib
         int width_{};
         int height_{};
         awen::raylib::Color color_{colors::Black};
-        std::unique_ptr<awen::raylib::Node> rootNode_{std::make_unique<awen::raylib::Node>()};
+        awen::raylib::Node* rootNode_{addChild<Node>()};
     };
 }

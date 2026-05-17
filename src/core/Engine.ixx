@@ -15,13 +15,13 @@ export namespace awen::core
         static constexpr auto DefaultUpdateFixedInterval{std::chrono::milliseconds(10)};
 
         Engine() = default;
+        ~Engine() override = default;
+
         Engine(const Engine&) = delete;
         auto operator=(const Engine&) -> Engine& = delete;
 
         Engine(Engine&&) noexcept = delete;
         auto operator=(Engine&&) noexcept -> Engine& = delete;
-
-        ~Engine() override = default;
 
         /// @brief Sets the limit of fixed updates that can be performed in a single run loop iteration. This is used to prevent the "spiral of death"
         /// problem, where the engine gets stuck in an infinite loop of fixed updates if the update fixed interval is too small or if the system is
