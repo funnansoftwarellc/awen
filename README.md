@@ -30,20 +30,20 @@
 
 - macOS 14 (Sonoma) or later, Apple Silicon (arm64)
 - [Homebrew](https://brew.sh/)
-- LLVM 21 via Homebrew:
+- LLVM 22 via Homebrew:
   ```sh
-  brew install llvm@21
+  brew install llvm@22
   ```
   After installing, add LLVM to your `PATH`:
   ```sh
-  echo 'export PATH="/opt/homebrew/opt/llvm@21/bin:$PATH"' >> ~/.zprofile
+  echo 'export PATH="/opt/homebrew/opt/llvm@22/bin:$PATH"' >> ~/.zprofile
   source ~/.zprofile
   ```
 
 ### Linux
 
-- Ubuntu 25.10 (or compatible) — x86-64
-- GCC (latest available) **or** Clang (latest via [apt.llvm.org](https://apt.llvm.org/))
+- Ubuntu 26.04 (or compatible) — x86-64 or arm64
+- GCC 16 **or** Clang 22 (via [apt.llvm.org](https://apt.llvm.org/))
 - The provided [Dev Container](.devcontainer/Dockerfile) sets up a fully configured environment with native Linux, Android, and WebAssembly toolchains. Using it is the recommended approach on Linux.
 
   To build without the Dev Container, install the required tools manually:
@@ -51,13 +51,13 @@
   sudo apt-get update
   sudo apt-get install -y cmake ninja-build git pkg-config python3 zip unzip tar
   ```
-  Then install GCC or Clang following the instructions in the [Dockerfile](.devcontainer/Dockerfile).
+  Then install GCC 16 or Clang 22 following the instructions in the [Dockerfile](.devcontainer/Dockerfile).
 
 ### Windows
 
 - Windows 10/11 — x86-64
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) with the **Desktop development with C++** workload (provides MSVC and the Windows SDK)
-- CMake and Ninja (included with Visual Studio, or install separately)
+- **MSVC / Visual Studio generator:** [Visual Studio 2022](https://visualstudio.microsoft.com/) with the **Desktop development with C++** workload (provides MSVC and the Windows SDK); CMake and Ninja are included
+- **MinGW GCC:** [MSYS2](https://www.msys2.org/) with the `mingw-w64-ucrt-x86_64-gcc` and `mingw-w64-ucrt-x86_64-ninja` packages (UCRT64 environment); run builds from the MSYS2 UCRT64 shell
 
 ---
 
@@ -116,12 +116,17 @@ cmake --build --preset arm64-osx-clang-debug --target install
 
 Available presets:
 
-| Preset | Compiler | Configuration |
-|---|---|---|
-| `x64-linux-gcc-debug` | GCC | Debug |
-| `x64-linux-gcc-release` | GCC | Release |
-| `x64-linux-clang-debug` | Clang | Debug |
-| `x64-linux-clang-release` | Clang | Release |
+| Preset | Compiler | Architecture | Configuration |
+|---|---|---|---|
+| `arm64-linux-gcc-release` | GCC | arm64 | Release |
+| `x64-linux-gcc-debug` | GCC | x64 | Debug |
+| `x64-linux-gcc-release` | GCC | x64 | Release |
+| `x64-linux-clang-debug` | Clang | x64 | Debug |
+| `x64-linux-clang-release` | Clang | x64 | Release |
+
+The `arm64-linux-gcc-release` preset is for building natively on an arm64 Linux host. The devcontainer targets x64 presets.
+
+Test presets support filtered runs: append `-unit` to run only unit tests, or `-graphics` for only graphics tests (e.g. `ctest --preset x64-linux-clang-debug-unit`).
 
 ```sh
 # Configure
@@ -141,12 +146,19 @@ cmake --build --preset x64-linux-clang-debug --target install
 
 Available presets:
 
-| Preset | Configuration |
-|---|---|
-| `x64-windows-msvc-debug` | Debug |
-| `x64-windows-msvc-release` | Release |
+| Preset | Toolchain | Configuration |
+|---|---|---|
+| `x64-windows-msvc-debug` | MSVC | Debug |
+| `x64-windows-msvc-release` | MSVC | Release |
+| `x64-windows-mingw-gcc-debug` | MinGW GCC | Debug |
+| `x64-windows-mingw-gcc-release` | MinGW GCC | Release |
+| `x64-windows-visualstudio` | MSVC (VS generator) | Debug + Release |
 
-Run the following from a **Developer Command Prompt for VS 2022** (or after running `vcvarsall.bat amd64`):
+MSVC presets require a **Developer Command Prompt for VS 2022** (or `vcvarsall.bat amd64`). MinGW presets require the MSYS2 UCRT64 shell with GCC and Ninja in `PATH`. The `x64-windows-visualstudio` preset generates a Visual Studio 2022 solution — open `build/x64-windows-visualstudio/` in Visual Studio to build and test.
+
+Test presets for MSVC and MinGW support filtered runs: append `-unit` or `-graphics` (e.g. `ctest --preset x64-windows-msvc-debug-unit`).
+
+Run the following MSVC commands from a **Developer Command Prompt for VS 2022** (or after running `vcvarsall.bat amd64`):
 
 ```bat
 rem Configure
@@ -166,16 +178,18 @@ The installed binary is written to `build/<preset>/installed/bin/`.
 
 ### Android
 
-Android builds target **arm64-v8a** and cross-compile from Linux using the [Android NDK](https://developer.android.com/ndk). The provided [Dev Container](.devcontainer/Dockerfile) sets up the required environment (Ubuntu 25.10 with Clang, NDK r29, and Android SDK) and is the recommended approach.
+Android builds cross-compile using the [Android NDK](https://developer.android.com/ndk). The provided [Dev Container](.devcontainer/Dockerfile) sets up the required environment (Ubuntu 26.04 with Clang and the Android NDK) and is the recommended approach for Linux hosts.
 
 Available presets:
 
-| Preset | Configuration |
-|---|---|
-| `x64-linux-clang-arm64-android-debug` | Debug |
-| `x64-linux-clang-arm64-android-release` | Release |
-| `x64-windows-clang-arm64-android-debug` | Debug (Windows host) |
-| `x64-windows-clang-arm64-android-release` | Release (Windows host) |
+| Preset | Host | Target ABI | Configuration |
+|---|---|---|---|
+| `x64-linux-clang-arm64-android-debug` | Linux x64 | arm64-v8a | Debug |
+| `x64-linux-clang-arm64-android-release` | Linux x64 | arm64-v8a | Release |
+| `x64-windows-clang-arm64-android-debug` | Windows x64 | arm64-v8a | Debug |
+| `x64-windows-clang-arm64-android-release` | Windows x64 | arm64-v8a | Release |
+| `x64-windows-clang-x64-android-debug` | Windows x64 | x86-64 | Debug (configure only) |
+| `x64-windows-clang-x64-android-release` | Windows x64 | x86-64 | Release (configure only) |
 
 ```sh
 # Configure
@@ -194,20 +208,22 @@ WebAssembly builds use [Emscripten](https://emscripten.org/) and cross-compile f
 
 Available presets:
 
-| Preset | Configuration |
-|---|---|
-| `wasm32-emscripten-debug` | Debug |
-| `wasm32-emscripten-release` | Release |
+| Preset | Host | Configuration |
+|---|---|---|
+| `x64-linux-wasm-debug` | Linux x64 | Debug |
+| `x64-linux-wasm-release` | Linux x64 | Release |
+| `arm64-linux-wasm-debug` | Linux arm64 | Debug |
+| `arm64-linux-wasm-release` | Linux arm64 | Release |
 
 ```sh
 # Configure
-cmake --preset wasm32-emscripten-debug
+cmake --preset x64-linux-wasm-debug
 
 # Build
-cmake --build --preset wasm32-emscripten-debug
+cmake --build --preset x64-linux-wasm-debug
 
 # Install
-cmake --build --preset wasm32-emscripten-debug --target install
+cmake --build --preset x64-linux-wasm-debug --target install
 ```
 
 The installed output is written to `build/<preset>/installed/`.
