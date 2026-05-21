@@ -8,6 +8,7 @@ target_sources(${PROJECT_NAME} PUBLIC
             Engine.ixx
             Module.ixx
             Object.ixx
+            Overloaded.ixx
 )
 
 find_package(PalSigslot CONFIG REQUIRED)

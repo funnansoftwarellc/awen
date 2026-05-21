@@ -25,13 +25,25 @@ auto main() -> int
     });
 
     auto* rootNode = window->getRootNode();
-    auto* pos = rootNode->addNode<awen::raylib::Node>();
 
     // NOLINTBEGIN
+    auto* rectOne = rootNode->addNode<awen::raylib::Rectangle>();
+    rectOne->setPosition({.x = 100.0F, .y = 100.0F});
+    rectOne->setWidth(200.0F);
+    rectOne->setHeight(200.0F);
+    rectOne->setColor(awen::raylib::colors::Red);
+
+    auto* rectOneChild = rectOne->addNode<awen::raylib::Rectangle>();
+    rectOneChild->setPosition({.x = 10.0F, .y = 10.0F});
+    rectOneChild->setWidth(50.0F);
+    rectOneChild->setHeight(50.0F);
+    rectOneChild->setColor(awen::raylib::colors::Blue);
+
+    auto* pos = rootNode->addNode<awen::raylib::Node>();
+
     pos->setPosition({.x = width / 2.0F, .y = height / 2.0F});
-    // pos->setRotation(45.0F);
-    // pos->setScale({.x = 2.0F, .y = 2.0F});
     // NOLINTEND
+    
     auto* text = pos->addNode<awen::raylib::Text>();
 
     rootNode->onEvents(

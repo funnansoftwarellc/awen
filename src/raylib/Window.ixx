@@ -41,7 +41,7 @@ export namespace awen::raylib
                 {
                     auto events = ProcessEvents();
 
-                    for (const auto& event : events)
+                    for (auto& event : events)
                     {
                         rootNode_->events(event);
                     }

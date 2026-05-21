@@ -5,6 +5,7 @@ module;
 #include <concepts>
 #include <sigslot/signal.hpp>
 #include <typeinfo>
+#include <variant>
 #include <vector>
 
 export module awen.raylib.node;
@@ -88,9 +89,19 @@ export namespace awen::raylib
             return nodes_;
         }
 
-        auto events(Event x) -> void
+        auto events(Event& x) -> void
         {
-            events_(x);
+            for (const auto& child : nodes_)
+            {
+                child->events(x);
+            }
+
+            const auto handled = std::visit([&](const auto& event) { return event.handled; }, x);
+
+            if (!handled)
+            {
+                events_(x);
+            }
         }
 
         auto renderPre() -> void
@@ -173,13 +184,52 @@ export namespace awen::raylib
             return engine_;
         }
 
+        /// @brief Map world coordinates to this node's local coordinate space.
+        /// @param point The point in world coordinates to map.
+        /// @return The point mapped to this node's local coordinate space.
+        [[nodiscard]] auto mapToNode(Vector2 point) const -> Vector2
+        {
+            Vector2 targetPoint = point;
+
+            // Walk up the tree from this node to the common ancestor, applying
+            // inverse transforms to convert the point into world space.
+            const Node* current = this;
+
+            while (current != nullptr)
+            {
+                targetPoint.x = (targetPoint.x * (1.0F / current->scale_.x)) - current->position_.x;
+                targetPoint.y = (targetPoint.y * (1.0F / current->scale_.y)) - current->position_.y;
+                current = dynamic_cast<const Node*>(current->getParent());
+            }
+
+            return targetPoint;
+        }
+
+        [[nodiscard]] auto mapToWorld(Vector2 point) const -> Vector2
+        {
+            Vector2 worldPoint = point;
+
+            // Walk up the tree from this node to the root, applying transforms to
+            // convert the point into world space.
+            const Node* current = this;
+
+            while (current != nullptr)
+            {
+                worldPoint.x = (worldPoint.x * current->scale_.x) + current->position_.x;
+                worldPoint.y = (worldPoint.y * current->scale_.y) + current->position_.y;
+                current = dynamic_cast<const Node*>(current->getParent());
+            }
+
+            return worldPoint;
+        }
+
     private:
         using awen::core::Object::addChild;
         std::vector<Node*> nodes_;
         Vector2 position_{};
         Vector2 scale_{.x = 1.0F, .y = 1.0F};
         float rotation_{};
-        sigslot::signal_st<Event> events_;
+        sigslot::signal_st<Event&> events_;
         sigslot::signal_st<> renderPre_;
         sigslot::signal_st<> render_;
         sigslot::signal_st<> renderPost_;

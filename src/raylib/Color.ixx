@@ -1,6 +1,7 @@
 module;
 
 #include <raylib.h>
+#include <compare>
 #include <cstdint>
 
 export module awen.raylib.color;
@@ -13,6 +14,8 @@ export namespace awen::raylib
         std::uint8_t g{};
         std::uint8_t b{};
         std::uint8_t a{};
+
+        auto operator<=>(const Color&) const noexcept = default;
     };
 
     namespace colors

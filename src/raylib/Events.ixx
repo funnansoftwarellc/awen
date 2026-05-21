@@ -2,9 +2,14 @@ module;
 
 #include <raylib.h>
 #include <cstdint>
-#include <magic_enum/magic_enum.hpp>
 #include <variant>
 #include <vector>
+
+// NOLINTBEGIN
+#define MAGIC_ENUM_RANGE_MIN 0
+#define MAGIC_ENUM_RANGE_MAX 512
+#include <magic_enum/magic_enum.hpp>
+// NOLINTEND
 
 export module awen.raylib.events;
 
@@ -22,6 +27,7 @@ export namespace awen::raylib
         };
 
         Type type{Type::Unknown};
+        bool handled{false};
     };
 
     struct EventKeyboard
@@ -149,6 +155,7 @@ export namespace awen::raylib
 
         Type type{Type::Unknown};
         Key key{Key::Unknown};
+        bool handled{false};
     };
 
     struct EventMouse
@@ -162,15 +169,29 @@ export namespace awen::raylib
             WheelScrolled,
         };
 
+        enum class Button : std::uint8_t
+        {
+            Unknown = 0,
+            Left = MOUSE_BUTTON_LEFT,
+            Right = MOUSE_BUTTON_RIGHT,
+            Middle = MOUSE_BUTTON_MIDDLE,
+        };
+
         Type type{Type::Unknown};
+        Button button{Button::Unknown};
+        float x{};
+        float y{};
+        bool handled{false};
     };
 
     struct EventJoystick
     {
+        bool handled{false};
     };
 
     struct EventTouch
     {
+        bool handled{false};
     };
 
     using Event = std::variant<EventWindow, EventKeyboard, EventMouse, EventJoystick, EventTouch>;
@@ -188,6 +209,20 @@ export namespace awen::raylib
             else if (IsKeyReleased(static_cast<int>(event)))
             {
                 events.emplace_back(EventKeyboard{.type = EventKeyboard::Type::Released, .key = event});
+            }
+        }
+
+        for (auto button : magic_enum::enum_values<EventMouse::Button>())
+        {
+            if (IsMouseButtonPressed(static_cast<int>(button)))
+            {
+                const auto pos = GetMousePosition();
+                events.emplace_back(EventMouse{.type = EventMouse::Type::ButtonPressed, .button = button, .x = pos.x, .y = pos.y});
+            }
+            else if (IsMouseButtonReleased(static_cast<int>(button)))
+            {
+                const auto pos = GetMousePosition();
+                events.emplace_back(EventMouse{.type = EventMouse::Type::ButtonReleased, .button = button, .x = pos.x, .y = pos.y});
             }
         }
 

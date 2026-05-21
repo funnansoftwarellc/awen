@@ -7,6 +7,7 @@ target_sources(${PROJECT_NAME} PUBLIC
         FILES
             Color.ixx
             Events.ixx
+            Rectangle.ixx
             Module.ixx
             Node.ixx
             Text.ixx
