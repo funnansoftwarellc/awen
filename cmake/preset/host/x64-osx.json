@@ -1,0 +1,17 @@
+{
+  "version": 7,
+  "configurePresets": [
+    {
+      "name": "host-x64-osx",
+      "hidden": true,
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "VCPKG_HOST_TRIPLET": "x64-osx-release"
+      }
+    }
+  ]
+}
