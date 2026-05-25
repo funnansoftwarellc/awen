@@ -19,7 +19,13 @@ if(EMSCRIPTEN)
     target_link_options(${PROJECT_NAME}
         PUBLIC
             -sUSE_GLFW=3
+            -sASSERTIONS=1
             -sASYNCIFY
+            -sWASM=1
+    )
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+            -DPLATFORM=Web
     )
 endif()
 

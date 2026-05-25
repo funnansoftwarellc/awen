@@ -1,0 +1,19 @@
+diff --git a/src/platforms/rcore_web.c b/src/platforms/rcore_web.c
+index 2c91a3b..e1b5c42 100644
+--- a/src/platforms/rcore_web.c
++++ b/src/platforms/rcore_web.c
+@@ -1658,6 +1658,14 @@
+ 
+     emscripten_set_canvas_element_size("#canvas", width, height);
+ 
++    // emscripten_set_canvas_element_size() sets canvas.width/height directly,
++    // bypassing GLFW's resize listener. This leaves GLFW.active.width stale,
++    // causing libglfw.js calculateMouseCoords() to scale mouse coordinates by
++    // GLFW.active.width / canvas.getBoundingClientRect().width. Calling
++    // glfwSetWindowSize() keeps GLFW in sync so the scale factor stays 1:1
++    // and mouse hit-testing matches the drawn geometry.
++    glfwSetWindowSize(platform.handle, width, height);
++
+     SetupViewport(width, height); // Reset viewport and projection matrix for new size
+ 
+     CORE.Window.currentFbo.width = width;

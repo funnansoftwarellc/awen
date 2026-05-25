@@ -1,10 +1,12 @@
 module;
 
+#include <GLFW/glfw3.h>
 #include <raylib.h>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <typeinfo>
+#include <utility>
 
 export module awen.raylib.window;
 import awen.core;
@@ -45,6 +47,10 @@ export namespace awen::raylib
                     {
                         rootNode_->events(event);
                     }
+
+                    // Poll events for web assembly after processing events.
+                    // Otherwise, it don't work.
+                    PollInputEvents();
                 });
 
             onUpdatePost(
@@ -60,28 +66,19 @@ export namespace awen::raylib
                         }
                     }
 
-                    const auto& nodes = rootNode_->getNodes();
-
-                    for (const auto& node : nodes)
-                    {
-                        node->renderPre();
-                    }
+                    rootNode_->renderPre();
 
                     BeginDrawing();
                     ClearBackground(ToRaylibColor(color_));
 
-                    for (const auto& node : nodes)
-                    {
-                        node->render();
-                    }
+                    rootNode_->render();
 
                     DrawFPS(0, 0);
                     EndDrawing();
 
-                    for (const auto& node : nodes)
-                    {
-                        node->renderPost();
-                    }
+                    SwapScreenBuffer();
+
+                    rootNode_->renderPost();
 
                     const auto pos = GetWindowPosition();
                     posX_ = static_cast<int>(pos.x);
@@ -172,6 +169,8 @@ export namespace awen::raylib
             {
                 return;
             }
+
+            std::ignore = rootNode_->remove();
 
             rootNode_ = node.get();
             addChild(std::move(node));

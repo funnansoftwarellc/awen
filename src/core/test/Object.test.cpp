@@ -37,6 +37,42 @@ UNIT_TEST(Object, AddChildWithArgs)
     EXPECT_EQ(child->value, expectedValue);
 }
 
+UNIT_TEST(Object, AddChildEmitsChildAddAfterParentSet)
+{
+    Object parent;
+    bool signalCalled = false;
+    bool signalSawParentSet = false;
+    Object* signalChild{};
+
+    std::ignore = parent.onChildAdd(
+        [&](Object& child)
+        {
+            signalCalled = true;
+            signalSawParentSet = child.getParent() == &parent;
+            signalChild = &child;
+        });
+
+    auto* child = parent.addChild<Object>();
+
+    EXPECT_NE(child, nullptr);
+    EXPECT_TRUE(signalCalled);
+    EXPECT_TRUE(signalSawParentSet);
+    EXPECT_EQ(signalChild, child);
+}
+
+UNIT_TEST(Object, AddChildNullDoesNotEmitChildAdd)
+{
+    Object parent;
+    bool signalCalled = false;
+
+    std::ignore = parent.onChildAdd([&](Object&) { signalCalled = true; });
+
+    auto* child = parent.addChild(std::unique_ptr<Object>{});
+
+    EXPECT_EQ(child, nullptr);
+    EXPECT_FALSE(signalCalled);
+}
+
 UNIT_TEST(Object, RemoveChild)
 {
     Object parent;
@@ -47,6 +83,32 @@ UNIT_TEST(Object, RemoveChild)
     EXPECT_NE(removedChild, nullptr);
     EXPECT_EQ(removedChild.get(), child);
     EXPECT_EQ(child->getParent(), nullptr);
+}
+
+UNIT_TEST(Object, RemoveChildEmitsChildRemoveAfterParentCleared)
+{
+    Object parent;
+    auto* child = parent.addChild<Object>();
+    bool signalCalled = false;
+    bool signalSawParentCleared = false;
+    Object* signalChild{};
+
+    std::ignore = parent.onChildRemove(
+        [&](Object& removedChild)
+        {
+            signalCalled = true;
+            signalSawParentCleared = removedChild.getParent() == nullptr;
+            signalChild = &removedChild;
+        });
+
+    auto removedChild = child->remove();
+
+    EXPECT_NE(removedChild, nullptr);
+    EXPECT_EQ(removedChild.get(), child);
+    EXPECT_TRUE(signalCalled);
+    EXPECT_TRUE(signalSawParentCleared);
+    EXPECT_EQ(signalChild, child);
+    EXPECT_TRUE(std::empty(parent.getChildren()));
 }
 
 UNIT_TEST(Object, GetParent)
@@ -105,6 +167,31 @@ UNIT_TEST(Object, GetParentWithTypeCache)
     auto* derivedChild = child->addChild(std::make_unique<DerivedObject>());
     EXPECT_NE(derivedChild, nullptr);
     EXPECT_EQ(derivedChild->getParent<DerivedObject>(), child);
+}
+
+UNIT_TEST(Object, GetParentWithTypeCacheClearedWhenSubtreeMoves)
+{
+    struct FirstParent : public Object
+    {
+    };
+
+    struct SecondParent : public Object
+    {
+    };
+
+    FirstParent firstParent;
+    SecondParent secondParent;
+    auto* child = firstParent.addChild<Object>();
+    auto* grandchild = child->addChild<Object>();
+
+    EXPECT_EQ(grandchild->getParent<FirstParent>(), &firstParent);
+
+    auto removedChild = child->remove();
+    auto* readdedChild = secondParent.addChild(std::move(removedChild));
+
+    EXPECT_EQ(readdedChild, child);
+    EXPECT_EQ(grandchild->getParent<FirstParent>(), nullptr);
+    EXPECT_EQ(grandchild->getParent<SecondParent>(), &secondParent);
 }
 
 UNIT_TEST(Object, GetChildrenEmpty)

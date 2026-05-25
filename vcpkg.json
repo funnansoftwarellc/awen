@@ -5,7 +5,12 @@
   "description": "A modern C++ game engine for creation and exploration.",
   "homepage": "https://github.com/funnansoftwarellc/awen",
   "dependencies": [
-    "raylib",
+    {
+      "name": "raylib",
+      "features": [
+        "frames"
+      ]
+    },
     "gtest",
     "palsigslot",
     "magic-enum"

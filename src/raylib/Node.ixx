@@ -4,8 +4,11 @@ module;
 #include <raymath.h>
 #include <rlgl.h>
 #include <concepts>
+#include <memory>
+#include <ranges>
 #include <sigslot/signal.hpp>
-#include <typeinfo>
+#include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -23,7 +26,37 @@ export namespace awen::raylib
     class Node : public core::Object
     {
     public:
-        Node() = default;
+        Node()
+        {
+            std::ignore = onChildAdd(
+                [this](core::Object& child)
+                {
+                    auto* node = dynamic_cast<Node*>(&child);
+
+                    if (node == nullptr)
+                    {
+                        return;
+                    }
+
+                    node->markDirty();
+                    nodes_.emplace_back(node);
+                });
+
+            std::ignore = onChildRemove(
+                [this](core::Object& child)
+                {
+                    auto* node = dynamic_cast<Node*>(&child);
+
+                    if (node == nullptr)
+                    {
+                        return;
+                    }
+
+                    std::erase(nodes_, node);
+                    node->markDirty();
+                });
+        }
+
         ~Node() override = default;
 
         Node(const Node&) = delete;
@@ -67,29 +100,18 @@ export namespace awen::raylib
 
         [[nodiscard]] auto addNode(std::unique_ptr<Node> node) -> Node*
         {
-            if (node == nullptr)
-            {
-                return nullptr;
-            }
-
-            auto* nodePtr = node.get();
-            addChild(std::move(node));
-            nodePtr->parentNode_ = this;
-            nodePtr->markDirty();
-            nodes_.emplace_back(nodePtr);
-            return nodePtr;
+            auto* ptr = node.get();
+            std::ignore = addChild(std::move(node));
+            return ptr;
         }
 
         template <TypeNode T, typename... Args>
         [[nodiscard]] auto addNode(Args&&... args) -> T*
         {
             auto node = std::make_unique<T>(std::forward<Args>(args)...);
-            auto* nodePtr = node.get();
-            addChild(std::move(node));
-            nodePtr->parentNode_ = this;
-            nodePtr->markDirty();
-            nodes_.emplace_back(nodePtr);
-            return nodePtr;
+            auto* ptr = node.get();
+            std::ignore = addChild(std::move(node));
+            return ptr;
         }
 
         [[nodiscard]] auto getNodes() const -> std::vector<Node*>
@@ -99,14 +121,17 @@ export namespace awen::raylib
 
         auto events(Event& x) -> void
         {
-            for (const auto& child : nodes_)
+            for (auto* child : std::views::reverse(nodes_))
             {
                 child->events(x);
+
+                if (isHandled(x))
+                {
+                    return;
+                }
             }
 
-            const auto handled = std::visit([&](const auto& event) { return event.handled; }, x);
-
-            if (!handled)
+            if (!isHandled(x))
             {
                 events_(x);
             }
@@ -214,6 +239,11 @@ export namespace awen::raylib
     private:
         using awen::core::Object::addChild;
 
+        [[nodiscard]] static auto isHandled(const Event& x) -> bool
+        {
+            return std::visit([](const auto& event) { return event.handled; }, x);
+        }
+
         /// @brief Mark this node and all descendants as having stale world transforms.
         auto markDirty() -> void
         {
@@ -257,10 +287,11 @@ export namespace awen::raylib
             }
 
             const auto& local = getLocalTransform();
+            const auto* parentNode = getParent<Node>();
 
-            if (parentNode_ != nullptr)
+            if (parentNode != nullptr && parentNode != this)
             {
-                worldTransform_ = MatrixMultiply(local, parentNode_->getWorldTransform());
+                worldTransform_ = MatrixMultiply(local, parentNode->getWorldTransform());
             }
             else
             {
@@ -279,11 +310,7 @@ export namespace awen::raylib
         sigslot::signal_st<> renderPre_;
         sigslot::signal_st<> render_;
         sigslot::signal_st<> renderPost_;
-        awen::core::Engine* engine_{};
 
-        // TODO: reset parentNode_ if Object::remove() is ever called on a Node;
-        // currently no caller detaches nodes, so this stays valid for the node's lifetime.
-        Node* parentNode_{};
         mutable Matrix localTransform_{};
         mutable Matrix worldTransform_{};
         mutable Matrix worldInverse_{};

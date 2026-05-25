@@ -7,7 +7,6 @@ module;
 #include <ranges>
 #include <sigslot/signal.hpp>
 #include <typeindex>
-#include <typeinfo>
 #include <unordered_map>
 #include <vector>
 
@@ -120,6 +119,8 @@ export namespace awen::core
             auto* childPtr = x.get();
             children_.emplace_back(std::move(x));
             childPtr->parent_ = this;
+            childPtr->clearParentCache();
+            childAdd_(*childPtr);
             return childPtr;
         }
 
@@ -132,10 +133,7 @@ export namespace awen::core
         auto addChild(Args&&... args) -> T*
         {
             auto child = std::make_unique<T>(std::forward<Args>(args)...);
-            auto* childPtr = child.get();
-            children_.emplace_back(std::move(child));
-            childPtr->parent_ = this;
-            return childPtr;
+            return static_cast<T*>(addChild(std::move(child)));
         }
 
         /// @brief Removes this object from its parent. The removed object will not be destroyed, but it will no longer be a child of the parent.
@@ -148,15 +146,18 @@ export namespace awen::core
                 return nullptr;
             }
 
-            auto removeChild = parent_->removeChild(this);
+            auto* oldParent = parent_;
+            auto removedChild = oldParent->removeChild(this);
 
-            if (removeChild == nullptr)
+            if (removedChild == nullptr)
             {
                 return nullptr;
             }
 
-            removeChild->parent_ = nullptr;
-            return removeChild;
+            removedChild->parent_ = nullptr;
+            removedChild->clearParentCache();
+            oldParent->childRemove_(*removedChild);
+            return removedChild;
         }
 
         /// @brief Get the child objects of this object.
@@ -282,7 +283,51 @@ export namespace awen::core
             return updateFixed_.connect(x);
         }
 
+        /// @brief Connects a slot that is called after a child object is added to this object.
+        /// @param x The slot to connect. The slot receives the added child object.
+        /// @return The connection that can be used to disconnect the slot.
+        auto onChildAdd(auto x) -> sigslot::connection
+        {
+            return childAdd_.connect(x);
+        }
+
+        /// @brief Connects a slot that is called after a child object is removed from this object.
+        /// @param x The slot to connect. The slot receives the removed child object.
+        /// @return The connection that can be used to disconnect the slot.
+        auto onChildRemove(auto x) -> sigslot::connection
+        {
+            return childRemove_.connect(x);
+        }
+
     private:
+        auto clearParentCache() -> void
+        {
+            std::vector<Object*> visitor;
+            std::vector<Object*> visited;
+            visitor.reserve(std::size(children_));
+            visited.reserve(std::size(children_) + 1);
+            visitor.emplace_back(this);
+
+            while (!std::empty(visitor))
+            {
+                auto* object = visitor.back();
+                visitor.pop_back();
+
+                if (std::ranges::find(visited, object) != std::end(visited))
+                {
+                    continue;
+                }
+
+                visited.emplace_back(object);
+                object->parentCache_.clear();
+
+                for (const auto& child : object->children_)
+                {
+                    visitor.emplace_back(child.get());
+                }
+            }
+        }
+
         auto removeChild(Object* child) -> std::unique_ptr<Object>
         {
             auto it = std::ranges::find_if(children_, [child](const auto& c) { return c.get() == child; });
@@ -306,6 +351,8 @@ export namespace awen::core
         sigslot::signal_st<std::chrono::duration<float>> update_;
         sigslot::signal_st<std::chrono::duration<float>> updateFixed_;
         sigslot::signal_st<> updatePost_;
+        sigslot::signal_st<Object&> childAdd_;
+        sigslot::signal_st<Object&> childRemove_;
         bool started_{false};
     };
 }
