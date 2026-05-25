@@ -67,6 +67,16 @@ auto main() -> int
     ring->setEndAngle(330.0F);
     ring->setSegments(90);
     ring->setColor(awen::raylib::colors::White);
+
+    auto* triangleStrip = rootNode->addNode<awen::raylib::TriangleStrip>();
+    triangleStrip->setVertices({
+        {.x = 0.0F, .y = -0.5F},
+        {.x = -0.5F, .y = 0.5F},
+        {.x = 0.5F, .y = 0.5F},
+    });
+    triangleStrip->setColor(awen::raylib::colors::Green);
+    triangleStrip->setScale({.x = 64.0F, .y = 64.0F});
+    triangleStrip->setPosition({.x = width / 2.0F, .y = height / 2.0F});
     // NOLINTEND
 
     rootNode->onEvents(

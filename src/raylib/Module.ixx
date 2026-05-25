@@ -7,3 +7,4 @@ export import awen.raylib.rectangle;
 export import awen.raylib.ring;
 export import awen.raylib.text;
 export import awen.raylib.textfps;
+export import awen.raylib.trianglestrip;

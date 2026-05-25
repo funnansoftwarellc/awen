@@ -13,6 +13,7 @@ target_sources(${PROJECT_NAME} PUBLIC
             Node.ixx
             Text.ixx
             TextFPS.ixx
+            TriangleStrip.ixx
             Window.ixx
 )
 
