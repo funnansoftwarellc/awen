@@ -5,7 +5,6 @@ module;
 #include <sigslot/signal.hpp>
 #include <typeinfo>
 
-
 export module awen.raylib.ring;
 import awen.raylib.color;
 import awen.raylib.node;

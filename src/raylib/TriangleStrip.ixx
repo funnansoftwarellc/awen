@@ -5,7 +5,6 @@ module;
 #include <typeinfo>
 #include <vector>
 
-
 export module awen.raylib.trianglestrip;
 import awen.raylib.color;
 import awen.raylib.node;
