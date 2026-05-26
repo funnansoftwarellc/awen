@@ -2,6 +2,9 @@ module;
 
 #include <raylib.h>
 #include <compare>
+#include <sigslot/signal.hpp>
+#include <typeinfo>
+
 
 export module awen.raylib.ring;
 import awen.raylib.color;

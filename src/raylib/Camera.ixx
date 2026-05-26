@@ -1,6 +1,7 @@
 module;
 
 #include <raylib.h>
+#include <typeinfo>
 
 export module awen.raylib.camera;
 import awen.raylib.node;
